@@ -1,5 +1,64 @@
-# Vue 3 + TypeScript + Vite
+<!--
+ * @Description: 
+ * @Author: tianyi
+ * @Date: 2025-02-23 11:47:44
+ * @LastEditors: tianyi
+ * @LastEditTime: 2025-02-23 16:59:32
+ * @FilePath: \muflow\readme.md
+-->
+# MuFlow - Vue Flow 流程图编辑器
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+基于 Vue 3 + TypeScript + Vite + Vue Flow 开发的流程图编辑器组件。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 项目进度
+
+### ✅ 第一阶段：环境搭建与 Vue Flow 集成
+- [x] 搭建 Vue 3.4.19 + TypeScript 开发环境
+- [x] 安装 Vue Flow 核心库
+- [x] 在静态 UI 页面的主画布窗口区域集成 Vue Flow 组件
+- [x] 实现 Vue Flow 画布的基本渲染
+
+### ✅ 第二阶段：静态 UI 页面实现
+- [x] 实现顶部工具栏布局
+  - [x] Logo 区域
+  - [x] 样式设置工具区域（字体、线框、连线、对齐分布）
+  - [x] 画布操作工具区域（清除、导出、保存）
+- [x] 实现左侧控件栏布局
+  - [x] 文字标签控件图标
+  - [x] 圆角矩形节点控件图标
+- [x] 实现主画布窗口布局
+- [x] 完成所有工具图标的 SVG 实现
+
+### 🚧 第三阶段：基础功能实现 (进行中)
+- [ ] 实现基本的矩形节点和连线拖拽绘制功能
+- [ ] 实现节点的选中、拖动和删除功能
+- [ ] 实现左侧控件栏的控件拖拽到画布上创建节点的功能
+
+### ⏳ 第四阶段：样式定制与增强功能 (待开始)
+- [ ] 实现线框样式、字体样式和连线样式的设置功能
+- [ ] 实现文件标签控件
+- [ ] 完善控件连线操作
+- [ ] 实现控件大小调整和文字自适应
+- [ ] 实现双击编辑节点文字功能
+
+### ⏳ 第五阶段：JSON 保存加载与辅助功能 (待开始)
+- [ ] 实现画布 JSON 保存和加载功能
+- [ ] 实现清除画布功能
+- [ ] 实现导出图片功能
+- [ ] 实现多选节点的对齐和分布功能
+- [ ] 完善 UI 交互细节
+
+### ⏳ 第六阶段：测试与优化 (待开始)
+- [ ] 进行全面的功能测试和兼容性测试
+- [ ] 修复 Bug 并进行性能优化
+- [ ] 完善文档和示例
+
+## 开发环境
+
+- Vue 3.4.19
+- TypeScript
+- Vite
+- Vue Flow
+
+## 项目设置
+
