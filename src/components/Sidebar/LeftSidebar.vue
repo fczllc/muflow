@@ -1,22 +1,64 @@
 <template>
   <div class="left-sidebar">
     <!-- 文字标签控件 -->
-    <button class="sidebar-btn" draggable="true" @dragstart="onDragStart('text')" title="文字标签">
+    <button 
+      class="sidebar-btn" 
+      draggable="true" 
+      @dragstart="onDragStart($event, 'textLabel')" 
+      title="文字标签"
+    >
       <ToolbarIcon type="textLabel" />
     </button>
 
     <!-- 圆角矩形节点控件 -->
-    <button class="sidebar-btn" draggable="true" @dragstart="onDragStart('roundedRect')" title="圆角矩形">
+    <button 
+      class="sidebar-btn" 
+      draggable="true" 
+      @dragstart="onDragStart($event, 'roundedRect')" 
+      title="圆角矩形"
+    >
       <ToolbarIcon type="roundedRect" />
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useVueFlow } from '@vue-flow/core'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
 
-const onDragStart = (type: 'text' | 'roundedRect') => {
-  // 处理拖拽开始事件
+const { addNodes } = useVueFlow()
+
+const onDragStart = (event: DragEvent, nodeType: 'textLabel' | 'roundedRect') => {
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('application/vueflow', nodeType)
+    event.dataTransfer.effectAllowed = 'move'
+  }
+}
+
+const onDrop = (event: DragEvent) => {
+  const type = event.dataTransfer?.getData('application/vueflow')
+  if (!type) return
+
+  // 获取鼠标在画布上的位置
+  const { left, top } = (event.target as HTMLDivElement).getBoundingClientRect()
+  const position = {
+    x: event.clientX - left,
+    y: event.clientY - top
+  }
+
+  // 创建新节点
+  const newNode = {
+    id: `${type}-${Date.now()}`,
+    type,
+    position,
+    data: { 
+      label: type === 'textLabel' ? '文本标签' : '圆角矩形',
+      fontSize: 14,
+      color: '#000000'
+    }
+  }
+
+  addNodes([newNode])
 }
 </script>
 
