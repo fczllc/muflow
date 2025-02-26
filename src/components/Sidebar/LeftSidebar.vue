@@ -5,7 +5,7 @@
       class="sidebar-btn" 
       draggable="true" 
       @dragstart="onDragStart($event, 'textLabel')" 
-      title="文字标签"
+      title="文字"
     >
       <ToolbarIcon type="textLabel" />
     </button>
@@ -15,7 +15,7 @@
       class="sidebar-btn" 
       draggable="true" 
       @dragstart="onDragStart($event, 'roundedRect')" 
-      title="圆角矩形"
+      title="节点"
     >
       <ToolbarIcon type="roundedRect" />
     </button>
@@ -52,8 +52,8 @@ const onDrop = (event: DragEvent) => {
     type,
     position,
     data: { 
-      label: type === 'textLabel' ? '文本标签' : '圆角矩形',
-      fontSize: 14,
+      label: type === 'textLabel' ? '文本' : '节点',
+      fontSize: 12,
       color: '#000000'
     }
   }

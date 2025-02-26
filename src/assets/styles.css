@@ -1,0 +1,115 @@
+/* 编辑状态下允许文本选择 */
+.vue-flow__node.editing,
+.vue-flow__node .edit-input {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* 确保编辑状态下不触发拖动和缩放 */
+.vue-flow__node .edit-input {
+  pointer-events: auto !important;
+}
+
+/* 添加nodrag和nowheel类，防止拖动和缩放 */
+.nodrag {
+  pointer-events: all !important;
+}
+
+.nowheel {
+  pointer-events: all !important;
+}
+
+/* 确保所有节点元素使用border-box盒模型 */
+.vue-flow__node,
+.vue-flow__node *,
+.edit-input {
+  box-sizing: border-box !important;
+}
+
+/* 防止编辑状态下节点大小变化 */
+.vue-flow__node.editing .node-content,
+.vue-flow__node .edit-input {
+  overflow: hidden !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+/* 确保编辑状态下节点尺寸固定 */
+.vue-flow__node.editing {
+  width: var(--node-width) !important;
+  height: var(--node-height) !important;
+  transition: none !important;
+}
+
+/* 确保输入框和文本区域不会改变节点尺寸 */
+.edit-input {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  resize: none !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+/* 确保编辑状态下文本垂直居中 */
+.vue-flow__node.editing .node-content,
+.vue-flow__node .edit-input {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 修复textarea垂直居中问题 */
+textarea.edit-input {
+  display: block !important; /* 覆盖flex显示 */
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: normal !important;
+}
+
+/* 使用伪元素技巧实现textarea垂直居中 */
+.text-label-node.editing .node-content {
+  position: relative !important;
+}
+
+.text-label-node.editing .node-content::before {
+  display: none;
+}
+
+.text-label-node.editing .node-content {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.text-label-node.editing .edit-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 隐藏textarea的滚动条 */
+textarea.edit-input::-webkit-scrollbar {
+  display: none !important;
+}
+
+textarea.edit-input {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+  overflow: hidden !important;
+} 

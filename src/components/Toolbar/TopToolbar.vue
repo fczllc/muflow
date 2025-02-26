@@ -4,6 +4,7 @@
     
     <div class="style-tools">
       <!-- 字体样式设置组 -->
+      <div class="tool-title">字体</div>
       <div class="tool-group">
         <select v-model="fontSize" class="font-size-select">
           <option value="12">12px</option>
@@ -15,17 +16,11 @@
         <input type="color" v-model="fontColor" class="color-picker" title="字体颜色">
       </div>
 
-      <ToolbarIcon type="divider" />
-
-      <!-- 线框样式设置组 -->
-      <div class="tool-group">
-        <input type="number" v-model="borderWidth" min="1" max="10" class="number-input" title="边框粗细">
-        <input type="color" v-model="borderColor" class="color-picker" title="边框颜色">
-      </div>
 
       <ToolbarIcon type="divider" />
 
       <!-- 连线样式设置组 -->
+      <div class="tool-title">连线</div>
       <div class="tool-group">
         <input type="number" v-model="lineWidth" min="1" max="10" class="number-input" title="线条粗细">
         <input type="color" v-model="lineColor" class="color-picker" title="线条颜色">
@@ -40,6 +35,7 @@
       <ToolbarIcon type="divider" />
 
       <!-- 对齐分布设置组 -->
+      <div class="tool-title">布局</div>
       <div class="tool-group">
         <button class="icon-btn" @click="alignLeft" title="左对齐">
           <ToolbarIcon type="alignLeft" />
@@ -103,6 +99,10 @@
   border-bottom: 1px solid var(--border-color);
   background: var(--background-color);
 }
+.tool-title{
+font-size: 12px;
+color: #666;
+}
 
 .style-tools {
   display: flex;
@@ -123,6 +123,7 @@
   height: 24px;
   padding: 0 4px;
   border: 1px solid var(--border-color);
+  font-size: 12px;
   border-radius: 4px;
 }
 
@@ -132,6 +133,7 @@
   padding: 0 4px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
+  font-size: 12px;
 }
 
 .color-picker {
@@ -205,9 +207,6 @@ import ToolbarIcon from '../Icons/ToolbarIcon.vue'
 const fontSize = ref(12)
 const fontColor = ref('#000000')
 
-// 边框样式
-const borderWidth = ref(1)
-const borderColor = ref('#000000')
 
 // 连线样式
 const lineWidth = ref(1)
