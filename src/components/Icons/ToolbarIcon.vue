@@ -1,5 +1,49 @@
 <template>
-  <span :class="['toolbar-icon', { active }]" v-html="getIcon()"></span>
+  <div class="toolbar-icon">
+    <!-- 根据类型显示不同的图标 -->
+    <svg v-if="type === 'textLabel'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 7V4h16v3"></path>
+      <path d="M9 20h6"></path>
+      <path d="M12 4v16"></path>
+    </svg>
+    
+    <svg v-else-if="type === 'roundedRect'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+    </svg>
+    
+    <!-- 输入节点图标 -->
+    <svg v-else-if="type === 'inputNode'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12h8"></path>
+      <path d="M21 9l-4 3 4 3V9z"></path>
+      <path d="M11 5v14"></path>
+    </svg>
+    
+    <!-- 上下连接节点图标 -->
+    <svg v-else-if="type === 'topBottomNode'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="8" width="16" height="8" rx="2"></rect>
+      <line x1="12" y1="4" x2="12" y2="8"></line>
+      <line x1="12" y1="16" x2="12" y2="20"></line>
+    </svg>
+    
+    <!-- 左右连接节点图标 -->
+    <svg v-else-if="type === 'leftRightNode'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="8" y="4" width="8" height="16" rx="2"></rect>
+      <line x1="4" y1="12" x2="8" y2="12"></line>
+      <line x1="16" y1="12" x2="20" y2="12"></line>
+    </svg>
+    
+    <!-- 输出节点图标 -->
+    <svg v-else-if="type === 'outputNode'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12h-8"></path>
+      <path d="M3 9l4 3-4 3V9z"></path>
+      <path d="M13 5v14"></path>
+    </svg>
+    
+    <!-- 默认图标 -->
+    <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+    </svg>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -25,6 +69,8 @@ type IconType =
   | 'clear' | 'export' | 'save'
   // 左侧栏控件图标
   | 'textLabel' | 'roundedRect'
+  // 新增节点类型
+  | 'inputNode' | 'topBottomNode' | 'leftRightNode' | 'outputNode'
 
 const props = defineProps<Props>()
 
@@ -127,26 +173,15 @@ const getIcon = () => icons[props.type]
 
 <style scoped>
 .toolbar-icon {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  transition: all 0.2s;
+  width: 100%;
+  height: 100%;
 }
 
-.toolbar-icon:hover {
-  opacity: 0.8;
-}
-
-.toolbar-icon.active {
-  color: var(--primary-color);
-}
-
-:deep(svg) {
-  width: 16px;
-  height: 16px;
+svg {
+  color: #555;
 }
 </style>
 
