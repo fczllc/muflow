@@ -39,6 +39,113 @@
       <path d="M13 5v14"></path>
     </svg>
     
+    <!-- 分隔线 -->
+    <svg v-else-if="type === 'separator'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="3" x2="12" y2="21"></line>
+    </svg>
+    
+    <!-- 左对齐 -->
+    <svg v-else-if="type === 'alignLeft'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="4" x2="4" y2="20"></line>
+      <rect x="4" y="6" width="14" height="4" rx="1"></rect>
+      <rect x="4" y="14" width="10" height="4" rx="1"></rect>
+    </svg>
+    
+    <!-- 右对齐 -->
+    <svg v-else-if="type === 'alignRight'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="20" y1="4" x2="20" y2="20"></line>
+      <rect x="6" y="6" width="14" height="4" rx="1"></rect>
+      <rect x="10" y="14" width="10" height="4" rx="1"></rect>
+    </svg>
+    
+    <!-- 顶对齐 -->
+    <svg v-else-if="type === 'alignTop'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="4" x2="20" y2="4"></line>
+      <rect x="6" y="4" width="4" height="10" rx="1"></rect>
+      <rect x="14" y="4" width="4" height="14" rx="1"></rect>
+    </svg>
+    
+    <!-- 底对齐 -->
+    <svg v-else-if="type === 'alignBottom'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="20" x2="20" y2="20"></line>
+      <rect x="6" y="10" width="4" height="10" rx="1"></rect>
+      <rect x="14" y="6" width="4" height="14" rx="1"></rect>
+    </svg>
+    
+    <!-- 水平居中 -->
+    <svg v-else-if="type === 'alignHCenter'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="4" x2="12" y2="20"></line>
+      <rect x="6" y="6" width="12" height="4" rx="1"></rect>
+      <rect x="8" y="14" width="8" height="4" rx="1"></rect>
+    </svg>
+    
+    <!-- 垂直居中 -->
+    <svg v-else-if="type === 'alignVCenter'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="12" x2="20" y2="12"></line>
+      <rect x="6" y="6" width="4" height="12" rx="1"></rect>
+      <rect x="14" y="8" width="4" height="8" rx="1"></rect>
+    </svg>
+    
+    <!-- 水平均匀分布 - 更新图标 -->
+    <svg v-else-if="type === 'distributeHorizontal' || type === 'distributeH'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 左侧竖线 -->
+      <line x1="4" y1="5" x2="4" y2="19"></line>
+      <!-- 中间竖线 -->
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <!-- 右侧竖线 -->
+      <line x1="20" y1="5" x2="20" y2="19"></line>
+      <!-- 左侧矩形 -->
+      <rect x="4" y="9" width="3" height="6" rx="1"></rect>
+      <!-- 中间矩形 -->
+      <rect x="10.5" y="9" width="3" height="6" rx="1"></rect>
+      <!-- 右侧矩形 -->
+      <rect x="17" y="9" width="3" height="6" rx="1"></rect>
+    </svg>
+    
+    <!-- 垂直均匀分布 - 更新图标 -->
+    <svg v-else-if="type === 'distributeVertical' || type === 'distributeV'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 顶部横线 -->
+      <line x1="5" y1="4" x2="19" y2="4"></line>
+      <!-- 中间横线 -->
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+      <!-- 底部横线 -->
+      <line x1="5" y1="20" x2="19" y2="20"></line>
+      <!-- 顶部矩形 -->
+      <rect x="9" y="4" width="6" height="3" rx="1"></rect>
+      <!-- 中间矩形 -->
+      <rect x="9" y="10.5" width="6" height="3" rx="1"></rect>
+      <!-- 底部矩形 -->
+      <rect x="9" y="17" width="6" height="3" rx="1"></rect>
+    </svg>
+    
+    <!-- 清除画布 -->
+    <svg v-else-if="type === 'clear'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 画布外框 -->
+      <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+      <!-- 叉号 -->
+      <line x1="9" y1="9" x2="15" y2="15"></line>
+      <line x1="15" y1="9" x2="9" y2="15"></line>
+    </svg>
+    
+    <!-- 导出图片 -->
+    <svg v-else-if="type === 'export'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 画布外框 -->
+      <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+      <!-- 图片标志 -->
+      <circle cx="8.5" cy="8.5" r="1.5"></circle>
+      <polyline points="21 15 16 10 5 21"></polyline>
+    </svg>
+    
+    <!-- 保存画布 -->
+    <svg v-else-if="type === 'save'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 软盘形状 -->
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+      <!-- 中间的矩形 -->
+      <rect x="7" y="3" width="10" height="7"></rect>
+      <!-- 底部的矩形 -->
+      <rect x="7" y="13" width="10" height="5"></rect>
+    </svg>
+    
     <!-- 默认图标 -->
     <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"></circle>
@@ -55,120 +162,24 @@ interface Props {
 }
 
 type IconType = 
-  // 线条样式
-  | 'lineSolid' | 'lineDashed' | 'lineDotted'
-  // 箭头样式
-  | 'arrowNone' | 'arrowSingle' | 'arrowDouble'
-  // 对齐方式
-  | 'alignLeft' | 'alignRight' | 'alignTop' | 'alignBottom'
-  | 'alignHCenter' | 'alignVCenter'
-  | 'distributeH' | 'distributeV'
-  // 分隔线
-  | 'divider'
-  // 画布工具
+  // 工具栏图标
+  | 'bold' | 'italic' | 'underline' | 'fontSize' | 'fontColor'
+  // 连线样式图标
+  | 'lineWidth' | 'lineColor' | 'lineStyle' | 'arrowStyle'
+  // 对齐图标
+  | 'alignLeft' | 'alignRight' | 'alignTop' | 'alignBottom' | 'alignHCenter' | 'alignVCenter'
+  // 分布图标
+  | 'distributeHorizontal' | 'distributeVertical' | 'distributeH' | 'distributeV'
+  // 画布工具图标
   | 'clear' | 'export' | 'save'
+  // 分隔线
+  | 'separator' | 'divider'
   // 左侧栏控件图标
   | 'textLabel' | 'roundedRect'
   // 新增节点类型
   | 'inputNode' | 'topBottomNode' | 'leftRightNode' | 'outputNode'
 
-const props = defineProps<Props>()
-
-const icons = {
-  // 线条样式
-  lineSolid: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="none" stroke="currentColor" stroke-width="2" d="M4 12h16"/>
-  </svg>`,
-  
-  lineDashed: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2" d="M4 12h16"/>
-  </svg>`,
-  
-  lineDotted: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2" d="M4 12h16"/>
-  </svg>`,
-
-  // 箭头样式
-  arrowNone: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="none" stroke="currentColor" stroke-width="2" d="M4 12h16"/>
-  </svg>`,
-  
-  arrowSingle: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="none" stroke="currentColor" stroke-width="2" d="M4 12h16"/>
-    <path fill="currentColor" d="M16 8l4 4-4 4"/>
-  </svg>`,
-  
-  arrowDouble: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="none" stroke="currentColor" stroke-width="2" d="M4 12h16"/>
-    <path fill="currentColor" d="M16 8l4 4-4 4M8 8L4 12l4 4"/>
-  </svg>`,
-
-  // 对齐方式
-  alignLeft: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M4 4h2v16H4zm4 4h12v2H8zm0 6h8v2H8z"/>
-  </svg>`,
-  
-  alignRight: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M18 4h2v16h-2zM4 8h12v2H4zm4 6h8v2H4z"/>
-  </svg>`,
-  
-  alignTop: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M4 4h16v2H4zm4 4h8v12H8z"/>
-  </svg>`,
-  
-  alignBottom: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M4 18h16v2H4zm4-12h8v12H8z"/>
-  </svg>`,
-  
-  alignHCenter: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M11 4h2v16h-2zm-7-1h16v2H4zm0 14h16v2H4z"/>
-  </svg>`,
-  
-  alignVCenter: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M4 11h16v2H4zM8 4h2v16H8zm6 0h2v16h-2z"/>
-  </svg>`,
-  
-  distributeH: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M4 4h2v16H4zm14 0h2v16h-2zM8 8h8v8H8z"/>
-  </svg>`,
-  
-  distributeV: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M4 4h16v2H4zm0 14h16v2H4zM8 8h8v8H8z"/>
-  </svg>`,
-
-  // 分隔线
-  divider: `<svg viewBox="0 0 2 24" width="2" height="24">
-    <path fill="currentColor" d="M0 0h2v24H0z" opacity="0.2"/>
-  </svg>`,
-
-  // 画布工具
-  clear: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12z"/>
-  </svg>`,
-  
-  export: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M21 15v4c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2v-4h2v4h14v-4h2zm-5-7L12 4 8 8h3v8h2V8h3z"/>
-  </svg>`,
-  
-  save: `<svg viewBox="0 0 24 24" width="16" height="16">
-    <path fill="currentColor" d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4z"/>
-  </svg>`,
-
-  // 左侧栏控件图标
-  textLabel: `<svg viewBox="0 0 24 24" width="24" height="24">
-    <path fill="currentColor" d="M18.5,4L19.66,8.35L18.7,8.61C18.25,7.74 17.79,6.87 17.26,6.43C16.73,6 16.11,6 15.5,6H13V16.5C13,17 13,17.5 13.33,17.75C13.67,18 14.33,18 15,18V19H9V18C9.67,18 10.33,18 10.67,17.75C11,17.5 11,17 11,16.5V6H8.5C7.89,6 7.27,6 6.74,6.43C6.21,6.87 5.75,7.74 5.3,8.61L4.34,8.35L5.5,4H18.5Z"/>
-  </svg>`,
-  
-  roundedRect: `<svg viewBox="0 0 24 24" width="24" height="24">
-    <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>
-    <circle cx="7" cy="12" r="1" fill="currentColor"/>
-    <circle cx="12" cy="7" r="1" fill="currentColor"/>
-    <circle cx="17" cy="12" r="1" fill="currentColor"/>
-    <circle cx="12" cy="17" r="1" fill="currentColor"/>
-  </svg>`
-}
-
-const getIcon = () => icons[props.type]
+const { type } = defineProps<Props>()
 </script>
 
 <style scoped>

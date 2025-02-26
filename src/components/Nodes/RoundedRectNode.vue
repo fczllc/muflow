@@ -127,8 +127,6 @@ watch(() => props.selected, (newSelected) => {
         const actualWidth = nodeRef.value.offsetWidth
         const actualHeight = nodeRef.value.offsetHeight
         
-        console.log(`Node selected, style dimensions: ${width} x ${height}, actual dimensions: ${actualWidth}px x ${actualHeight}px`)
-        
         // 强制设置节点的样式尺寸为实际尺寸
         nodeRef.value.style.width = `${actualWidth}px`
         nodeRef.value.style.height = `${actualHeight}px`
@@ -272,8 +270,6 @@ const startResize = (event: MouseEvent, type: string) => {
   const startWidth = currentWidth
   const startHeight = currentHeight
   
-  console.log(`Starting resize with dimensions: ${startWidth}px x ${startHeight}px`)
-  
   // 处理鼠标移动事件
   const handleMouseMove = (moveEvent: MouseEvent) => {
     moveEvent.preventDefault()
@@ -330,9 +326,6 @@ const startResize = (event: MouseEvent, type: string) => {
     if (nodeRef.value) {
       nodeRef.value.style.width = `${newWidth}px`
       nodeRef.value.style.height = `${newHeight}px`
-      
-      // 添加日志，跟踪调整过程中的尺寸变化
-      console.log(`Resizing: width=${newWidth}px, height=${newHeight}px, deltaX=${positionDeltaX}, deltaY=${positionDeltaY}`)
     }
     
     // 存储位置变化，用于在鼠标松开时更新节点位置
@@ -360,8 +353,6 @@ const startResize = (event: MouseEvent, type: string) => {
       const newWidth = `${actualWidth}px`
       const newHeight = `${actualHeight}px`
       
-      console.log(`Node ${props.id} resized to ${newWidth} x ${newHeight} (actual DOM dimensions)`)
-      
       // 获取当前节点
       const node = getNodes.value.find(n => n.id === props.id)
       if (node) {
@@ -370,8 +361,6 @@ const startResize = (event: MouseEvent, type: string) => {
           x: node.position.x + nodePositionDelta.value.x,
           y: node.position.y + nodePositionDelta.value.y
         }
-        
-        console.log(`Node position updated from (${node.position.x}, ${node.position.y}) to (${newPosition.x}, ${newPosition.y})`)
         
         // 直接修改节点的 DOM 样式，确保视觉效果立即更新
         nodeRef.value.style.width = newWidth
@@ -398,13 +387,6 @@ const startResize = (event: MouseEvent, type: string) => {
           selected: true
         }
         
-        console.log('Updating node with:', {
-          width: newWidth,
-          height: newHeight,
-          position: newPosition,
-          selected: true
-        })
-        
         // 使用 setNodes 更新所有节点
         const updatedNodes = getNodes.value.map(n => 
           n.id === props.id ? updatedNode : n
@@ -414,11 +396,6 @@ const startResize = (event: MouseEvent, type: string) => {
         // 更新节点内部结构
         nextTick(() => {
           updateNodeInternals([props.id])
-          
-          // 再次检查节点的实际尺寸，确认更新是否成功
-          if (nodeRef.value) {
-            console.log(`After update, node dimensions: ${nodeRef.value.offsetWidth}px x ${nodeRef.value.offsetHeight}px`)
-          }
         })
       }
     }
@@ -436,11 +413,6 @@ const startResize = (event: MouseEvent, type: string) => {
       }
       document.addEventListener('click', preventClick, true)
       
-      // 再次检查节点的实际尺寸，确认更新是否成功
-      if (nodeRef.value) {
-        console.log(`After preventClick, node dimensions: ${nodeRef.value.offsetWidth}px x ${nodeRef.value.offsetHeight}px`)
-      }
-      
       // 确保节点仍然保持选中状态
       setTimeout(() => {
         const node = getNodes.value.find(n => n.id === props.id)
@@ -450,7 +422,6 @@ const startResize = (event: MouseEvent, type: string) => {
             n.id === props.id ? { ...n, selected: true } : n
           )
           setNodes(updatedNodes)
-          console.log('Forced node selection after resize')
         }
       }, 50)
     }, 0)
@@ -471,8 +442,6 @@ onMounted(() => {
     nodeRef.value.style.width = width
     nodeRef.value.style.height = height
     
-    console.log(`Node mounted, dimensions set to: ${width} x ${height}`)
-    
     // 强制重新计算布局
     nodeRef.value.offsetHeight // 触发重排
   }
@@ -483,8 +452,6 @@ onMounted(() => {
   // 添加一个小延时，确保节点完全初始化
   setTimeout(() => {
     if (nodeRef.value) {
-      console.log(`Node initialized, actual dimensions: ${nodeRef.value.offsetWidth}px x ${nodeRef.value.offsetHeight}px`)
-      
       // 再次确保节点的 DOM 尺寸与数据一致
       const width = props.data.style?.width || '150px'
       const height = props.data.style?.height || '40px'

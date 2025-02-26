@@ -28,7 +28,7 @@
         >
       </div>
 
-      <ToolbarIcon type="divider" />
+      <ToolbarIcon type="separator" />
 
       <!-- 连线样式设置组 -->
       <div class="tool-title">连线</div>
@@ -76,7 +76,7 @@
         </select>
       </div>
 
-      <ToolbarIcon type="divider" />
+      <ToolbarIcon type="separator" />
 
       <!-- 对齐分布设置组 -->
       <div class="tool-title">布局</div>
@@ -182,9 +182,13 @@
   border-bottom: 1px solid var(--border-color);
   background: var(--background-color);
 }
-.tool-title{
-font-size: 12px;
-color: #666;
+.tool-title {
+  font-size: 12px;
+  color: #666;
+  min-width: 40px;     /* 设置最小宽度 */
+  flex-shrink: 0;      /* 防止被压缩 */
+  white-space: nowrap; /* 防止文字换行 */
+  text-align: center;  /* 文字居中 */
 }
 
 .style-tools {
@@ -333,11 +337,6 @@ const {
   setEdges
 } = useVueFlow()
 
-// 获取元素数组的计算属性
-const elements = computed(() => {
-  return [...getNodes.value, ...getEdges.value]
-})
-
 // 计算属性：是否有选中的节点
 const hasSelectedNodes = computed(() => getSelectedNodes.value.length > 0)
 
@@ -348,7 +347,7 @@ const hasSelectedEdges = computed(() => getSelectedEdges.value.length > 0)
 const hasMultipleSelectedNodes = computed(() => getSelectedNodes.value.length > 1)
 
 // 字体样式
-const fontSize = ref(14)
+const fontSize = ref(12)
 const fontColor = ref('#000000')
 
 // 连线样式
@@ -392,29 +391,27 @@ watch(() => getSelectedEdges.value, (edges) => {
     selectedEdgeId.value = edge.id
     selectedNodeId.value = null
     
-    console.log('Selected edge:', edge.id, 'Style:', edge.style, 'Data:', edge.data)
-    
     // 优先使用保存在数据中的值，如果没有则从样式中获取
     if (edge.data?.savedLineWidth !== undefined) {
       lineWidth.value = edge.data.savedLineWidth
     } else {
-      lineWidth.value = parseInt(String(edge.style?.strokeWidth || '1').replace('px', '')) || 1
+      lineWidth.value = parseInt(String((edge.style as any)?.strokeWidth || '1').replace('px', '')) || 1
     }
     
     if (edge.data?.savedLineColor) {
       lineColor.value = edge.data.savedLineColor
     } else {
-      lineColor.value = edge.style?.stroke || '#555555'
+      lineColor.value = (edge.style as any)?.stroke || '#555555'
     }
     
     if (edge.data?.savedLineStyle) {
       lineStyle.value = edge.data.savedLineStyle
     } else {
       // 获取线型
-      if (edge.style?.strokeDasharray) {
-        if (edge.style.strokeDasharray === '5 5') {
+      if ((edge.style as any)?.strokeDasharray) {
+        if ((edge.style as any).strokeDasharray === '5 5') {
           lineStyle.value = 'dashed'
-        } else if (edge.style.strokeDasharray === '2 2') {
+        } else if ((edge.style as any).strokeDasharray === '2 2') {
           lineStyle.value = 'dotted'
         } else {
           lineStyle.value = 'solid'
@@ -456,11 +453,6 @@ const applyFontStyle = () => {
   const selectedNodes = getSelectedNodes.value
   
   selectedNodes.forEach(node => {
-    console.log('Applying font style:', node.id, {
-      fontSize: fontSize.value,
-      color: fontColor.value
-    })
-    
     updateNode(node.id, {
       data: {
         ...node.data,
@@ -476,18 +468,10 @@ const applyEdgeStyle = () => {
   const selectedEdges = getSelectedEdges.value
   
   if (selectedEdges.length === 0) {
-    console.log('No edges selected')
     return
   }
   
   selectedEdges.forEach(edge => {
-    console.log('Applying edge style:', edge.id, {
-      width: lineWidth.value,
-      color: lineColor.value,
-      style: lineStyle.value,
-      arrow: arrowStyle.value
-    })
-    
     // 设置线型
     let strokeDasharray = undefined
     if (lineStyle.value === 'dashed') {
@@ -511,7 +495,6 @@ const applyEdgeStyle = () => {
     
     // 确保边对象有效
     if (!edge || !edge.id || !edge.source || !edge.target) {
-      console.error('Invalid edge object:', edge)
       return
     }
     
@@ -528,8 +511,6 @@ const applyEdgeStyle = () => {
         stroke: lineColor.value,
         strokeDasharray
       }
-      
-      console.log('New style object:', newStyle)
       
       // 方法1: 直接在 getEdges.value 中查找并更新边
       const currentEdge = getEdges.value.find(e => e.id === edge.id)
@@ -556,12 +537,7 @@ const applyEdgeStyle = () => {
         
         // 设置新的边数组
         setEdges(edges)
-        
-        console.log('Edge style updated successfully using setEdges:', edge.id)
       }
-      
-      // 不再使用 updateEdge API，因为它可能导致警告
-      // 我们已经通过 setEdges 更新了边的样式
       
       // 方法2: 直接修改 DOM 元素样式（作为备用方案）
       setTimeout(() => {
@@ -574,11 +550,10 @@ const applyEdgeStyle = () => {
           } else {
             edgePath.removeAttribute('stroke-dasharray')
           }
-          console.log('Edge style updated directly in DOM:', edge.id)
         }
       }, 0)
     } catch (error) {
-      console.error('Error updating edge style:', error)
+      // 忽略错误
     }
   })
 }

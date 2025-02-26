@@ -20,7 +20,8 @@
       <ToolbarIcon type="roundedRect" />
     </button>
     
-    <!-- 输入节点 -->
+    <!-- 暂时隐藏以下四个节点类型 -->
+    <!-- 
     <button 
       class="sidebar-btn" 
       draggable="true" 
@@ -30,7 +31,6 @@
       <ToolbarIcon type="inputNode" />
     </button>
     
-    <!-- 上下连接节点 -->
     <button 
       class="sidebar-btn" 
       draggable="true" 
@@ -40,7 +40,6 @@
       <ToolbarIcon type="topBottomNode" />
     </button>
     
-    <!-- 左右连接节点 -->
     <button 
       class="sidebar-btn" 
       draggable="true" 
@@ -50,7 +49,6 @@
       <ToolbarIcon type="leftRightNode" />
     </button>
     
-    <!-- 输出节点 -->
     <button 
       class="sidebar-btn" 
       draggable="true" 
@@ -59,6 +57,7 @@
     >
       <ToolbarIcon type="outputNode" />
     </button>
+    -->
   </div>
 </template>
 

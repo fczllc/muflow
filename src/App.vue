@@ -104,7 +104,6 @@ const onConnectHandler = (connection: Connection) => {
   
   // 添加边到画布
   addEdges([edge])
-  console.log('Edge created:', edge.id)
 }
 
 const onDragOver = (event: DragEvent) => {
@@ -211,7 +210,6 @@ const onEdgeClick = (event: EdgeMouseEvent) => {
   event.event?.stopPropagation()
   
   const { edge } = event
-  console.log('Edge clicked:', edge.id)
   
   // 设置最近点击边的标志，并延长标志有效时间
   recentlyClickedEdge.value = true
@@ -246,19 +244,13 @@ const onEdgeClick = (event: EdgeMouseEvent) => {
     // 更新选中的边ID
     selectedEdgeId.value = edge.id
     selectedNodeId.value = null
-    
-    console.log('Edge selected:', edge.id)
   }
 }
 
 // 处理画布点击
 const onPaneClick = (event: MouseEvent) => {
-  console.log('Pane clicked')
-  
   // 如果最近点击了边、正在调整大小或调整大小刚刚结束，不清除选中状态
   if (recentlyClickedEdge.value || isResizing.value || resizeJustEnded.value) {
-    console.log('Ignoring pane click because edge was recently clicked or node is being resized')
-    
     // 重置调整大小刚刚结束标志
     resizeJustEnded.value = false
     return
@@ -272,8 +264,6 @@ const onPaneClick = (event: MouseEvent) => {
   // 更新选中的节点和边ID
   selectedNodeId.value = null
   selectedEdgeId.value = null
-  
-  console.log('Pane clicked, clearing selection')
 }
 
 // 处理键盘删除
@@ -292,16 +282,12 @@ const onKeyDown = (event: KeyboardEvent) => {
 
 // 处理节点拖拽结束事件
 const onNodeDragStopHandler = ({ node }) => {
-  console.log('Node dragged:', node.id, 'to position:', node.position)
-  
   // 确保连接到该节点的边也更新
   const connectedEdges = getEdges.value.filter(
     edge => edge.source === node.id || edge.target === node.id
   )
   
   if (connectedEdges.length > 0) {
-    console.log('Connected edges:', connectedEdges.map(e => e.id))
-    
     // 保存当前选中的边ID
     const currentSelectedEdgeId = selectedEdgeId.value
     
@@ -335,7 +321,6 @@ onMounted(() => {
   // 添加全局事件监听器，监听调整大小开始和结束
   window.addEventListener('resize-start', () => {
     isResizing.value = true
-    console.log('Resize started')
   })
   
   window.addEventListener('resize-end', () => {
@@ -346,8 +331,6 @@ onMounted(() => {
     setTimeout(() => {
       resizeJustEnded.value = false
     }, 100)
-    
-    console.log('Resize ended')
   })
 })
 
