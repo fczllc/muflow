@@ -5,6 +5,7 @@
     ref="nodeRef"
     @mouseenter="showHandles = true" 
     @mouseleave="showHandles = false"
+    :style="nodeStyle"
   >
     <Handle
       v-for="position in positions"
@@ -56,7 +57,10 @@ const selected = computed(() => props.selected)
 
 const positions = [Position.Top, Position.Right, Position.Bottom, Position.Left]
 
+// 计算节点样式，包括字体样式
 const nodeStyle = computed(() => ({
+  fontSize: `${props.data.fontSize || 14}px`,
+  color: props.data.color || '#000000',
   width: props.data.style?.width || '150px',
   height: props.data.style?.height || '40px'
 }))

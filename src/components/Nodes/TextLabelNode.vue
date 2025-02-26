@@ -4,6 +4,7 @@
     :class="{ selected, editing: isEditing }"
     ref="nodeRef"
     @dblclick="handleDoubleClick"
+    :style="nodeStyle"
   >
     <div class="node-content">
       <span v-if="!isEditing">{{ data.label }}</span>
@@ -143,54 +144,51 @@ const startResize = (event: MouseEvent, type: string) => {
     document.body.style.cursor = 'default'
     
     // 保存节点尺寸到数据中
-    if (nodeElement) {
+    if (nodeRef.value) {
       updateNode(props.id, {
         data: {
           ...props.data,
           style: {
             ...props.data.style,
-            width: `${nodeElement.offsetWidth}px`,
-            height: `${nodeElement.offsetHeight}px`
+            width: `${nodeRef.value.offsetWidth}px`,
+            height: `${nodeRef.value.offsetHeight}px`
           }
         }
       })
     }
   }
   
-  document.body.style.cursor = type === 'left' || type === 'right' ? 'ew-resize' : 'ns-resize'
-  
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
+  
+  // 设置鼠标样式
+  switch (type) {
+    case 'right':
+      document.body.style.cursor = 'e-resize'
+      break
+    case 'left':
+      document.body.style.cursor = 'w-resize'
+      break
+    case 'bottom':
+      document.body.style.cursor = 's-resize'
+      break
+    case 'top':
+      document.body.style.cursor = 'n-resize'
+      break
+  }
 }
 
-const handleDoubleClick = (event: MouseEvent) => {
-  // 阻止事件冒泡，防止触发画布缩放
-  event.stopPropagation()
-  
-  // 保存当前节点尺寸
-  const currentWidth = nodeRef.value?.offsetWidth || 0
-  const currentHeight = nodeRef.value?.offsetHeight || 0
+// 处理双击事件，进入编辑模式
+const handleDoubleClick = () => {
+  if (isEditing.value) return
   
   isEditing.value = true
   editLabel.value = props.data.label || ''
   
-  // 更新节点数据，标记为编辑状态并保存当前尺寸
-  updateNode(props.id, { 
-    data: { 
-      ...props.data, 
-      isEditing: true,
-      style: {
-        ...props.data.style,
-        width: `${currentWidth}px`,
-        height: `${currentHeight}px`
-      }
-    } 
-  })
-  
-  // 等待DOM更新后聚焦并选择全部文本
+  // 等待DOM更新后设置输入框焦点
   nextTick(() => {
     if (editInputRef.value) {
-      // 设置文本区域尺寸与节点一致
+      // 设置输入框尺寸与节点一致
       editInputRef.value.style.width = '100%'
       editInputRef.value.style.height = '100%'
       editInputRef.value.style.boxSizing = 'border-box'
@@ -199,21 +197,32 @@ const handleDoubleClick = (event: MouseEvent) => {
       editInputRef.value.focus()
       editInputRef.value.select()
     }
-    
-    // 确保节点尺寸不变
-    if (nodeRef.value) {
-      nodeRef.value.style.width = `${currentWidth}px`
-      nodeRef.value.style.height = `${currentHeight}px`
-    }
   })
 }
 
+// 完成编辑
 const finishEditing = () => {
+  if (!isEditing.value) return
+  
+  // 获取当前节点尺寸
+  const currentWidth = nodeRef.value?.offsetWidth || 100
+  const currentHeight = nodeRef.value?.offsetHeight || 30
+  
+  // 更新节点数据
+  updateNode(props.id, {
+    data: {
+      ...props.data,
+      label: editLabel.value,
+      isEditing: false,
+      style: {
+        ...props.data.style,
+        width: `${currentWidth}px`,
+        height: `${currentHeight}px`
+      }
+    } 
+  })
+  
   isEditing.value = false
-  // 更新节点标签
-  if (editLabel.value !== props.data.label) {
-    updateNode(props.id, { data: { ...props.data, label: editLabel.value } })
-  }
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -265,7 +274,6 @@ const handleKeydown = (e: KeyboardEvent) => {
   user-select: none;
   width: 100%;
   height: 100%;
-  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -328,4 +336,48 @@ textarea.edit-input {
   position: relative;
   overflow: visible;
 }
-</style> 
+
+/* 调整大小的控制点样式 */
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 1px solid #555;
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.resize-handle.top {
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: n-resize;
+}
+
+.resize-handle.right {
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: e-resize;
+}
+
+.resize-handle.bottom {
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: s-resize;
+}
+
+.resize-handle.left {
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: w-resize;
+}
+
+.resize-handle:hover {
+  background: #f0f0f0;
+  border-color: #333;
+}
+</style>
