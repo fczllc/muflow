@@ -112,4 +112,12 @@ textarea.edit-input {
   -ms-overflow-style: none !important;  /* IE and Edge */
   scrollbar-width: none !important;  /* Firefox */
   overflow: hidden !important;
+}
+
+.vue-flow {
+  font-family: SimSun, "宋体", serif !important;
+}
+
+.vue-flow__node {
+  font-family: SimSun, "宋体", serif !important;
 } 

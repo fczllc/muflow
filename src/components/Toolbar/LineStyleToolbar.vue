@@ -33,4 +33,19 @@
       </select>
     </div>
   </div>
-</template> 
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+
+// 添加响应式变量
+const lineWidth = ref('2')
+const lineColor = ref('#000000')
+const lineType = ref('solid')
+const arrowStyle = ref('none')
+
+// 添加方法
+const applyLineStyle = () => {
+  // TODO: 实现线条样式应用逻辑
+}
+</script> 

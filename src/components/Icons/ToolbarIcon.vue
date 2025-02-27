@@ -146,6 +146,15 @@
       <rect x="7" y="13" width="10" height="5"></rect>
     </svg>
     
+    <!-- 导入画布图标 -->
+    <svg v-else-if="type === 'import'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 文件夹形状 -->
+      <path d="M3 4v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7l-2-2H5a2 2 0 0 0-2 2z"></path>
+      <!-- 向上箭头 -->
+      <polyline points="12 10 12 16"></polyline>
+      <polyline points="9 13 12 10 15 13"></polyline>
+    </svg>
+    
     <!-- 默认图标 -->
     <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"></circle>
@@ -178,6 +187,7 @@ type IconType =
   | 'textLabel' | 'roundedRect'
   // 新增节点类型
   | 'inputNode' | 'topBottomNode' | 'leftRightNode' | 'outputNode'
+  | 'import' // 添加导入图标类型
 
 const { type } = defineProps<Props>()
 </script>

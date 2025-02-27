@@ -3,27 +3,30 @@
     <TopToolbar />
     <div class="main-content">
       <LeftSidebar />
-      <div class="canvas-container">
+      <!-- 使用 FlowEditor 作为容器 -->
+      <FlowEditor class="canvas-container">
         <VueFlow
           v-model="elements"
           :node-types="nodeTypes"
-          :default-zoom="1.5"
-          :min-zoom="0.2"
-          :max-zoom="4"
           :default-viewport="{ x: 0, y: 0, zoom: 1 }"
           :connection-mode="ConnectionMode.Loose"
+          :zoom-on-scroll="false"     
+          :zoom-on-pinch="false" 
+          :pan-On-Drag="false"
+          :min-zoom="1"               
+          :max-zoom="1"               
+          :default-zoom="1"
+          :pannable="false"
           :snap-to-grid="true"
           :snap-grid="[20, 20]"
-          :edges-updatable="true"
-          :connect-on-click="false"
-          class="vue-flow-wrapper"
+           class="vue-flow-wrapper"
           @connect="onConnectHandler"
           @drop="onDrop"
           @dragover="onDragOver"
           @nodeClick="onNodeClick"
           @edgeClick="onEdgeClick"
           @paneClick="onPaneClick"
-          @nodeDragStop="onNodeDragStop"
+          @nodeDragStop="handleNodeDragStop"
         >
           <!-- 注册自定义节点 -->
           <template #node-roundedRect="nodeProps">
@@ -32,24 +35,21 @@
           <template #node-textLabel="nodeProps">
             <TextLabelNode v-bind="nodeProps" />
           </template>
-
-          <!-- 添加背景 -->
-          <Background :pattern-color="'#aaa'" :gap="20" />
         </VueFlow>
-      </div>
+      </FlowEditor>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, markRaw, computed } from 'vue'
-import { VueFlow, useVueFlow, ConnectionMode, Panel, Controls, MiniMap, NodeTypes, EdgeTypes, Connection, MarkerType, Position } from '@vue-flow/core'
-import { Background } from '@vue-flow/background'
+import { VueFlow, useVueFlow, ConnectionMode, Panel, NodeTypes, EdgeTypes, Connection, MarkerType, Position, NodeDragEvent } from '@vue-flow/core'
 import type { NodeMouseEvent, EdgeMouseEvent } from '@vue-flow/core'
 import TopToolbar from './components/Toolbar/TopToolbar.vue'
 import LeftSidebar from './components/Sidebar/LeftSidebar.vue'
 import RoundedRectNode from './components/Nodes/RoundedRectNode.vue'
 import TextLabelNode from './components/Nodes/TextLabelNode.vue'
+import FlowEditor from './components/FlowEditor.vue'
 
 // 引入必要的样式
 import '@vue-flow/core/dist/style.css'
@@ -281,7 +281,8 @@ const onKeyDown = (event: KeyboardEvent) => {
 }
 
 // 处理节点拖拽结束事件
-const onNodeDragStopHandler = ({ node }) => {
+const handleNodeDragStop = (e: NodeDragEvent) => {
+  const { node } = e
   // 确保连接到该节点的边也更新
   const connectedEdges = getEdges.value.filter(
     edge => edge.source === node.id || edge.target === node.id
@@ -312,7 +313,7 @@ const onNodeDragStopHandler = ({ node }) => {
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
   onConnect(onConnectHandler)
-  onNodeDragStop(onNodeDragStopHandler)
+  onNodeDragStop(handleNodeDragStop)
   
   // 添加边点击事件处理
   const { onEdgeClick: registerEdgeClick } = useVueFlow()

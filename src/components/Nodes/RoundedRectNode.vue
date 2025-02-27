@@ -87,8 +87,8 @@ const selected = computed(() => props.selected)
 const nodeStyle = computed(() => ({
   fontSize: `${props.data.fontSize || 14}px`,
   color: props.data.color || '#000000',
-  width: props.data.style?.width || '150px',
-  height: props.data.style?.height || '40px'
+  width: props.data.style?.width || '120px',
+  height: props.data.style?.height || '42px'
 }))
 
 const handleStyle = {
@@ -120,8 +120,8 @@ watch(() => props.selected, (newSelected) => {
     nextTick(() => {
       // 确保节点的 DOM 尺寸与数据一致
       if (nodeRef.value) {
-        const width = props.data.style?.width || '150px'
-        const height = props.data.style?.height || '40px'
+        const width = props.data.style?.width || '120px'
+        const height = props.data.style?.height || '42px'
         
         // 检查节点的实际尺寸
         const actualWidth = nodeRef.value.offsetWidth
@@ -265,8 +265,8 @@ const startResize = (event: MouseEvent, type: string) => {
   const startY = event.clientY
   
   // 获取当前节点的宽度和高度 - 确保使用最新的尺寸
-  const currentWidth = nodeRef.value ? nodeRef.value.offsetWidth : 150
-  const currentHeight = nodeRef.value ? nodeRef.value.offsetHeight : 40
+  const currentWidth = nodeRef.value ? nodeRef.value.offsetWidth : 120
+  const currentHeight = nodeRef.value ? nodeRef.value.offsetHeight : 46
   const startWidth = currentWidth
   const startHeight = currentHeight
   
@@ -287,17 +287,17 @@ const startResize = (event: MouseEvent, type: string) => {
     
     switch (type) {
       case 'top':
-        newHeight = Math.max(30, startHeight - deltaY)
+        newHeight = Math.max(46, startHeight - deltaY)
         positionDeltaY = startHeight - newHeight
         break
       case 'right':
-        newWidth = Math.max(100, startWidth + deltaX)
+        newWidth = Math.max(120, startWidth + deltaX)
         break
       case 'bottom':
-        newHeight = Math.max(30, startHeight + deltaY)
+        newHeight = Math.max(46, startHeight + deltaY)
         break
       case 'left':
-        newWidth = Math.max(100, startWidth - deltaX)
+        newWidth = Math.max(120, startWidth - deltaX)
         positionDeltaX = startWidth - newWidth
         break
       case 'topLeft':
@@ -436,8 +436,8 @@ const startResize = (event: MouseEvent, type: string) => {
 onMounted(() => {
   // 确保节点的 DOM 尺寸与数据一致
   if (nodeRef.value) {
-    const width = props.data.style?.width || '150px'
-    const height = props.data.style?.height || '40px'
+    const width = props.data.style?.width || '120px'
+    const height = props.data.style?.height || '42px'
     
     nodeRef.value.style.width = width
     nodeRef.value.style.height = height
@@ -453,8 +453,8 @@ onMounted(() => {
   setTimeout(() => {
     if (nodeRef.value) {
       // 再次确保节点的 DOM 尺寸与数据一致
-      const width = props.data.style?.width || '150px'
-      const height = props.data.style?.height || '40px'
+      const width = props.data.style?.width || '120px'
+      const height = props.data.style?.height || '42px'
       
       nodeRef.value.style.width = width
       nodeRef.value.style.height = height
@@ -465,6 +465,13 @@ onMounted(() => {
     updateNodeInternals([props.id])
   }, 100)
 })
+</script>
+
+<script lang="ts">
+// 添加默认导出
+export default {
+  name: 'RoundedRectNode'
+}
 </script>
 
 <style>
@@ -481,18 +488,19 @@ onMounted(() => {
 /* 圆角矩形节点基本样式 */
 .rounded-rect-node {
   padding: 10px;
-  border-radius: 3px;  /* 设置圆角为 3px */
-  border: 1px solid #555;  /* 设置边框为 1px */
+  border-radius: 3px;
+  border: 1px solid #555;
   background: white;
-  min-width: 120px;
-  min-height: 46px;
+  width: 120px;      /* 设置默认宽度 */
+  height: 42px;      /* 设置默认高度 */
+  min-width: 120px;  /* 设置最小宽度 */
+  min-height: 42px;  /* 设置最小高度 */
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  font-size: 12px;
-  color: inherit;
-  box-sizing: border-box; /* 使用 border-box 盒模型 */
+  font-size: 12px;   /* 设置默认字体大小 */
+  box-sizing: border-box;
 }
 
 /* 选中状态样式 - 不改变边框宽度 */

@@ -165,11 +165,34 @@
       </div>
 
       <div class="tool-btn-wrapper">
+        <button class="icon-btn" @click="importJSON" @mouseleave="hideTooltip" title="导入画布">
+          <ToolbarIcon type="import" />
+        </button>
+        <div class="tooltip" v-show="activeTooltip === 'import'">导入画布</div>
+        <input
+          type="file"
+          ref="fileInput"
+          accept=".json"
+          style="display: none"
+          @change="handleFileImport"
+        >
+      </div>
+
+      <div class="tool-btn-wrapper">
         <button class="icon-btn" @click="saveJSON"  @mouseleave="hideTooltip" title="保存画布">
           <ToolbarIcon type="save" />
         </button>
       </div>
     </div>
+
+    <!-- 添加确认模态框 -->
+    <ConfirmModal
+      :show="showClearConfirm"
+      title="清除画布"
+      message="确认要清除画布吗？此操作不可恢复。"
+      @confirm="handleClearConfirm"
+      @cancel="handleClearCancel"
+    />
   </div>
 </template>
 
@@ -183,8 +206,8 @@
   background: var(--background-color);
 }
 .tool-title {
-  font-size: 12px;
-  color: #666;
+font-size: 12px;
+color: #666;
   min-width: 40px;     /* 设置最小宽度 */
   flex-shrink: 0;      /* 防止被压缩 */
   white-space: nowrap; /* 防止文字换行 */
@@ -325,6 +348,8 @@ import { ref, computed, watch } from 'vue'
 import { useVueFlow, MarkerType } from '@vue-flow/core'
 import Logo from '../Logo/Logo.vue'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
+import ConfirmModal from '../Modal/ConfirmModal.vue'
+import html2canvas from 'html2canvas'
 
 // 获取 Vue Flow 实例
 const { 
@@ -334,6 +359,7 @@ const {
   getSelectedEdges, 
   updateNode, 
   updateEdge,
+  setNodes,
   setEdges
 } = useVueFlow()
 
@@ -569,7 +595,7 @@ const distributeHorizontal = () => { /* 实现水平分布 */ }
 const distributeVertical = () => { /* 实现垂直分布 */ }
 
 // 提示框状态
-const activeTooltip = ref<'clear' | 'export' | 'save' | null>(null)
+const activeTooltip = ref<'clear' | 'export' | 'save' | 'import' | null>(null)
 
 // 隐藏提示框
 const hideTooltip = () => {
@@ -577,9 +603,188 @@ const hideTooltip = () => {
 }
 
 // 画布操作方法
-const clearCanvas = () => { /* 实现清除画布 */ }
-const exportImage = () => { /* 实现导出图片 */ }
-const saveJSON = () => { /* 实现保存JSON */ }
+const showClearConfirm = ref(false)
+
+const clearCanvas = () => {
+  showClearConfirm.value = true
+}
+
+const handleClearConfirm = () => {
+  setNodes([])
+  setEdges([])
+  showClearConfirm.value = false
+}
+
+const handleClearCancel = () => {
+  showClearConfirm.value = false
+}
+
+// 导出图片方法
+const exportImage = async () => {
+  try {
+    // 获取 Vue Flow 容器
+    const flowContainer = document.querySelector('.vue-flow') as HTMLElement
+    if (!flowContainer) {
+      throw new Error('找不到画布元素')
+    }
+
+    // 使用 html2canvas 配置
+    const options = {
+      backgroundColor: '#ffffff', // 设置白色背景
+      scale: 2,  // 2倍清晰度，避免图片模糊
+      useCORS: true, // 处理跨域图片
+      logging: false, // 关闭日志
+      allowTaint: true, // 允许跨域图片
+      // 只导出可见区域
+      ignoreElements: (element: Element) => {
+        return element.classList.contains('vue-flow__minimap') || // 排除小地图
+               element.classList.contains('vue-flow__controls') || // 排除控制按钮
+               (element as HTMLElement).style.display === 'none' // 排除隐藏元素
+      }
+    }
+
+    // 转换为 canvas
+    const canvas = await html2canvas(flowContainer, options)
+
+    // 转换为 JPG 图片
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9) // 0.9 为图片质量参数
+
+    // 创建下载链接
+    const link = document.createElement('a')
+    link.download = `flowchart_${getTimestamp()}.jpg`
+    link.href = dataUrl
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+  } catch (error) {
+    console.error('导出图片失败:', error)
+    alert('导出图片失败，请稍后重试')
+  }
+}
+
+// 获取当前时间戳作为文件名的一部分
+const getTimestamp = () => {
+  const now = new Date()
+  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`
+}
+
+// 生成画布数据的方法 - 将来可以被其他保存方法复用
+const generateCanvasData = () => {
+  const flowData = {
+    nodes: getNodes.value,
+    edges: getEdges.value,
+    // 添加元数据
+    metadata: {
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      title: `流程图_${getTimestamp()}`
+    }
+  }
+  return flowData
+}
+
+// 下载JSON文件的方法
+const downloadJSON = (data: any, filename: string) => {
+  const jsonStr = JSON.stringify(data, null, 2)
+  const blob = new Blob([jsonStr], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+// 保存画布方法
+const saveJSON = async () => {
+  try {
+    // 生成画布数据
+    const canvasData = generateCanvasData()
+    
+    // 生成文件名
+    const filename = `flowchart_${getTimestamp()}.json`
+    
+    // TODO: 如果需要调用API保存，可以在这里添加条件判断
+    // if (process.env.SAVE_TO_API) {
+    //   await saveToAPI(canvasData)
+    //   return
+    // }
+    
+    // 默认下载到本地
+    downloadJSON(canvasData, filename)
+    
+  } catch (error) {
+    console.error('保存失败:', error)
+    // 这里可以添加错误提示
+    alert('保存失败，请稍后重试')
+  }
+}
+
+// 文件输入引用
+const fileInput = ref<HTMLInputElement | null>(null)
+
+// 触发文件选择
+const importJSON = () => {
+  fileInput.value?.click()
+}
+
+// 处理文件导入
+const handleFileImport = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  
+  if (!file) return
+  
+  try {
+    // TODO: 如果需要从API加载数据，可以在这里添加条件判断
+    // if (process.env.LOAD_FROM_API) {
+    //   const data = await loadFromAPI()
+    //   await loadFlowData(data)
+    //   return
+    // }
+    
+    // 读取本地文件
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const jsonData = JSON.parse(e.target?.result as string)
+        await loadFlowData(jsonData)
+      } catch (error) {
+        console.error('JSON解析失败:', error)
+        alert('无效的JSON文件格式')
+      }
+    }
+    reader.readAsText(file)
+  } catch (error) {
+    console.error('导入失败:', error)
+    alert('导入失败，请检查文件格式')
+  } finally {
+    // 清空文件输入框,允许重复选择同一文件
+    input.value = ''
+  }
+}
+
+// 加载流程图数据
+const loadFlowData = async (data: any) => {
+  try {
+    // 基本验证
+    if (!data.nodes || !data.edges || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+      throw new Error('无效的流程图数据格式')
+    }
+
+    // 设置节点和边
+    setNodes(data.nodes)
+    setEdges(data.edges)
+    
+  } catch (error) {
+    console.error('加载数据失败:', error)
+    alert('加载数据失败，请检查数据格式')
+    throw error
+  }
+}
 </script>
 
 <script lang="ts">
