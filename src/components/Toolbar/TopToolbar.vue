@@ -83,7 +83,7 @@
       <div class="tool-group" :class="{ 'disabled': !hasMultipleSelectedNodes }">
         <button 
           class="icon-btn" 
-          @click="alignLeft" 
+          @click="handleAlignClick('left')" 
           title="左对齐"
           :disabled="!hasMultipleSelectedNodes"
         >
@@ -91,7 +91,7 @@
         </button>
         <button 
           class="icon-btn" 
-          @click="alignRight" 
+          @click="handleAlignClick('right')" 
           title="右对齐"
           :disabled="!hasMultipleSelectedNodes"
         >
@@ -99,7 +99,7 @@
         </button>
         <button 
           class="icon-btn" 
-          @click="alignTop" 
+          @click="handleAlignClick('top')" 
           title="顶对齐"
           :disabled="!hasMultipleSelectedNodes"
         >
@@ -107,7 +107,7 @@
         </button>
         <button 
           class="icon-btn" 
-          @click="alignBottom" 
+          @click="handleAlignClick('bottom')" 
           title="底对齐"
           :disabled="!hasMultipleSelectedNodes"
         >
@@ -115,7 +115,7 @@
         </button>
         <button 
           class="icon-btn" 
-          @click="alignHCenter" 
+          @click="handleAlignClick('center')" 
           title="水平居中"
           :disabled="!hasMultipleSelectedNodes"
         >
@@ -123,7 +123,7 @@
         </button>
         <button 
           class="icon-btn" 
-          @click="alignVCenter" 
+          @click="handleAlignClick('middle')" 
           title="垂直居中"
           :disabled="!hasMultipleSelectedNodes"
         >
@@ -131,17 +131,17 @@
         </button>
         <button 
           class="icon-btn" 
-          @click="distributeHorizontal" 
+          @click="handleDistributeClick('horizontal')" 
           title="水平分布"
-          :disabled="!hasMultipleSelectedNodes"
+          :disabled="!hasThreeOrMoreSelectedNodes"
         >
           <ToolbarIcon type="distributeH" />
         </button>
         <button 
           class="icon-btn" 
-          @click="distributeVertical" 
+          @click="handleDistributeClick('vertical')" 
           title="垂直分布"
-          :disabled="!hasMultipleSelectedNodes"
+          :disabled="!hasThreeOrMoreSelectedNodes"
         >
           <ToolbarIcon type="distributeV" />
         </button>
@@ -369,8 +369,17 @@ const hasSelectedNodes = computed(() => getSelectedNodes.value.length > 0)
 // 计算属性：是否有选中的边
 const hasSelectedEdges = computed(() => getSelectedEdges.value.length > 0)
 
-// 计算属性：是否有多个选中的节点（用于布局功能）
-const hasMultipleSelectedNodes = computed(() => getSelectedNodes.value.length > 1)
+// 计算是否有两个或更多节点被选中（用于对齐功能）
+const hasMultipleSelectedNodes = computed(() => {
+  const selectedNodes = getNodes.value.filter(node => node.selected)
+  return selectedNodes.length >= 2
+})
+
+// 计算是否有三个或更多节点被选中（用于分布功能）
+const hasThreeOrMoreSelectedNodes = computed(() => {
+  const selectedNodes = getNodes.value.filter(node => node.selected)
+  return selectedNodes.length >= 3
+})
 
 // 字体样式
 const fontSize = ref(12)
@@ -584,15 +593,22 @@ const applyEdgeStyle = () => {
   })
 }
 
-// 对齐和分布方法
-const alignLeft = () => { /* 实现左对齐 */ }
-const alignRight = () => { /* 实现右对齐 */ }
-const alignTop = () => { /* 实现顶对齐 */ }
-const alignBottom = () => { /* 实现底对齐 */ }
-const alignHCenter = () => { /* 实现水平居中 */ }
-const alignVCenter = () => { /* 实现垂直居中 */ }
-const distributeHorizontal = () => { /* 实现水平分布 */ }
-const distributeVertical = () => { /* 实现垂直分布 */ }
+// 添加分布事件
+const emit = defineEmits<{
+  (e: 'align', direction: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'middle'): void
+  (e: 'distribute', direction: 'horizontal' | 'vertical'): void
+}>()
+
+// 对齐按钮点击处理
+const handleAlignClick = (direction: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'middle') => {
+  // 调用父组件的对齐方法
+  emit('align', direction)
+}
+
+// 分布按钮点击处理
+const handleDistributeClick = (direction: 'horizontal' | 'vertical') => {
+  emit('distribute', direction)
+}
 
 // 提示框状态
 const activeTooltip = ref<'clear' | 'export' | 'save' | 'import' | null>(null)

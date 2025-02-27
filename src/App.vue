@@ -1,6 +1,9 @@
 <template>
   <div class="app">
-    <TopToolbar />
+    <TopToolbar 
+      @align="alignNodes"
+      @distribute="distributeNodes"
+    />
     <div class="main-content">
       <LeftSidebar />
       <!-- 使用 FlowEditor 作为容器 -->
@@ -19,15 +22,21 @@
           :pannable="false"
           :snap-to-grid="true"
           :snap-grid="[20, 20]"
-           class="vue-flow-wrapper"
+          :multi-selection-key-code="'Control'"
+          class="vue-flow-wrapper"
           @connect="onConnectHandler"
           @drop="onDrop"
           @dragover="onDragOver"
           @nodeClick="onNodeClick"
           @edgeClick="onEdgeClick"
           @paneClick="onPaneClick"
+          @nodeDrag="onNodeDrag"
           @nodeDragStop="handleNodeDragStop"
+          @selectionChange="onSelectionChange"
         >
+          <!-- 添加对齐线组件 -->
+          <AlignmentLines :lines="alignmentLines" />
+          
           <!-- 注册自定义节点 -->
           <template #node-roundedRect="nodeProps">
             <RoundedRectNode v-bind="nodeProps" />
@@ -50,12 +59,29 @@ import LeftSidebar from './components/Sidebar/LeftSidebar.vue'
 import RoundedRectNode from './components/Nodes/RoundedRectNode.vue'
 import TextLabelNode from './components/Nodes/TextLabelNode.vue'
 import FlowEditor from './components/FlowEditor.vue'
+import type { FlowNode, FlowEdge, AlignDirection, DistributeDirection, NodeDimensions } from './types/flow'
+import { debounce } from 'lodash-es'
+import AlignmentLines from './components/AlignmentLines.vue'
 
 // 引入必要的样式
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 
-const { addNodes, addEdges, removeNodes, removeEdges, findNode, findEdge, getNodes, getEdges, onConnect, onNodeDragStop, updateEdge, setEdges } = useVueFlow()
+const { 
+  addNodes, 
+  addEdges, 
+  removeNodes, 
+  removeEdges, 
+  findNode, 
+  findEdge, 
+  getNodes, 
+  getEdges, 
+  onConnect, 
+  onNodeDragStop, 
+  updateEdge, 
+  setEdges,
+  updateNode
+} = useVueFlow()
 
 const elements = ref([])
 
@@ -72,6 +98,9 @@ const isResizing = ref(false)
 // 添加一个标志，表示调整大小是否刚刚结束
 const resizeJustEnded = ref(false)
 
+// 添加选中节点集合
+const selectedNodes = ref<string[]>([])
+
 // 注册自定义节点和边类型 - 使用 markRaw 避免组件被设为响应式
 const nodeTypes: NodeTypes = {
   roundedRect: markRaw(RoundedRectNode),
@@ -81,6 +110,113 @@ const nodeTypes: NodeTypes = {
 // 初始化节点和边
 const initialNodes = ref([])
 const initialEdges = ref([])
+
+// 缓存节点尺寸
+const nodeDimensionsCache = new Map<string, NodeDimensions>()
+
+const getNodeDimensions = (node: FlowNode): NodeDimensions => {
+  // 检查缓存
+  const cached = nodeDimensionsCache.get(node.id)
+  if (cached) return cached
+  
+  const element = document.querySelector(`[data-id="${node.id}"]`)
+  if (element) {
+    const rect = element.getBoundingClientRect()
+    const dimensions = {
+      width: rect.width,
+      height: rect.height
+    }
+    // 存入缓存
+    nodeDimensionsCache.set(node.id, dimensions)
+    return dimensions
+  }
+  
+  const defaultDimensions = node.type === 'textLabel' ? 
+    { width: 150, height: 40 } : 
+    { width: 200, height: 50 }
+  
+  // 存入缓存
+  nodeDimensionsCache.set(node.id, defaultDimensions)
+  return defaultDimensions
+}
+
+// 在节点更新时清除缓存
+const clearNodeDimensionsCache = (nodeId: string) => {
+  nodeDimensionsCache.delete(nodeId)
+}
+
+// 使用 computed 优化性能
+const selectedNodesList = computed(() => 
+  getNodes.value.filter(node => node.selected)
+)
+
+// 添加更多 computed 属性
+const connectedEdges = computed(() => 
+  getEdges.value.filter(edge => 
+    selectedNodesList.value.some(node => edge.source === node.id || edge.target === node.id)
+  )
+)
+
+// 优化边界值计算
+const selectedNodesBounds = computed(() => {
+  if (selectedNodesList.value.length < 2) return null
+  
+  return selectedNodesList.value.reduce((acc, node: FlowNode) => {
+    const { width, height } = getNodeDimensions(node)
+    return {
+      left: Math.min(acc.left, node.position.x),
+      right: Math.max(acc.right, node.position.x + width),
+      top: Math.min(acc.top, node.position.y),
+      bottom: Math.max(acc.bottom, node.position.y + height)
+    }
+  }, {
+    left: Infinity,
+    right: -Infinity,
+    top: Infinity,
+    bottom: -Infinity
+  })
+})
+
+// 添加类型守卫
+const isFlowNode = (node: any): node is FlowNode => {
+  return node && 
+    typeof node.id === 'string' && 
+    (node.type === 'roundedRect' || node.type === 'textLabel') &&
+    typeof node.position === 'object'
+}
+
+// 添加错误处理
+const updateNodePosition = (nodeId: string, position: { x: number, y: number }) => {
+  try {
+    const node = getNodes.value.find(n => n.id === nodeId)
+    if (!node) {
+      throw new Error(`Node ${nodeId} not found`)
+    }
+    if (!isFlowNode(node)) {
+      throw new Error(`Invalid node type for ${nodeId}`)
+    }
+    
+    updateNode(nodeId, {
+      ...node,
+      position
+    })
+  } catch (error) {
+    console.error('Failed to update node position:', error)
+  }
+}
+
+// 防抖处理节点位置更新
+const debouncedUpdateView = debounce(() => {
+  elements.value = [...elements.value]
+}, 16) // 约60fps
+
+// 在更新节点位置后使用
+const updateNodesPosition = () => {
+  // ... 更新节点位置的代码 ...
+  
+  // 使用防抖更新视图
+  debouncedUpdateView()
+}
 
 // 处理连线事件
 const onConnectHandler = (connection: Connection) => {
@@ -182,7 +318,7 @@ const getDefaultLabel = (type: string): string => {
   }
 }
 
-// 处理节点选中
+// 修改处理节点点击事件
 const onNodeClick = (event: NodeMouseEvent) => {
   // 阻止事件冒泡，防止触发 onPaneClick
   event.event?.stopPropagation()
@@ -280,34 +416,270 @@ const onKeyDown = (event: KeyboardEvent) => {
   }
 }
 
-// 处理节点拖拽结束事件
-const handleNodeDragStop = (e: NodeDragEvent) => {
-  const { node } = e
-  // 确保连接到该节点的边也更新
-  const connectedEdges = getEdges.value.filter(
-    edge => edge.source === node.id || edge.target === node.id
-  )
+// 修改对齐方法
+const alignNodes = (direction: AlignDirection) => {
+  const bounds = selectedNodesBounds.value
+  if (!bounds) return
   
-  if (connectedEdges.length > 0) {
-    // 保存当前选中的边ID
-    const currentSelectedEdgeId = selectedEdgeId.value
+  const centerX = bounds.left + (bounds.right - bounds.left) / 2
+  const centerY = bounds.top + (bounds.bottom - bounds.top) / 2
+  
+  selectedNodesList.value.forEach(node => {
+    const { width, height } = getNodeDimensions(node)
+    let newPosition = { x: node.position.x, y: node.position.y }
     
-    // 强制更新连接的边
-    const updatedEdges = getEdges.value.map(edge => {
-      if (edge.source === node.id || edge.target === node.id) {
-        // 保持选中状态
-        return { 
-          ...edge,
-          selected: edge.id === currentSelectedEdgeId
-        }
+    switch (direction) {
+      case 'left':
+        newPosition.x = bounds.left
+        break
+      case 'right':
+        newPosition.x = bounds.right - width
+        break
+      case 'top':
+        newPosition.y = bounds.top
+        break
+      case 'bottom':
+        newPosition.y = bounds.bottom - height
+        break
+      case 'center':
+        newPosition.x = centerX - width / 2
+        break
+      case 'middle':
+        newPosition.y = centerY - height / 2
+        break
+    }
+    
+    updateNodePosition(node.id, newPosition)
+  })
+  
+  // 使用防抖更新视图
+  debouncedUpdateView()
+}
+
+// 修改分布方法
+const distributeNodes = (direction: DistributeDirection) => {
+  if (selectedNodesList.value.length < 3) return
+  
+  try {
+    const nodesInfo = selectedNodesList.value.map((node: FlowNode) => {
+      if (!isFlowNode(node)) {
+        throw new Error(`Invalid node type for ${node.id}`)
       }
-      return edge
+      
+      const { width, height } = getNodeDimensions(node)
+      return {
+        id: node.id,
+        width,
+        height,
+        position: node.position,
+        center: direction === 'horizontal' 
+          ? node.position.x + width / 2 
+          : node.position.y + height / 2
+      }
     })
     
-    // 更新边
-    setEdges(updatedEdges)
+    // 按中心点位置排序
+    nodesInfo.sort((a, b) => a.center - b.center)
+    
+    // 获取首尾节点的中心点位置
+    const firstCenter = nodesInfo[0].center
+    const lastCenter = nodesInfo[nodesInfo.length - 1].center
+    
+    // 计算间距
+    const totalSpace = lastCenter - firstCenter
+    const spacing = totalSpace / (nodesInfo.length - 1)
+    
+    // 批量更新节点位置
+    const updates = nodesInfo.map((nodeInfo, index) => {
+      if (index === 0 || index === nodesInfo.length - 1) return null
+      
+      const newCenter = firstCenter + spacing * index
+      const newPosition = { ...nodeInfo.position }
+      
+      if (direction === 'horizontal') {
+        newPosition.x = newCenter - nodeInfo.width / 2
+      } else {
+        newPosition.y = newCenter - nodeInfo.height / 2
+      }
+      
+      return {
+        id: nodeInfo.id,
+        position: newPosition
+      }
+    }).filter(Boolean)
+    
+    // 批量应用更新
+    updates.forEach(update => {
+      if (update) {
+        updateNodePosition(update.id, update.position)
+      }
+    })
+    
+    // 使用防抖更新视图
+    debouncedUpdateView()
+    
+  } catch (error) {
+    console.error('Failed to distribute nodes:', error)
   }
 }
+
+// 水平分布
+const distributeHorizontal = () => {
+  distributeNodes('horizontal')
+}
+
+// 垂直分布
+const distributeVertical = () => {
+  distributeNodes('vertical')
+}
+
+// 使用 computed 优化连接边的获取
+const getConnectedEdges = (nodeIds: string[]) => computed(() => 
+  getEdges.value.filter(edge => 
+    nodeIds.some(id => edge.source === id || edge.target === id)
+  )
+)
+
+// 添加新的状态
+const alignmentLines = ref<Array<{ id: string; type: 'horizontal' | 'vertical'; position: number }>>([])
+const snapThreshold = 5 // 吸附阈值（像素）
+
+// 计算对齐位置
+const calculateAlignment = (draggedNode: FlowNode, otherNodes: FlowNode[]) => {
+  const lines: typeof alignmentLines.value = []
+  const { width, height } = getNodeDimensions(draggedNode)
+  
+  // 获取拖动节点的边界
+  const draggedBounds = {
+    left: draggedNode.position.x,
+    right: draggedNode.position.x + width,
+    top: draggedNode.position.y,
+    bottom: draggedNode.position.y + height,
+    centerX: draggedNode.position.x + width / 2,
+    centerY: draggedNode.position.y + height / 2
+  }
+  
+  // 检查与其他节点的对齐
+  otherNodes.forEach(node => {
+    if (node.id === draggedNode.id) return
+    
+    const { width: nodeWidth, height: nodeHeight } = getNodeDimensions(node)
+    const nodeBounds = {
+      left: node.position.x,
+      right: node.position.x + nodeWidth,
+      top: node.position.y,
+      bottom: node.position.y + nodeHeight,
+      centerX: node.position.x + nodeWidth / 2,
+      centerY: node.position.y + nodeHeight / 2
+    }
+    
+    // 检查垂直对齐
+    const verticalAlignments = [
+      { reference: nodeBounds.left, dragged: draggedBounds.left, type: 'left' },
+      { reference: nodeBounds.centerX, dragged: draggedBounds.centerX, type: 'center' },
+      { reference: nodeBounds.right, dragged: draggedBounds.right, type: 'right' }
+    ]
+    
+    verticalAlignments.forEach(({ reference, dragged, type }) => {
+      if (Math.abs(reference - dragged) <= snapThreshold) {
+        lines.push({
+          id: `v-${node.id}-${type}`,
+          type: 'vertical',
+          position: reference
+        })
+      }
+    })
+    
+    // 检查水平对齐
+    const horizontalAlignments = [
+      { reference: nodeBounds.top, dragged: draggedBounds.top, type: 'top' },
+      { reference: nodeBounds.centerY, dragged: draggedBounds.centerY, type: 'center' },
+      { reference: nodeBounds.bottom, dragged: draggedBounds.bottom, type: 'bottom' }
+    ]
+    
+    horizontalAlignments.forEach(({ reference, dragged, type }) => {
+      if (Math.abs(reference - dragged) <= snapThreshold) {
+        lines.push({
+          id: `h-${node.id}-${type}`,
+          type: 'horizontal',
+          position: reference
+        })
+      }
+    })
+  })
+  
+  return lines
+}
+
+// 修改节点拖动事件
+const onNodeDrag = (event: NodeDragEvent) => {
+  const { node } = event
+  const otherNodes = getNodes.value.filter(n => n.id !== node.id)
+  
+  // 计算对齐线
+  alignmentLines.value = calculateAlignment(node, otherNodes)
+  
+  // 如果有对齐线，进行吸附
+  if (alignmentLines.value.length > 0) {
+    const { width, height } = getNodeDimensions(node)
+    let newPosition = { ...node.position }
+    
+    alignmentLines.value.forEach(line => {
+      if (line.type === 'vertical') {
+        // 检查左边对齐
+        if (Math.abs(line.position - node.position.x) <= snapThreshold) {
+          newPosition.x = line.position
+        }
+        // 检查中心对齐
+        else if (Math.abs(line.position - (node.position.x + width / 2)) <= snapThreshold) {
+          newPosition.x = line.position - width / 2
+        }
+        // 检查右边对齐
+        else if (Math.abs(line.position - (node.position.x + width)) <= snapThreshold) {
+          newPosition.x = line.position - width
+        }
+      } else {
+        // 检查顶部对齐
+        if (Math.abs(line.position - node.position.y) <= snapThreshold) {
+          newPosition.y = line.position
+        }
+        // 检查中心对齐
+        else if (Math.abs(line.position - (node.position.y + height / 2)) <= snapThreshold) {
+          newPosition.y = line.position - height / 2
+        }
+        // 检查底部对齐
+        else if (Math.abs(line.position - (node.position.y + height)) <= snapThreshold) {
+          newPosition.y = line.position - height
+        }
+      }
+    })
+    
+    // 更新节点位置
+    updateNodePosition(node.id, newPosition)
+  }
+}
+
+// 修改节点拖动结束事件
+const handleNodeDragStop = debounce((e: NodeDragEvent) => {
+  const { node } = e
+  
+  // 清除对齐线
+  alignmentLines.value = []
+  
+  // 清除节点尺寸缓存
+  clearNodeDimensionsCache(node.id)
+  
+  // 更新视图
+  debouncedUpdateView()
+}, 16)
+
+// 优化选中变化事件
+const onSelectionChange = debounce(({ nodes, edges }) => {
+  selectedNodes.value = nodes.map(node => node.id)
+  
+  // 清除选中节点的尺寸缓存
+  nodes.forEach(node => clearNodeDimensionsCache(node.id))
+}, 16)
 
 // 监听键盘事件
 onMounted(() => {
@@ -347,6 +719,10 @@ onUnmounted(() => {
     isResizing.value = false
     resizeJustEnded.value = true
   })
+  
+  debouncedUpdateView.cancel()
+  handleNodeDragStop.cancel()
+  onSelectionChange.cancel()
 })
 </script>
 

@@ -12,7 +12,8 @@
     "@element-plus/icons-vue": "^2.3.1",
     "@vue-flow/core": "^1.42.1",
     "html2canvas": "^1.4.1",
-    "vue": "^3.4.19"
+    "vue": "^3.4.19",
+    "lodash-es": "^4.17.21"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
@@ -20,6 +21,7 @@
     "@vue/tsconfig": "^0.7.0",
     "typescript": "~5.7.2",
     "vite": "^6.1.0",
-    "vue-tsc": "^2.2.0"
+    "vue-tsc": "^2.2.0",
+    "@types/lodash-es": "^4.17.12"
   }
 }
