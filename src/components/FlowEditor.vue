@@ -4,6 +4,14 @@
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'FlowEditor'
+})
+</script>
+
 <script setup lang="ts">
 // 移除 VueFlow 相关的导入和实现
 </script>

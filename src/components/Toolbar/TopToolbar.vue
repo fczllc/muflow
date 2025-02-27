@@ -1,6 +1,6 @@
 <template>
   <div class="top-toolbar">
-    <Logo />
+    <img src="@/assets/logo.png" alt="logo" class="logo">
     
     <div class="style-tools">
       <!-- 字体样式设置组 -->
@@ -175,52 +175,6 @@
         </button>
       </div>
     </div>
-
-    <!-- 画布操作工具 -->
-    <div class="canvas-tools">
-      <div class="tool-btn-wrapper">
-        <button class="icon-btn" @click="clearCanvas" @mouseleave="hideTooltip" title="清除画布">
-          <ToolbarIcon type="clear" />
-        </button>
-        <div class="tooltip" v-show="activeTooltip === 'clear'">清除画布</div>
-      </div>
-
-      <div class="tool-btn-wrapper">
-        <button class="icon-btn" @click="exportImage" @mouseleave="hideTooltip" title="导出图片">
-          <ToolbarIcon type="export" />
-        </button>
-        <div class="tooltip" v-show="activeTooltip === 'export'">导出图片</div>
-      </div>
-
-      <div class="tool-btn-wrapper">
-        <button class="icon-btn" @click="importJSON" @mouseleave="hideTooltip" title="导入画布">
-          <ToolbarIcon type="import" />
-        </button>
-        <div class="tooltip" v-show="activeTooltip === 'import'">导入画布</div>
-        <input
-          type="file"
-          ref="fileInput"
-          accept=".json"
-          style="display: none"
-          @change="handleFileImport"
-        >
-      </div>
-
-      <div class="tool-btn-wrapper">
-        <button class="icon-btn" @click="saveJSON"  @mouseleave="hideTooltip" title="保存画布">
-          <ToolbarIcon type="save" />
-        </button>
-      </div>
-    </div>
-
-    <!-- 添加确认模态框 -->
-    <ConfirmModal
-      :show="showClearConfirm"
-      title="清除画布"
-      message="确认要清除画布吗？此操作不可恢复。"
-      @confirm="handleClearConfirm"
-      @cancel="handleClearCancel"
-    />
   </div>
 </template>
 
@@ -229,7 +183,7 @@
   display: flex;
   align-items: center;
   height: 40px;
-  padding: 0 16px;
+  padding: 0 8px;
   border-bottom: 1px solid var(--border-color);
   background: var(--background-color);
 }
@@ -418,12 +372,16 @@ color: #666;
 .tool-group.disabled select {
   cursor: not-allowed;
 }
+
+.logo {
+  width: 60px;
+  height: 20px;
+}
 </style>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useVueFlow, MarkerType } from '@vue-flow/core'
-import Logo from '../Logo/Logo.vue'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
 import ConfirmModal from '../Modal/ConfirmModal.vue'
 import html2canvas from 'html2canvas'

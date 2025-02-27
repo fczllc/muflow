@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, markRaw, computed } from 'vue'
-import { VueFlow, useVueFlow, ConnectionMode, Panel, NodeTypes, EdgeTypes, Connection, MarkerType, Position, NodeDragEvent } from '@vue-flow/core'
+import { VueFlow, useVueFlow, ConnectionMode, Connection, MarkerType, Position, NodeDragEvent } from '@vue-flow/core'
 import type { NodeMouseEvent, EdgeMouseEvent } from '@vue-flow/core'
 import TopToolbar from './components/Toolbar/TopToolbar.vue'
 import LeftSidebar from './components/Sidebar/LeftSidebar.vue'
@@ -62,6 +62,7 @@ import FlowEditor from './components/FlowEditor.vue'
 import type { FlowNode, FlowEdge, AlignDirection, DistributeDirection, NodeDimensions } from './types/flow'
 import { debounce } from 'lodash-es'
 import AlignmentLines from './components/AlignmentLines.vue'
+import type { GraphNode} from '@vue-flow/core'
 
 // 引入必要的样式
 import '@vue-flow/core/dist/style.css'
@@ -72,18 +73,14 @@ const {
   addEdges, 
   removeNodes, 
   removeEdges, 
-  findNode, 
-  findEdge, 
   getNodes, 
   getEdges, 
   onConnect, 
   onNodeDragStop, 
-  updateEdge, 
-  setEdges,
   updateNode
 } = useVueFlow()
 
-const elements = ref([])
+const elements = ref<Array<FlowNode | FlowEdge>>([])
 
 // 当前选中的节点和边
 const selectedNodeId = ref<string | null>(null)
@@ -106,10 +103,6 @@ const nodeTypes: NodeTypes = {
   roundedRect: markRaw(RoundedRectNode),
   textLabel: markRaw(TextLabelNode)
 }
-
-// 初始化节点和边
-const initialNodes = ref([])
-const initialEdges = ref([])
 
 // 缓存节点尺寸
 const nodeDimensionsCache = new Map<string, NodeDimensions>()
@@ -150,18 +143,20 @@ const selectedNodesList = computed(() =>
   getNodes.value.filter(node => node.selected)
 )
 
-// 添加更多 computed 属性
-const connectedEdges = computed(() => 
-  getEdges.value.filter(edge => 
-    selectedNodesList.value.some(node => edge.source === node.id || edge.target === node.id)
-  )
-)
 
-// 优化边界值计算
+// 修改 selectedNodesBounds computed 属性
 const selectedNodesBounds = computed(() => {
   if (selectedNodesList.value.length < 2) return null
   
-  return selectedNodesList.value.reduce((acc, node: FlowNode) => {
+  const initialBounds = {
+    left: Infinity,
+    right: -Infinity,
+    top: Infinity,
+    bottom: -Infinity
+  }
+  
+  return selectedNodesList.value.reduce<typeof initialBounds>((acc, node) => {
+    if (!isFlowNode(node)) return acc
     const { width, height } = getNodeDimensions(node)
     return {
       left: Math.min(acc.left, node.position.x),
@@ -169,12 +164,7 @@ const selectedNodesBounds = computed(() => {
       top: Math.min(acc.top, node.position.y),
       bottom: Math.max(acc.bottom, node.position.y + height)
     }
-  }, {
-    left: Infinity,
-    right: -Infinity,
-    top: Infinity,
-    bottom: -Infinity
-  })
+  }, initialBounds)
 })
 
 // 添加类型守卫
@@ -210,13 +200,6 @@ const debouncedUpdateView = debounce(() => {
   elements.value = [...elements.value]
 }, 16) // 约60fps
 
-// 在更新节点位置后使用
-const updateNodesPosition = () => {
-  // ... 更新节点位置的代码 ...
-  
-  // 使用防抖更新视图
-  debouncedUpdateView()
-}
 
 // 处理连线事件
 const onConnectHandler = (connection: Connection) => {
@@ -328,8 +311,8 @@ const onNodeClick = (event: NodeMouseEvent) => {
   selectedEdgeId.value = null
   
   // 清除所有边的选中状态
-  elements.value.forEach(el => {
-    if (el.type === 'edge') {
+  elements.value.forEach((el: FlowNode | FlowEdge) => {
+    if ('type' in el && el.type === 'edge') {
       el.selected = false
       el.class = ''
     }
@@ -356,15 +339,15 @@ const onEdgeClick = (event: EdgeMouseEvent) => {
   }, 200)
   
   // 取消所有节点的选中状态
-  elements.value.forEach(el => {
-    if (el.type !== 'edge') {
+  elements.value.forEach((el: FlowNode | FlowEdge) => {
+    if ('type' in el && el.type !== 'edge') {
       el.selected = false
     }
   })
   
   // 取消所有边的选中状态
-  elements.value.forEach(el => {
-    if (el.type === 'edge') {
+  elements.value.forEach((el: FlowNode | FlowEdge) => {
+    if ('type' in el && el.type === 'edge') {
       el.selected = false
     }
   })
@@ -393,7 +376,7 @@ const onPaneClick = (event: MouseEvent) => {
   }
   
   // 清除所有节点和边的选中状态
-  elements.value.forEach(el => {
+  elements.value.forEach((el: FlowNode | FlowEdge) => {
     el.selected = false
   })
   
@@ -461,7 +444,7 @@ const distributeNodes = (direction: DistributeDirection) => {
   if (selectedNodesList.value.length < 3) return
   
   try {
-    const nodesInfo = selectedNodesList.value.map((node: FlowNode) => {
+    const nodesInfo = selectedNodesList.value.map((node) => {
       if (!isFlowNode(node)) {
         throw new Error(`Invalid node type for ${node.id}`)
       }
@@ -523,22 +506,6 @@ const distributeNodes = (direction: DistributeDirection) => {
   }
 }
 
-// 水平分布
-const distributeHorizontal = () => {
-  distributeNodes('horizontal')
-}
-
-// 垂直分布
-const distributeVertical = () => {
-  distributeNodes('vertical')
-}
-
-// 使用 computed 优化连接边的获取
-const getConnectedEdges = (nodeIds: string[]) => computed(() => 
-  getEdges.value.filter(edge => 
-    nodeIds.some(id => edge.source === id || edge.target === id)
-  )
-)
 
 // 添加新的状态
 const alignmentLines = ref<Array<{ id: string; type: 'horizontal' | 'vertical'; position: number }>>([])
@@ -674,10 +641,10 @@ const handleNodeDragStop = debounce((e: NodeDragEvent) => {
 }, 16)
 
 // 优化选中变化事件
-const onSelectionChange = debounce(({ nodes, edges }) => {
+const onSelectionChange = debounce(({ nodes }: { 
+  nodes: GraphNode[]
+}) => {
   selectedNodes.value = nodes.map(node => node.id)
-  
-  // 清除选中节点的尺寸缓存
   nodes.forEach(node => clearNodeDimensionsCache(node.id))
 }, 16)
 
@@ -766,25 +733,6 @@ onUnmounted(() => {
   stroke-width: 1px !important;
   stroke: #555555 !important; /* 使用完整的 6 位十六进制格式 */
 }
-
-/* 移除选中状态的连接线样式，避免与顶部工具栏设置冲突 */
-/* .vue-flow__edge.selected,
-.vue-flow__edge.selected .vue-flow__edge-path,
-.vue-flow .vue-flow__edge.selected .vue-flow__edge-path,
-.vue-flow__edge[class*="selected"] .vue-flow__edge-path,
-.vue-flow__edge .selected-path,
-.vue-flow__edge .selected-edge path {
-  stroke: #0000FF !important;
-  stroke-width: 3px !important;
-} */
-
-/* 移除属性选择器样式 */
-/* .vue-flow__edge[data-selected="true"],
-.vue-flow__edge[data-selected="true"] .vue-flow__edge-path,
-.vue-flow__edge .vue-flow__edge-path[data-selected="true"] {
-  stroke: #0000FF !important;
-  stroke-width: 3px !important;
-} */
 
 /* 连接线交互状态 */
 .vue-flow__edge:hover,

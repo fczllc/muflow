@@ -30,6 +30,14 @@
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'TextLabelNode'
+})
+</script>
+
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useVueFlow } from '@vue-flow/core'

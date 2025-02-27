@@ -13,6 +13,14 @@
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'AlignmentLines'
+})
+</script>
+
 <script setup lang="ts">
 defineProps<{
   lines: Array<{
