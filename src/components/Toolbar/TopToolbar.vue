@@ -58,9 +58,21 @@
           @change="applyEdgeStyle"
           title="线条样式"
         >
-          <option value="solid">实线</option>
-          <option value="dashed">虚线</option>
-          <option value="dotted">点线</option>
+          <option value="solid">
+            <span class="line-style-option">
+              ─
+            </span>
+          </option>
+          <option value="dashed">
+            <span class="line-style-option">
+             ┄
+            </span>
+          </option>
+          <option value="dotted">
+            <span class="line-style-option">
+              ┉
+            </span>
+          </option>
         </select>
         <select 
           v-model="arrowStyle" 
@@ -69,10 +81,26 @@
           @change="applyEdgeStyle"
           title="箭头样式"
         >
-          <option value="none">无箭头</option>
-          <option value="source">左箭头</option>
-          <option value="target">右箭头</option>
-          <option value="both">双箭头</option>
+          <option value="none">
+            <span class="arrow-style-option">
+              ─
+            </span>
+          </option>
+          <option value="source">
+            <span class="arrow-style-option">
+              ←
+            </span>
+          </option>
+          <option value="target">
+            <span class="arrow-style-option">
+              →
+            </span>
+          </option>
+          <option value="both">
+            <span class="arrow-style-option">
+              ↔
+            </span>
+          </option>
         </select>
       </div>
 
@@ -234,20 +262,20 @@ color: #666;
 }
 
 .font-size-select {
-  width: 70px;
+  width: 60px;
   height: 24px;
   padding: 0 4px;
   border: 1px solid var(--border-color);
   font-size: 12px;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .number-input {
-  width: 50px;
+  width: 40px;
   height: 24px;
   padding: 0 4px;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: 3px;
   font-size: 12px;
 }
 
@@ -256,7 +284,7 @@ color: #666;
   height: 24px;
   padding: 0;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
 }
 
@@ -268,7 +296,7 @@ color: #666;
   height: 24px;
   padding: 0;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: 3px;
   background: transparent;
   cursor: pointer;
 }
@@ -299,7 +327,7 @@ color: #666;
   background-color: rgba(0, 0, 0, 0.75);
   color: white;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 3px;
   font-size: 12px;
   white-space: nowrap;
   pointer-events: none;
@@ -320,19 +348,68 @@ color: #666;
 /* 添加连线样式下拉框样式 */
 .line-style-select,
 .arrow-style-select {
-  height: 28px;
-  padding: 0 5px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  padding: 4px 8px;
+  width: 50px;
+  text-align: center;
   background-color: white;
-  font-size: 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 3px;
   cursor: pointer;
 }
 
+.line-style-select option,
+.arrow-style-select option {
+  font-family: monospace;
+  text-align: center;
+  padding: 8px;
+}
+
+.line-style-option,
+.arrow-style-option {
+  display: inline-block;
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* 禁用状态样式 */
 .line-style-select:disabled,
 .arrow-style-select:disabled {
-  opacity: 0.5;
+  background-color: #f5f7fa;
   cursor: not-allowed;
+  border-color: #e4e7ed;
+  color: #c0c4cc;
+}
+
+/* 悬停效果 */
+.line-style-select:not(:disabled):hover,
+.arrow-style-select:not(:disabled):hover {
+  border-color: #409eff;
+}
+
+/* 选中状态 */
+.line-style-select option:checked,
+.arrow-style-select option:checked {
+  background-color: #f5f7fa;
+}
+
+/* 下拉选项悬停效果 */
+.line-style-select option:hover,
+.arrow-style-select option:hover {
+  background-color: #ecf5ff;
+}
+
+/* 自定义箭头样式 */
+.arrow-style-option {
+  color: #606266;
+}
+
+/* 自定义线条样式 */
+.line-style-option {
+  color: #606266;
 }
 
 /* 工具组禁用状态 */
