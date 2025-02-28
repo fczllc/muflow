@@ -59,19 +59,13 @@
           title="线条样式"
         >
           <option value="solid">
-            <span class="line-style-option">
-              ─
-            </span>
+            ─
           </option>
           <option value="dashed">
-            <span class="line-style-option">
-             ┄
-            </span>
+            ┄
           </option>
           <option value="dotted">
-            <span class="line-style-option">
-              ┉
-            </span>
+            ┉
           </option>
         </select>
         <select 
@@ -82,24 +76,16 @@
           title="箭头样式"
         >
           <option value="none">
-            <span class="arrow-style-option">
-              ─
-            </span>
+            ─
           </option>
           <option value="source">
-            <span class="arrow-style-option">
-              ←
-            </span>
+            ←
           </option>
           <option value="target">
-            <span class="arrow-style-option">
-              →
-            </span>
+            →
           </option>
           <option value="both">
-            <span class="arrow-style-option">
-              ↔
-            </span>
+            ↔
           </option>
         </select>
       </div>
@@ -324,9 +310,7 @@ color: #666;
 .arrow-style-option {
   display: inline-block;
   white-space: nowrap;
-  font-family: monospace;
   font-size: 14px;
-  line-height: 1;
 }
 
 /* 禁用状态样式 */

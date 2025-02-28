@@ -155,6 +155,13 @@
       <polyline points="9 13 12 10 15 13"></polyline>
     </svg>
     
+    <!-- 帮助图标 -->
+    <svg v-else-if="type === 'help'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    </svg>
+    
     <!-- 默认图标 -->
     <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"></circle>
@@ -180,7 +187,7 @@ type IconType =
   // 分布图标
   | 'distributeHorizontal' | 'distributeVertical' | 'distributeH' | 'distributeV'
   // 画布工具图标
-  | 'clear' | 'export' | 'save'
+  | 'clear' | 'export' | 'save' | 'help'
   // 分隔线
   | 'separator' | 'divider'
   // 左侧栏控件图标

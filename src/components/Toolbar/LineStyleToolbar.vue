@@ -36,7 +36,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useVueFlow, MarkerType } from '@vue-flow/core'
+
+const { getEdges, setEdges } = useVueFlow()
 
 // 添加响应式变量
 const lineWidth = ref('2')
@@ -46,6 +49,28 @@ const arrowStyle = ref('none')
 
 // 添加方法
 const applyLineStyle = () => {
-  // TODO: 实现线条样式应用逻辑
+  setEdges(
+    getEdges.value.map(edge => {
+      if (edge.selected) {
+        return {
+          ...edge,
+          style: {
+            strokeWidth: parseInt(lineWidth.value),
+            stroke: lineColor.value,
+            strokeDasharray: lineType.value === 'dashed' ? '5 5' : 
+                           lineType.value === 'dotted' ? '2 2' : undefined
+          },
+          // 使用 MarkerType 设置箭头
+          markerStart: arrowStyle.value === 'source' || arrowStyle.value === 'both' 
+            ? MarkerType.Arrow 
+            : undefined,
+          markerEnd: arrowStyle.value === 'target' || arrowStyle.value === 'both' 
+            ? MarkerType.Arrow 
+            : undefined
+        }
+      }
+      return edge
+    })
+  )
 }
 </script> 

@@ -7,6 +7,7 @@
         </div>
         <div class="modal-body">
           {{ message }}
+          <slot></slot>
         </div>
         <div class="modal-footer">
           <button class="btn btn-cancel" @click="onCancel">取消</button>

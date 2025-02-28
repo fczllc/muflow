@@ -28,12 +28,8 @@
 </template>
 
 <script setup lang="ts">
-import { useVueFlow } from '@vue-flow/core'
-import { Position } from '@vue-flow/core'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
 import CanvasTools from '../Toolbar/CanvasTools.vue'
-
-const { addNodes } = useVueFlow()
 
 const onDragStart = (event: DragEvent, nodeType: string) => {
   if (event.dataTransfer) {
@@ -41,7 +37,6 @@ const onDragStart = (event: DragEvent, nodeType: string) => {
     event.dataTransfer.effectAllowed = 'move'
   }
 }
-
 </script>
 
 <style scoped>
@@ -77,7 +72,10 @@ const onDragStart = (event: DragEvent, nodeType: string) => {
 /* 添加画布工具容器样式 */
 .canvas-tools-wrapper {
   margin-top: auto;
+  padding-bottom: 8px;
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 </style>
 
