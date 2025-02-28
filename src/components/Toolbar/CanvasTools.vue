@@ -70,6 +70,14 @@
         <div class="help-modal-content">
           <div class="shortcut-list">
             <div class="shortcut-item">
+              <div class="shortcut-key">Ctrl + A</div>
+              <div class="shortcut-desc">全选所有对象</div>
+            </div>
+            <div class="shortcut-item">
+              <div class="shortcut-key">ESC</div>
+              <div class="shortcut-desc">取消选中状态</div>
+            </div>
+            <div class="shortcut-item">
               <div class="shortcut-key">Ctrl + 点击</div>
               <div class="shortcut-desc">多选对象</div>
             </div>
@@ -105,7 +113,7 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useVueFlow, Panel } from '@vue-flow/core'
 import type { VueFlowStore } from '@vue-flow/core'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
@@ -406,6 +414,43 @@ const showHelp = () => {
 const hideHelp = () => {
   showHelpModal.value = false
 }
+
+// 添加全选快捷键处理
+const handleKeyDown = (event: KeyboardEvent) => {
+  // 检查是否按下 Ctrl+A
+  if (event.ctrlKey && event.key.toLowerCase() === 'a') {
+    event.preventDefault() // 阻止浏览器默认的全选行为
+    
+    // 获取所有节点和边
+    const nodes = getNodes.value
+    const edges = getEdges.value
+    
+    // 将所有节点和边设置为选中状态
+    setNodes(nodes.map(node => ({ ...node, selected: true })))
+    setEdges(edges.map(edge => ({ ...edge, selected: true })))
+  }
+  
+  // 检查是否按下 ESC
+  if (event.key === 'Escape') {
+    // 获取所有节点和边
+    const nodes = getNodes.value
+    const edges = getEdges.value
+    
+    // 将所有节点和边设置为非选中状态
+    setNodes(nodes.map(node => ({ ...node, selected: false })))
+    setEdges(edges.map(edge => ({ ...edge, selected: false })))
+  }
+}
+
+// 在组件挂载时添加事件监听
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+// 在组件卸载时移除事件监听
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <style scoped>
