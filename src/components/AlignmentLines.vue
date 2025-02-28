@@ -16,6 +16,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
+interface AlignmentLine {
+  id: string
+  type: 'horizontal' | 'vertical'
+  position: number
+}
+
 export default defineComponent({
   name: 'AlignmentLines'
 })
@@ -23,11 +29,7 @@ export default defineComponent({
 
 <script setup lang="ts">
 defineProps<{
-  lines: Array<{
-    id: string
-    type: 'horizontal' | 'vertical'
-    position: number
-  }>
+  lines: AlignmentLine[]
 }>()
 </script>
 

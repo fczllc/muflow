@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, watch, onMounted, ref } from 'vue'
 import { getBezierPath, getSmoothStepPath, getStraightPath, Position, useVueFlow } from '@vue-flow/core'
+import type { EdgeStyle } from '../../types/flow'
 
-const props = defineProps<{
+interface EdgeProps {
   id: string
   sourceX: number
   sourceY: number
@@ -10,13 +11,15 @@ const props = defineProps<{
   targetY: number
   sourcePosition: Position
   targetPosition: Position
-  data: any
+  data?: Record<string, any>
   markerEnd?: string
   markerStart?: string
-  style?: any
+  style?: EdgeStyle
   selected?: boolean
   animated?: boolean
-}>()
+}
+
+const props = defineProps<EdgeProps>()
 
 // 使用 Vue Flow 钩子，但不直接修改边的状态
 const { getEdges } = useVueFlow()

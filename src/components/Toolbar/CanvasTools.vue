@@ -15,10 +15,10 @@
     </div>
 
     <div class="tool-btn-wrapper">
-      <button class="icon-btn" @click="importJSON" @mouseleave="hideTooltip" title="导入画布">
+      <button class="icon-btn" @click="importJSON" @mouseleave="hideTooltip" title="导入本地文件">
         <ToolbarIcon type="import" />
       </button>
-      <div class="tooltip" v-show="activeTooltip === 'import'">导入画布</div>
+      <div class="tooltip" v-show="activeTooltip === 'import'">导入本地文件</div>
       <input
         type="file"
         ref="fileInput"
@@ -29,9 +29,10 @@
     </div>
 
     <div class="tool-btn-wrapper">
-      <button class="icon-btn" @click="saveJSON" @mouseleave="hideTooltip" title="保存画布">
+      <button class="icon-btn" @click="saveJSON" @mouseleave="hideTooltip" title="保存到本地">
         <ToolbarIcon type="save" />
       </button>
+      <div class="tooltip" v-show="activeTooltip === 'save'">保存到本地</div>
     </div>
 
     <!-- 添加帮助按钮 -->
@@ -106,6 +107,15 @@
         </div>
       </div>
     </div>
+
+    <!-- API错误提示模态框 -->
+    <ConfirmModal
+      :show="showAPIError"
+      title="API错误"
+      :message="apiErrorMessage"
+      @confirm="handleAPIError"
+      @cancel="handleAPIError"
+    />
   </div>
 </template>
 
@@ -124,6 +134,7 @@ import type { VueFlowStore, Node as VueFlowNode, Edge as VueFlowEdge, GraphNode,
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
 import ConfirmModal from '../Modal/ConfirmModal.vue'
 import html2canvas from 'html2canvas'
+import type { FlowNode, FlowEdge, FlowData, APIResponse } from '../../types/flow'
 
 const { getNodes, getEdges, setNodes, setEdges, vueFlowRef, toObject } = useVueFlow()
 
@@ -556,6 +567,217 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
 })
+
+// API相关状态
+const showAPIError = ref(false)
+const apiErrorMessage = ref('')
+
+/**
+ * 验证流程图数据格式
+ * @param data 要验证的数据
+ * @returns boolean 数据是否有效
+ */
+const validateFlowData = (data: FlowData): boolean => {
+  try {
+    // 检查基本结构
+    if (!data || typeof data !== 'object') {
+      throw new Error('无效的数据格式')
+    }
+
+    // 检查nodes数组
+    if (!Array.isArray(data.nodes)) {
+      throw new Error('nodes必须是数组')
+    }
+
+    // 检查edges数组
+    if (!Array.isArray(data.edges)) {
+      throw new Error('edges必须是数组')
+    }
+
+    // 验证每个节点的必要属性
+    data.nodes.forEach((node: FlowNode) => {
+      if (!node.id || !node.type || !node.position || 
+          typeof node.position.x !== 'number' || 
+          typeof node.position.y !== 'number') {
+        throw new Error('节点数据格式错误')
+      }
+    })
+
+    // 验证每个边的必要属性
+    data.edges.forEach((edge: FlowEdge) => {
+      if (!edge.id || !edge.source || !edge.target) {
+        throw new Error('边数据格式错误')
+      }
+    })
+
+    return true
+  } catch (error) {
+    apiErrorMessage.value = error instanceof Error ? error.message : '数据验证失败'
+    showAPIError.value = true
+    return false
+  }
+}
+
+/**
+ * 从API加载流程图数据
+ * @param apiEndpoint API端点URL
+ * @param options 可选的请求配置
+ */
+const loadFromAPI = async (apiEndpoint: string, options?: RequestInit): Promise<APIResponse> => {
+  try {
+    const response = await fetch(apiEndpoint, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+      },
+      ...options
+    })
+
+    if (!response.ok) {
+      throw new Error('API请求失败: ' + response.statusText)
+    }
+
+    const data = await response.json()
+
+    // 验证数据格式
+    if (!validateFlowData(data)) {
+      return { success: false, error: '数据验证失败' }
+    }
+
+    // 处理节点数据
+    const nodes = data.nodes.map((node: FlowNode) => ({
+      ...node,
+      id: node.id,
+      type: node.type,
+      position: { 
+        x: Number(node.position.x) || 0,
+        y: Number(node.position.y) || 0
+      },
+      data: {
+        ...node.data,
+        label: node.data?.label || '',
+        fontSize: Number(node.data?.fontSize) || 14,
+        color: node.data?.color || '#000000',
+        style: node.data?.style || {}
+      },
+      selected: false
+    }))
+
+    // 处理边数据
+    const edges = data.edges.map((edge: FlowEdge) => ({
+      ...edge,
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      type: edge.type || 'smoothstep',
+      style: {
+        ...(typeof edge.style === 'object' ? edge.style : {}),
+        strokeWidth: typeof edge.style === 'object' ? edge.style.strokeWidth || 1 : 1,
+        stroke: typeof edge.style === 'object' ? edge.style.stroke || '#555555' : '#555555'
+      },
+      markerEnd: edge.markerEnd,
+      markerStart: edge.markerStart,
+      selected: false
+    }))
+
+    // 清空当前画布
+    setNodes([])
+    setEdges([])
+
+    // 等待一帧以确保清空操作完成
+    await new Promise(resolve => requestAnimationFrame(resolve))
+
+    // 添加新的节点和边
+    setNodes(nodes)
+    setEdges(edges)
+
+    return { success: true, data: { nodes, edges } }
+  } catch (error) {
+    console.error('从API加载失败:', error)
+    apiErrorMessage.value = error instanceof Error ? error.message : '从API加载失败'
+    showAPIError.value = true
+    return { success: false, error: error instanceof Error ? error.message : '从API加载失败' }
+  }
+}
+
+/**
+ * 保存流程图数据到API
+ * @param apiEndpoint API端点URL
+ * @param options 可选的请求配置
+ */
+const saveToAPI = async (apiEndpoint: string, options?: RequestInit) => {
+  try {
+    // 获取节点和边的数据
+    const nodes = getNodes.value.map((node: VueFlowNode) => ({
+      ...node,
+      id: node.id,
+      type: node.type,
+      position: { ...node.position },
+      data: {
+        ...node.data,
+        label: node.data?.label || '',
+        fontSize: node.data?.fontSize || 14,
+        color: node.data?.color || '#000000',
+        style: node.data?.style || {}
+      },
+      selected: false
+    }))
+
+    const edges = getEdges.value.map((edge: VueFlowEdge) => ({
+      ...edge,
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      type: edge.type || 'smoothstep',
+      style: {
+        ...(typeof edge.style === 'object' ? edge.style : {}),
+        strokeWidth: typeof edge.style === 'object' ? edge.style.strokeWidth || 1 : 1,
+        stroke: typeof edge.style === 'object' ? edge.style.stroke || '#555555' : '#555555'
+      },
+      markerEnd: edge.markerEnd,
+      markerStart: edge.markerStart,
+      selected: false
+    }))
+
+    const flowData = {
+      nodes,
+      edges,
+      metadata: {
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        title: `流程图_${getTimestamp()}`
+      }
+    }
+
+    const response = await fetch(apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+      },
+      body: JSON.stringify(flowData),
+      ...options
+    })
+
+    if (!response.ok) {
+      throw new Error('保存到API失败: ' + response.statusText)
+    }
+
+    return true
+  } catch (error) {
+    console.error('保存到API失败:', error)
+    apiErrorMessage.value = error instanceof Error ? error.message : '保存到API失败'
+    showAPIError.value = true
+    return false
+  }
+}
+
+// 处理API错误
+const handleAPIError = () => {
+  showAPIError.value = false
+  apiErrorMessage.value = ''
+}
 </script>
 
 <style scoped>
@@ -696,5 +918,17 @@ onUnmounted(() => {
 .shortcut-desc {
   color: #333;
   font-size: 14px;
+}
+
+/* 添加新的样式 */
+.icon-btn[title="从API导入"],
+.icon-btn[title="保存到API"] {
+  /* 可以添加特殊的样式来区分API相关的按钮 */
+  background-color: #f0f8ff;
+}
+
+.icon-btn[title="从API导入"]:hover,
+.icon-btn[title="保存到API"]:hover {
+  background-color: #e6f3ff;
 }
 </style> 

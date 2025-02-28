@@ -8,7 +8,8 @@
       <LeftSidebar />
       <div class="canvas-container">
         <VueFlow
-          v-model="elements"
+          :nodes="getNodes"
+          :edges="getEdges"
           :node-types="nodeTypes"
           :default-viewport="{ x: 0, y: 0, zoom: 1 }"
           :connection-mode="ConnectionMode.Loose"
@@ -60,15 +61,14 @@ export default defineComponent({
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, markRaw, computed } from 'vue'
 import { VueFlow, useVueFlow, ConnectionMode, MarkerType, Position } from '@vue-flow/core'
-import type { Connection, NodeDragEvent, NodeMouseEvent, EdgeMouseEvent } from '@vue-flow/core'
+import type { Connection, NodeDragEvent, NodeMouseEvent, EdgeMouseEvent, Node, Edge, Elements } from '@vue-flow/core'
 import TopToolbar from './Toolbar/TopToolbar.vue'
 import LeftSidebar from './Sidebar/LeftSidebar.vue'
 import RoundedRectNode from './Nodes/RoundedRectNode.vue'
 import TextLabelNode from './Nodes/TextLabelNode.vue'
-import type { FlowNode, FlowEdge, AlignDirection, DistributeDirection, NodeDimensions, BaseNode } from '../types/flow'
+import type { FlowNode, FlowEdge, AlignDirection, DistributeDirection, NodeDimensions } from '../types/flow'
 import { debounce } from 'lodash-es'
 import AlignmentLines from './AlignmentLines.vue'
-import type { Node as VueFlowNode, Edge as VueFlowEdge, GraphNode } from '@vue-flow/core'
 
 // 引入必要的样式
 import '@vue-flow/core/dist/style.css'
@@ -81,14 +81,16 @@ const {
   removeNodes, 
   removeEdges, 
   getNodes, 
-  getEdges, 
+  getEdges,
+  setNodes,
+  setEdges,
   onConnect, 
   onNodeDragStop: registerNodeDragStop, 
-  updateNode
+  updateNode,
+  onEdgeClick: registerEdgeClick
 } = useVueFlow()
 
 // 状态定义
-const elements = ref<Array<any>>([])
 const selectedNodeId = ref<string | null>(null)
 const selectedEdgeId = ref<string | null>(null)
 const recentlyClickedEdge = ref(false)
@@ -183,26 +185,14 @@ const clearNodeDimensionsCache = (nodeId: string) => {
 
 const updateNodePosition = (nodeId: string, position: { x: number, y: number }) => {
   try {
-    const node = getNodes.value.find(n => n.id === nodeId)
-    if (!node) {
-      throw new Error(`Node ${nodeId} not found`)
-    }
-    if (!isFlowNode(node)) {
-      throw new Error(`Invalid node type for ${nodeId}`)
-    }
-    
-    updateNode(nodeId, {
-      ...node,
-      position
-    })
+    const nodes = getNodes.value.map(node => 
+      node.id === nodeId ? { ...node, position } : node
+    )
+    setNodes(nodes)
   } catch (error) {
     console.error('Failed to update node position:', error)
   }
 }
-
-const debouncedUpdateView = debounce(() => {
-  elements.value = [...elements.value]
-}, 16)
 
 // 对齐和分布方法
 const alignNodes = (direction: AlignDirection) => {
@@ -212,8 +202,9 @@ const alignNodes = (direction: AlignDirection) => {
   const centerX = bounds.left + (bounds.right - bounds.left) / 2
   const centerY = bounds.top + (bounds.bottom - bounds.top) / 2
   
-  selectedNodesList.value.forEach(node => {
-    if (!isFlowNode(node)) return
+  const nodes = getNodes.value.map(node => {
+    if (!isFlowNode(node) || !node.selected) return node
+    
     const { width, height } = getNodeDimensions(node)
     let newPosition = { x: node.position.x, y: node.position.y }
     
@@ -238,10 +229,10 @@ const alignNodes = (direction: AlignDirection) => {
         break
     }
     
-    updateNodePosition(node.id, newPosition)
+    return { ...node, position: newPosition }
   })
   
-  debouncedUpdateView()
+  setNodes(nodes)
 }
 
 const distributeNodes = (direction: DistributeDirection) => {
@@ -276,12 +267,16 @@ const distributeNodes = (direction: DistributeDirection) => {
     const totalSpace = lastCenter - firstCenter
     const spacing = totalSpace / (nodesInfo.length - 1)
     
-    // 批量更新节点位置
-    const updates = nodesInfo.map((nodeInfo, index) => {
-      if (index === 0 || index === nodesInfo.length - 1) return null
+    // 更新节点位置
+    const nodes = getNodes.value.map(node => {
+      const nodeInfo = nodesInfo.find(info => info.id === node.id)
+      if (!nodeInfo || !node.selected) return node
+      
+      const index = nodesInfo.findIndex(info => info.id === node.id)
+      if (index === 0 || index === nodesInfo.length - 1) return node
       
       const newCenter = firstCenter + spacing * index
-      const newPosition = { ...nodeInfo.position }
+      const newPosition = { ...node.position }
       
       if (direction === 'horizontal') {
         newPosition.x = newCenter - nodeInfo.width / 2
@@ -289,21 +284,10 @@ const distributeNodes = (direction: DistributeDirection) => {
         newPosition.y = newCenter - nodeInfo.height / 2
       }
       
-      return {
-        id: nodeInfo.id,
-        position: newPosition
-      }
-    }).filter(Boolean)
-    
-    // 批量应用更新
-    updates.forEach(update => {
-      if (update) {
-        updateNodePosition(update.id, update.position)
-      }
+      return { ...node, position: newPosition }
     })
     
-    debouncedUpdateView()
-    
+    setNodes(nodes)
   } catch (error) {
     console.error('Failed to distribute nodes:', error)
   }
@@ -398,14 +382,18 @@ const onNodeClick = (event: NodeMouseEvent) => {
   selectedNodeId.value = node.id
   selectedEdgeId.value = null
   
-  elements.value.forEach((el: any) => {
-    if ('type' in el && el.type === 'edge') {
-      el.selected = false
-      el.class = ''
-    }
-  })
+  const nodes = getNodes.value.map(n => ({
+    ...n,
+    selected: n.id === node.id
+  }))
   
-  elements.value = [...elements.value]
+  const edges = getEdges.value.map(e => ({
+    ...e,
+    selected: false
+  }))
+  
+  setNodes(nodes)
+  setEdges(edges)
 }
 
 const onEdgeClick = (event: EdgeMouseEvent) => {
@@ -420,25 +408,20 @@ const onEdgeClick = (event: EdgeMouseEvent) => {
     recentlyClickedEdge.value = false
   }, 200)
   
-  elements.value.forEach((el: any) => {
-    if ('type' in el && el.type !== 'edge') {
-      el.selected = false
-    }
-  })
+  const nodes = getNodes.value.map(n => ({
+    ...n,
+    selected: false
+  }))
   
-  elements.value.forEach((el: any) => {
-    if ('type' in el && el.type === 'edge') {
-      el.selected = false
-    }
-  })
+  const edges = getEdges.value.map(e => ({
+    ...e,
+    selected: e.id === edge.id
+  }))
   
-  const edgeIndex = elements.value.findIndex(el => el.id === edge.id)
-  if (edgeIndex !== -1) {
-    elements.value[edgeIndex].selected = true
-    elements.value = [...elements.value]
-    selectedEdgeId.value = edge.id
-    selectedNodeId.value = null
-  }
+  setNodes(nodes)
+  setEdges(edges)
+  selectedEdgeId.value = edge.id
+  selectedNodeId.value = null
 }
 
 const onPaneClick = (event: MouseEvent) => {
@@ -447,9 +430,18 @@ const onPaneClick = (event: MouseEvent) => {
     return
   }
   
-  elements.value.forEach((el: any) => {
-    el.selected = false
-  })
+  const nodes = getNodes.value.map(n => ({
+    ...n,
+    selected: false
+  }))
+  
+  const edges = getEdges.value.map(e => ({
+    ...e,
+    selected: false
+  }))
+  
+  setNodes(nodes)
+  setEdges(edges)
   
   selectedNodeId.value = null
   selectedEdgeId.value = null
@@ -489,7 +481,10 @@ const onNodeDrag = (event: NodeDragEvent) => {
       }
     })
     
-    updateNodePosition(node.id, newPosition)
+    const nodes = getNodes.value.map(n => 
+      n.id === node.id ? { ...n, position: newPosition } : n
+    )
+    setNodes(nodes)
   }
 }
 
@@ -498,7 +493,6 @@ const handleNodeDragStop = debounce((e: NodeDragEvent) => {
   
   alignmentLines.value = []
   clearNodeDimensionsCache(node.id)
-  debouncedUpdateView()
 }, 16)
 
 const onSelectionChange = debounce(({ nodes }: { nodes: any[] }) => {
@@ -508,58 +502,51 @@ const onSelectionChange = debounce(({ nodes }: { nodes: any[] }) => {
   })
 }, 16)
 
-// 键盘事件处理
-const onKeyDown = (event: KeyboardEvent) => {
-  if (event.key === 'Delete') {
-    if (selectedNodeId.value) {
-      removeNodes([selectedNodeId.value])
-      selectedNodeId.value = null
-    }
-    if (selectedEdgeId.value) {
-      removeEdges([selectedEdgeId.value])
-      selectedEdgeId.value = null
-    }
-  }
-}
-
 // 生命周期钩子
 onMounted(() => {
-  window.addEventListener('keydown', onKeyDown)
-  onConnect(onConnectHandler)
-  registerNodeDragStop(handleNodeDragStop)
-  
-  const { onEdgeClick: registerEdgeClick } = useVueFlow()
-  registerEdgeClick(onEdgeClick)
-  
-  window.addEventListener('resize-start', () => {
+  // 添加事件监听器
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Delete') {
+      if (selectedNodeId.value) {
+        removeNodes([selectedNodeId.value])
+        selectedNodeId.value = null
+      }
+      if (selectedEdgeId.value) {
+        removeEdges([selectedEdgeId.value])
+        selectedEdgeId.value = null
+      }
+    }
+  }
+
+  const handleResizeStart = () => {
     isResizing.value = true
-  })
-  
-  window.addEventListener('resize-end', () => {
+  }
+
+  const handleResizeEnd = () => {
     isResizing.value = false
     resizeJustEnded.value = true
-    
     setTimeout(() => {
       resizeJustEnded.value = false
     }, 100)
-  })
-})
+  }
 
-onUnmounted(() => {
-  window.removeEventListener('keydown', onKeyDown)
-  
-  window.removeEventListener('resize-start', () => {
-    isResizing.value = true
+  // 注册事件监听器
+  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('resize-start', handleResizeStart)
+  window.addEventListener('resize-end', handleResizeEnd)
+  onConnect(onConnectHandler)
+  registerNodeDragStop(handleNodeDragStop)
+  registerEdgeClick(onEdgeClick)
+
+  // 清理函数
+  onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown)
+    window.removeEventListener('resize-start', handleResizeStart)
+    window.removeEventListener('resize-end', handleResizeEnd)
+    
+    handleNodeDragStop.cancel()
+    onSelectionChange.cancel()
   })
-  
-  window.removeEventListener('resize-end', () => {
-    isResizing.value = false
-    resizeJustEnded.value = true
-  })
-  
-  debouncedUpdateView.cancel()
-  handleNodeDragStop.cancel()
-  onSelectionChange.cancel()
 })
 
 // 计算对齐位置

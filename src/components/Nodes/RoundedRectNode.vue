@@ -249,10 +249,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 // 确保调整大小功能正常工作
 const startResize = (event: MouseEvent, type: string) => {
   // 确保节点已经完全初始化
-  if (nodeRef.value) {
-    // 强制重新计算布局
-    nodeRef.value.offsetHeight // 触发重排
-  }
+  if (!nodeRef.value) return
   
   event.preventDefault()
   event.stopPropagation()
@@ -263,12 +260,16 @@ const startResize = (event: MouseEvent, type: string) => {
   // 记录初始位置和大小
   const startX = event.clientX
   const startY = event.clientY
-  
-  // 获取当前节点的宽度和高度 - 确保使用最新的尺寸
   const currentWidth = nodeRef.value ? nodeRef.value.offsetWidth : 120
   const currentHeight = nodeRef.value ? nodeRef.value.offsetHeight : 46
   const startWidth = currentWidth
   const startHeight = currentHeight
+  
+  // 获取当前节点的初始位置
+  const node = getNodes.value.find(n => n.id === props.id)
+  if (!node) return
+  
+  const startPosition = { ...node.position }
   
   // 处理鼠标移动事件
   const handleMouseMove = (moveEvent: MouseEvent) => {
@@ -279,16 +280,15 @@ const startResize = (event: MouseEvent, type: string) => {
     const deltaX = moveEvent.clientX - startX
     const deltaY = moveEvent.clientY - startY
     
-    // 根据调整类型计算新的宽度和高度
+    // 根据调整类型计算新的宽度、高度和位置
     let newWidth = startWidth
     let newHeight = startHeight
-    let positionDeltaX = 0
-    let positionDeltaY = 0
+    let newPosition = { ...startPosition }
     
     switch (type) {
       case 'top':
         newHeight = Math.max(46, startHeight - deltaY)
-        positionDeltaY = startHeight - newHeight
+        newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'right':
         newWidth = Math.max(120, startWidth + deltaX)
@@ -298,23 +298,23 @@ const startResize = (event: MouseEvent, type: string) => {
         break
       case 'left':
         newWidth = Math.max(120, startWidth - deltaX)
-        positionDeltaX = startWidth - newWidth
+        newPosition.x = startPosition.x + (startWidth - newWidth)
         break
       case 'topLeft':
         newWidth = Math.max(100, startWidth - deltaX)
         newHeight = Math.max(30, startHeight - deltaY)
-        positionDeltaX = startWidth - newWidth
-        positionDeltaY = startHeight - newHeight
+        newPosition.x = startPosition.x + (startWidth - newWidth)
+        newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'topRight':
         newWidth = Math.max(100, startWidth + deltaX)
         newHeight = Math.max(30, startHeight - deltaY)
-        positionDeltaY = startHeight - newHeight
+        newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'bottomLeft':
         newWidth = Math.max(100, startWidth - deltaX)
         newHeight = Math.max(30, startHeight + deltaY)
-        positionDeltaX = startWidth - newWidth
+        newPosition.x = startPosition.x + (startWidth - newWidth)
         break
       case 'bottomRight':
         newWidth = Math.max(100, startWidth + deltaX)
@@ -322,109 +322,48 @@ const startResize = (event: MouseEvent, type: string) => {
         break
     }
     
-    // 直接更新节点的样式
+    // 更新节点位置和大小
     if (nodeRef.value) {
       nodeRef.value.style.width = `${newWidth}px`
       nodeRef.value.style.height = `${newHeight}px`
+      
+      // 更新节点位置
+      updateNode(props.id, {
+        position: newPosition,
+        style: {
+          width: `${newWidth}px`,
+          height: `${newHeight}px`
+        },
+        data: {
+          ...node.data,
+          style: {
+            ...node.data.style,
+            width: `${newWidth}px`,
+            height: `${newHeight}px`
+          }
+        }
+      })
     }
-    
-    // 存储位置变化，用于在鼠标松开时更新节点位置
-    nodePositionDelta.value = { x: positionDeltaX, y: positionDeltaY }
   }
   
   // 处理鼠标松开事件
-  const handleMouseUp = (upEvent: MouseEvent) => {
-    // 阻止事件冒泡，防止触发画布点击事件
-    upEvent.preventDefault()
-    upEvent.stopPropagation()
-    
-    // 移除事件监听器
+  const handleMouseUp = () => {
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
-    
-    // 获取调整后的尺寸 - 使用 offsetWidth/offsetHeight 获取实际 DOM 尺寸
-    if (nodeRef.value) {
-      // 获取实际 DOM 尺寸
-      const actualWidth = nodeRef.value.offsetWidth
-      const actualHeight = nodeRef.value.offsetHeight
-      
-      // 计算内容区域尺寸（减去 padding）
-      // 注意：如果使用 border-box 盒模型，这一步可以省略
-      const newWidth = `${actualWidth}px`
-      const newHeight = `${actualHeight}px`
-      
-      // 获取当前节点
-      const node = getNodes.value.find(n => n.id === props.id)
-      if (node) {
-        // 计算新的位置
-        const newPosition = {
-          x: node.position.x + nodePositionDelta.value.x,
-          y: node.position.y + nodePositionDelta.value.y
-        }
-        
-        // 直接修改节点的 DOM 样式，确保视觉效果立即更新
-        nodeRef.value.style.width = newWidth
-        nodeRef.value.style.height = newHeight
-        
-        // 创建一个完整的节点更新对象
-        const updatedNode = {
-          ...node,
-          position: newPosition,
-          style: {
-            ...node.style,
-            width: newWidth,
-            height: newHeight
-          },
-          data: {
-            ...node.data,
-            style: {
-              ...node.data.style,
-              width: newWidth,
-              height: newHeight
-            }
-          },
-          // 确保保持选中状态
-          selected: true
-        }
-        
-        // 使用 setNodes 更新所有节点
-        const updatedNodes = getNodes.value.map(n => 
-          n.id === props.id ? updatedNode : n
-        )
-        setNodes(updatedNodes)
-        
-        // 更新节点内部结构
-        nextTick(() => {
-          updateNodeInternals([props.id])
-        })
-      }
-    }
     
     // 触发调整大小结束事件
     window.dispatchEvent(new CustomEvent('resize-end'))
     
-    // 阻止后续事件
+    // 确保节点保持选中状态
     setTimeout(() => {
-      // 防止任何后续点击事件
-      const preventClick = (e: MouseEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        document.removeEventListener('click', preventClick, true)
+      const node = getNodes.value.find(n => n.id === props.id)
+      if (node && !node.selected) {
+        const updatedNodes = getNodes.value.map(n => 
+          n.id === props.id ? { ...n, selected: true } : n
+        )
+        setNodes(updatedNodes)
       }
-      document.addEventListener('click', preventClick, true)
-      
-      // 确保节点仍然保持选中状态
-      setTimeout(() => {
-        const node = getNodes.value.find(n => n.id === props.id)
-        if (node && !node.selected) {
-          // 如果节点不再被选中，强制重新选中
-          const updatedNodes = getNodes.value.map(n => 
-            n.id === props.id ? { ...n, selected: true } : n
-          )
-          setNodes(updatedNodes)
-        }
-      }, 50)
-    }, 0)
+    }, 50)
   }
   
   // 添加事件监听器

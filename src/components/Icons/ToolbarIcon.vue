@@ -172,11 +172,7 @@
 <script setup lang="ts">
 import { defineComponent, defineProps } from 'vue'
 
-interface Props {
-  type: IconType
-  active?: boolean
-}
-
+// 定义图标类型
 type IconType = 
   // 工具栏图标
   | 'bold' | 'italic' | 'underline' | 'fontSize' | 'fontColor'
@@ -195,6 +191,11 @@ type IconType =
   // 新增节点类型
   | 'inputNode' | 'topBottomNode' | 'leftRightNode' | 'outputNode'
   | 'import' // 添加导入图标类型
+
+interface Props {
+  type: IconType
+  active?: boolean
+}
 
 const { type } = defineProps<Props>()
 </script>

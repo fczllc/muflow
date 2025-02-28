@@ -70,120 +70,106 @@ const resizeHandlePositions = [
 ]
 
 const startResize = (event: MouseEvent, type: string) => {
-  event.stopPropagation()
-  
+  // 确保节点已经完全初始化
   if (!nodeRef.value) return
   
-  // 获取当前节点的初始位置和尺寸
-  const nodeElement = nodeRef.value
+  event.stopPropagation()
+  
+  // 触发调整大小开始事件
+  window.dispatchEvent(new CustomEvent('resize-start'))
+  
+  // 记录初始位置和大小
   const startX = event.clientX
   const startY = event.clientY
-  const startWidth = nodeElement.offsetWidth
-  const startHeight = nodeElement.offsetHeight
+  const currentWidth = nodeRef.value ? nodeRef.value.offsetWidth : 100
+  const currentHeight = nodeRef.value ? nodeRef.value.offsetHeight : 30
+  const startWidth = currentWidth
+  const startHeight = currentHeight
   
   // 获取当前节点的初始位置
-  let startPosition = { x: 0, y: 0 }
+  const node = getNodes.value.find(n => n.id === props.id)
+  if (!node) return
   
-  // 尝试从 Vue Flow 实例获取节点信息
-  try {
-    // getNodes 是一个计算属性，需要使用 .value 访问
-    const nodes = getNodes.value
-    const currentNode = nodes.find(n => n.id === props.id)
-    if (currentNode) {
-      startPosition = { ...currentNode.position }
-    }
-  } catch (error) {
-    console.error('Error getting node position:', error)
-    // 如果无法获取位置，使用默认值
-  }
+  const startPosition = { ...node.position }
   
-  const onMouseMove = (e: MouseEvent) => {
-    e.preventDefault()
+  // 处理鼠标移动事件
+  const handleMouseMove = (moveEvent: MouseEvent) => {
+    moveEvent.preventDefault()
+    moveEvent.stopPropagation()
     
-    const dx = e.clientX - startX
-    const dy = e.clientY - startY
+    // 计算鼠标移动距离
+    const deltaX = moveEvent.clientX - startX
+    const deltaY = moveEvent.clientY - startY
     
+    // 根据调整类型计算新的宽度、高度和位置
     let newWidth = startWidth
     let newHeight = startHeight
     let newPosition = { ...startPosition }
     
     switch (type) {
-      case 'right':
-        newWidth = Math.max(100, startWidth + dx)
+      case 'top':
+        newHeight = Math.max(30, startHeight - deltaY)
+        newPosition.y = startPosition.y + (startHeight - newHeight)
         break
-      case 'left':
-        newWidth = Math.max(100, startWidth - dx)
-        // 更新节点位置
-        newPosition.x = startPosition.x + dx
+      case 'right':
+        newWidth = Math.max(100, startWidth + deltaX)
         break
       case 'bottom':
-        newHeight = Math.max(30, startHeight + dy)
+        newHeight = Math.max(30, startHeight + deltaY)
         break
-      case 'top':
-        newHeight = Math.max(30, startHeight - dy)
-        // 更新节点位置
-        newPosition.y = startPosition.y + dy
+      case 'left':
+        newWidth = Math.max(100, startWidth - deltaX)
+        newPosition.x = startPosition.x + (startWidth - newWidth)
         break
     }
     
-    // 设置节点的新尺寸
-    nodeElement.style.width = `${newWidth}px`
-    nodeElement.style.height = `${newHeight}px`
-    
-    // 更新节点位置（仅当拖动左侧或顶部调整点时）
-    if (type === 'left' || type === 'top') {
-      setNodes((nodes) => 
-        nodes.map((n) => {
-          if (n.id === props.id) {
-            return {
-              ...n,
-              position: newPosition
-            }
-          }
-          return n
-        })
-      )
-    }
-  }
-  
-  const onMouseUp = () => {
-    window.removeEventListener('mousemove', onMouseMove)
-    window.removeEventListener('mouseup', onMouseUp)
-    document.body.style.cursor = 'default'
-    
-    // 保存节点尺寸到数据中
+    // 更新节点位置和大小
     if (nodeRef.value) {
+      nodeRef.value.style.width = `${newWidth}px`
+      nodeRef.value.style.height = `${newHeight}px`
+      
+      // 更新节点位置
       updateNode(props.id, {
+        position: newPosition,
+        style: {
+          width: `${newWidth}px`,
+          height: `${newHeight}px`
+        },
         data: {
-          ...props.data,
+          ...node.data,
           style: {
-            ...props.data.style,
-            width: `${nodeRef.value.offsetWidth}px`,
-            height: `${nodeRef.value.offsetHeight}px`
+            ...node.data.style,
+            width: `${newWidth}px`,
+            height: `${newHeight}px`
           }
         }
       })
     }
   }
   
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mouseup', onMouseUp)
-  
-  // 设置鼠标样式
-  switch (type) {
-    case 'right':
-      document.body.style.cursor = 'e-resize'
-      break
-    case 'left':
-      document.body.style.cursor = 'w-resize'
-      break
-    case 'bottom':
-      document.body.style.cursor = 's-resize'
-      break
-    case 'top':
-      document.body.style.cursor = 'n-resize'
-      break
+  // 处理鼠标松开事件
+  const handleMouseUp = () => {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+    
+    // 触发调整大小结束事件
+    window.dispatchEvent(new CustomEvent('resize-end'))
+    
+    // 确保节点保持选中状态
+    setTimeout(() => {
+      const node = getNodes.value.find(n => n.id === props.id)
+      if (node && !node.selected) {
+        const updatedNodes = getNodes.value.map(n => 
+          n.id === props.id ? { ...n, selected: true } : n
+        )
+        setNodes(updatedNodes)
+      }
+    }, 50)
   }
+  
+  // 添加事件监听器
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
 }
 
 // 处理双击事件，进入编辑模式
