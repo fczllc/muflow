@@ -70,6 +70,14 @@
         <div class="help-modal-content">
           <div class="shortcut-list">
             <div class="shortcut-item">
+              <div class="shortcut-key">悬停</div>
+              <div class="shortcut-desc">显示节点连线锚点，从锚点连线</div>
+            </div>
+            <div class="shortcut-item">
+              <div class="shortcut-key">Click</div>
+              <div class="shortcut-desc">选中，显示缩放锚点，拖动改变大小</div>
+            </div>
+            <div class="shortcut-item">
               <div class="shortcut-key">Ctrl + A</div>
               <div class="shortcut-desc">全选所有对象</div>
             </div>
@@ -93,10 +101,7 @@
               <div class="shortcut-key">鼠标拖拽</div>
               <div class="shortcut-desc">移动节点位置</div>
             </div>
-            <div class="shortcut-item">
-              <div class="shortcut-key">鼠标滚轮</div>
-              <div class="shortcut-desc">缩放画布</div>
-            </div>
+
           </div>
         </div>
       </div>
