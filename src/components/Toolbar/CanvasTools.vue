@@ -120,7 +120,7 @@ export default defineComponent({
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useVueFlow, Panel } from '@vue-flow/core'
-import type { VueFlowStore } from '@vue-flow/core'
+import type { VueFlowStore, Node as VueFlowNode, Edge as VueFlowEdge, GraphNode, GraphEdge } from '@vue-flow/core'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
 import ConfirmModal from '../Modal/ConfirmModal.vue'
 import html2canvas from 'html2canvas'
@@ -369,45 +369,145 @@ const importJSON = () => {
   fileInput.value?.click()
 }
 
-const handleFileImport = (event: Event) => {
+const handleFileImport = async (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
 
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target?.result as string)
-      setNodes(data.nodes || [])
-      setEdges(data.edges || [])
-    } catch (error) {
-      console.error('导入失败:', error)
-      alert('导入失败，请检查文件格式')
+  try {
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string)
+        
+        // 验证数据格式
+        if (!Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+          throw new Error('无效的流程图数据格式')
+        }
+
+        // 处理节点数据
+        const nodes = data.nodes.map((node: VueFlowNode) => ({
+          ...node,
+          // 确保必要的属性存在
+          id: node.id,
+          type: node.type,
+          position: { 
+            x: Number(node.position.x) || 0,
+            y: Number(node.position.y) || 0
+          },
+          data: {
+            ...node.data,
+            label: node.data?.label || '',
+            fontSize: Number(node.data?.fontSize) || 14,
+            color: node.data?.color || '#000000',
+            style: node.data?.style || {}
+          },
+          selected: false
+        }))
+
+        // 处理边数据
+        const edges = data.edges.map((edge: VueFlowEdge) => ({
+          ...edge,
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          type: edge.type || 'smoothstep',
+          style: {
+            ...(typeof edge.style === 'object' ? edge.style : {}),
+            strokeWidth: typeof edge.style === 'object' ? edge.style.strokeWidth || 1 : 1,
+            stroke: typeof edge.style === 'object' ? edge.style.stroke || '#555555' : '#555555'
+          },
+          markerEnd: edge.markerEnd,
+          markerStart: edge.markerStart,
+          selected: false
+        }))
+
+        // 先清空当前画布
+        setNodes([])
+        setEdges([])
+
+        // 等待一帧以确保清空操作完成
+        await new Promise(resolve => requestAnimationFrame(resolve))
+
+        // 添加新的节点和边
+        setNodes(nodes)
+        setEdges(edges)
+
+      } catch (error) {
+        console.error('导入失败:', error)
+        alert('导入失败，请检查文件格式')
+      }
     }
+    reader.readAsText(file)
+  } catch (error) {
+    console.error('导入失败:', error)
+    alert('导入失败，请稍后重试')
+  } finally {
+    // 清空文件输入框，允许重复选择同一文件
+    const input = event.target as HTMLInputElement
+    input.value = ''
   }
-  reader.readAsText(file)
 }
 
 const saveJSON = () => {
-  const flowData = {
-    nodes: getNodes.value,
-    edges: getEdges.value,
-    metadata: {
-      version: '1.0.0',
-      timestamp: new Date().toISOString(),
-      title: `流程图_${getTimestamp()}`
+  try {
+    // 获取节点和边的数据
+    const nodes = getNodes.value.map((node: VueFlowNode) => ({
+      ...node,
+      // 确保保存必要的属性
+      id: node.id,
+      type: node.type,
+      position: { ...node.position },
+      data: {
+        ...node.data,
+        label: node.data?.label || '',
+        fontSize: node.data?.fontSize || 14,
+        color: node.data?.color || '#000000',
+        style: node.data?.style || {}
+      },
+      selected: false // 重置选中状态
+    }))
+
+    const edges = getEdges.value.map((edge: VueFlowEdge) => ({
+      ...edge,
+      // 确保保存必要的属性
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      type: edge.type || 'smoothstep',
+      style: {
+        ...(typeof edge.style === 'object' ? edge.style : {}),
+        strokeWidth: typeof edge.style === 'object' ? edge.style.strokeWidth || 1 : 1,
+        stroke: typeof edge.style === 'object' ? edge.style.stroke || '#555555' : '#555555'
+      },
+      markerEnd: edge.markerEnd,
+      markerStart: edge.markerStart,
+      selected: false // 重置选中状态
+    }))
+
+    const flowData = {
+      nodes,
+      edges,
+      metadata: {
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        title: `流程图_${getTimestamp()}`
+      }
     }
+    
+    const jsonStr = JSON.stringify(flowData, null, 2)
+    const blob = new Blob([jsonStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `flowchart_${getTimestamp()}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('保存失败:', error)
+    alert('保存失败，请稍后重试')
   }
-  
-  const jsonStr = JSON.stringify(flowData, null, 2)
-  const blob = new Blob([jsonStr], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `flowchart_${getTimestamp()}.json`
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
 }
 
 // 显示帮助
