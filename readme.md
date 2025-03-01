@@ -254,3 +254,49 @@ npm run build
 
 注：✓ 表示测试通过，- 表示未测试，× 表示测试未通过
 
+### 画布工具
+
+- [x] 可配置的工具按钮
+  - [x] 清除画布
+  - [x] 导出图片
+  - [x] 导入 JSON
+  - [x] 保存为本地 JSON
+  - [x] 保存到 API
+  - [x] 帮助说明
+  - [x] 按钮显示控制
+
+## 使用说明
+
+### 基本使用
+
+```vue
+<template>
+  <div class="flow-container">
+    <FlowEditor />
+  </div>
+</template>
+```
+
+### 自定义工具按钮
+
+可以通过 `buttons` 属性控制工具按钮的显示/隐藏：
+
+```vue
+<template>
+  <div class="flow-container">
+    <FlowEditor>
+      <LeftSidebar :buttons="{
+        clear: true,      // 显示清除按钮
+        export: true,     // 显示导出按钮
+        import: false,    // 隐藏导入按钮
+        saveLocal: true,  // 显示本地保存按钮
+        saveAPI: false,   // 隐藏API保存按钮
+        help: true       // 显示帮助按钮
+      }" />
+    </FlowEditor>
+  </div>
+</template>
+```
+
+所有按钮默认显示，可以根据需要选择性隐藏。
+

@@ -4,7 +4,32 @@
 
 ## 属性 (Props)
 
-该组件没有可配置的属性。
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| buttons | ButtonsConfig | 见下方 | 控制画布工具按钮的显示/隐藏 |
+
+### ButtonsConfig 类型定义
+
+```typescript
+interface ButtonsConfig {
+  clear?: boolean    // 清除画布按钮
+  export?: boolean   // 导出图片按钮
+  import?: boolean   // 导入JSON按钮
+  saveLocal?: boolean // 保存为本地JSON按钮
+  saveAPI?: boolean  // 保存到API按钮
+  help?: boolean     // 帮助按钮
+}
+
+// 默认值
+const defaultButtons = {
+  clear: true,
+  export: true,
+  import: true,
+  saveLocal: true,
+  saveAPI: true,
+  help: true
+}
+```
 
 ## 事件 (Events)
 
@@ -83,20 +108,27 @@
 
 ## 使用示例
 
+1. 默认显示所有按钮：
 ```vue
-<template>
-  <div class="sidebar-container">
-    <LeftSidebar />
-  </div>
-</template>
+<LeftSidebar />
+```
 
-<script setup lang="ts">
-import { LeftSidebar } from './components'
-</script>
+2. 自定义显示特定按钮：
+```vue
+<LeftSidebar :buttons="{
+  clear: true,
+  export: true,
+  import: false,    // 隐藏导入按钮
+  saveLocal: true,
+  saveAPI: false,   // 隐藏保存到API按钮
+  help: true
+}" />
+```
 
-<style>
-.sidebar-container {
-  height: 100%;
-  border-right: 1px solid var(--border-color);
-}
-</style> 
+3. 只显示最基本的按钮：
+```vue
+<LeftSidebar :buttons="{
+  clear: true,
+  saveLocal: true,
+  help: true
+}" /> 

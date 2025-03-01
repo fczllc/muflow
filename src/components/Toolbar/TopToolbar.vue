@@ -358,8 +358,8 @@ color: #666;
 }
 
 .logo {
-  width: 60px;
-  height: 20px;
+  width: 42px;
+  height: 16px;
 }
 </style>
 
@@ -367,7 +367,6 @@ color: #666;
 import { ref, computed, watch } from 'vue'
 import { useVueFlow, MarkerType } from '@vue-flow/core'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
-import ConfirmModal from '../Modal/ConfirmModal.vue'
 import html2canvas from 'html2canvas'
 
 // 获取 Vue Flow 实例

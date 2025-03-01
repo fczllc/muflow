@@ -99,6 +99,76 @@ import FlowEditor from './components/FlowEditor.vue'
    - 保存到本地
    - API 数据交互
 
+### 工具按钮配置
+
+可以通过配置控制工具栏按钮的显示/隐藏：
+
+```vue
+<template>
+  <div class="flow-container">
+    <FlowEditor>
+      <LeftSidebar :buttons="{
+        // 基本操作
+        clear: true,      // 清除画布
+        help: true,       // 帮助说明
+        
+        // 文件操作
+        export: true,     // 导出图片
+        import: true,     // 导入JSON
+        
+        // 保存操作
+        saveLocal: true,  // 保存到本地
+        saveAPI: true     // 保存到API
+      }" />
+    </FlowEditor>
+  </div>
+</template>
+```
+
+按钮配置说明：
+1. 所有按钮默认显示
+2. 可以选择性地隐藏不需要的按钮
+3. 未指定的按钮保持默认显示状态
+4. 建议根据实际使用场景配置合适的按钮组合
+
+常见配置场景：
+
+1. 本地使用模式：
+```typescript
+const buttons = {
+  clear: true,
+  export: true,
+  import: true,
+  saveLocal: true,
+  saveAPI: false,  // 隐藏API保存
+  help: true
+}
+```
+
+2. API集成模式：
+```typescript
+const buttons = {
+  clear: true,
+  export: true,
+  import: false,    // 隐藏本地导入
+  saveLocal: false, // 隐藏本地保存
+  saveAPI: true,    // 启用API保存
+  help: true
+}
+```
+
+3. 只读模式：
+```typescript
+const buttons = {
+  clear: false,   // 禁用清除
+  export: true,   // 允许导出
+  import: false,  // 禁用导入
+  saveLocal: false, // 禁用保存
+  saveAPI: false,  // 禁用API
+  help: true
+}
+```
+
 ## 快捷键
 
 | 快捷键 | 功能 |

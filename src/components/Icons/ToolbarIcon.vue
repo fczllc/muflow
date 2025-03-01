@@ -136,14 +136,15 @@
       <polyline points="21 15 16 10 5 21"></polyline>
     </svg>
     
-    <!-- 保存画布 -->
+    <!-- 保存为本地JSON图标 -->
     <svg v-else-if="type === 'save'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- 软盘形状 -->
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-      <!-- 中间的矩形 -->
-      <rect x="7" y="3" width="10" height="7"></rect>
-      <!-- 底部的矩形 -->
-      <rect x="7" y="13" width="10" height="5"></rect>
+      <!-- 文件形状 -->
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <!-- JSON文本标识 -->
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <!-- 添加 .json 文本效果 -->
+      <line x1="8" y1="13" x2="16" y2="13"></line>
+      <line x1="8" y1="17" x2="16" y2="17"></line>
     </svg>
     
     <!-- 导入画布图标 -->
@@ -160,6 +161,19 @@
       <circle cx="12" cy="12" r="10"></circle>
       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
       <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    </svg>
+    
+    <!-- 保存到API图标 -->
+    <svg v-else-if="type === 'saveToAPI'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 软盘形状 -->
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+      <!-- 中间的矩形 -->
+      <rect x="7" y="3" width="10" height="7"></rect>
+      <!-- 底部的矩形 -->
+      <rect x="7" y="13" width="10" height="5"></rect>
+      <!-- 添加云端标识 -->
+      <path d="M3 15 L3 19"></path>
+      <path d="M21 15 L21 19"></path>
     </svg>
     
     <!-- 默认图标 -->
@@ -191,6 +205,7 @@ type IconType =
   // 新增节点类型
   | 'inputNode' | 'topBottomNode' | 'leftRightNode' | 'outputNode'
   | 'import' // 添加导入图标类型
+  | 'saveToAPI' // 添加保存到API的图标类型
 
 interface Props {
   type: IconType

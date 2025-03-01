@@ -1,24 +1,24 @@
 <template>
   <div class="canvas-tools">
-    <div class="tool-btn-wrapper">
+    <div v-if="buttons.clear" class="tool-btn-wrapper">
       <button class="icon-btn" @click="clearCanvas" @mouseleave="hideTooltip" title="清除画布">
         <ToolbarIcon type="clear" />
       </button>
       <div class="tooltip" v-show="activeTooltip === 'clear'">清除画布</div>
     </div>
 
-    <div class="tool-btn-wrapper">
+    <div v-if="buttons.export" class="tool-btn-wrapper">
       <button class="icon-btn" @click="handleExportClick" @mouseleave="hideTooltip" title="导出图片">
         <ToolbarIcon type="export" />
       </button>
       <div class="tooltip" v-show="activeTooltip === 'export'">导出图片</div>
     </div>
 
-    <div class="tool-btn-wrapper">
-      <button class="icon-btn" @click="importJSON" @mouseleave="hideTooltip" title="导入本地文件">
+    <div v-if="buttons.import" class="tool-btn-wrapper">
+      <button class="icon-btn" @click="importJSON" @mouseleave="hideTooltip" title="导入Json文件">
         <ToolbarIcon type="import" />
       </button>
-      <div class="tooltip" v-show="activeTooltip === 'import'">导入本地文件</div>
+      <div class="tooltip" v-show="activeTooltip === 'import'">导入Json文件</div>
       <input
         type="file"
         ref="fileInput"
@@ -28,19 +28,25 @@
       >
     </div>
 
-    <div class="tool-btn-wrapper">
-      <button class="icon-btn" @click="saveJSON" @mouseleave="hideTooltip" title="保存到本地">
+    <div v-if="buttons.saveLocal" class="tool-btn-wrapper">
+      <button class="icon-btn" @click="saveJSON" @mouseleave="hideTooltip" title="保存为Json文件">
         <ToolbarIcon type="save" />
       </button>
-      <div class="tooltip" v-show="activeTooltip === 'save'">保存到本地</div>
+      <div class="tooltip" v-show="activeTooltip === 'save'">保存为Json文件</div>
     </div>
 
-    <!-- 添加帮助按钮 -->
-    <div class="tool-btn-wrapper">
-      <button class="icon-btn" @click="showHelp" @mouseleave="hideTooltip" title="帮助">
+    <div v-if="buttons.saveAPI" class="tool-btn-wrapper">
+      <button class="icon-btn" @click="saveToAPI" @mouseleave="hideTooltip" title="保存">
+        <ToolbarIcon type="saveToAPI" />
+      </button>
+      <div class="tooltip" v-show="activeTooltip === 'saveToAPI'">保存</div>
+    </div>
+
+    <div v-if="buttons.help" class="tool-btn-wrapper">
+      <button class="icon-btn" @click="showHelp" @mouseleave="hideTooltip" title="查看操作">
         <ToolbarIcon type="help" />
       </button>
-      <div class="tooltip" v-show="activeTooltip === 'help'">帮助</div>
+      <div class="tooltip" v-show="activeTooltip === 'help'">查看操作</div>
     </div>
 
     <!-- 添加导出提示模态框 -->
@@ -139,7 +145,7 @@ import type { FlowNode, FlowEdge, FlowData, APIResponse } from '../../types/flow
 const { getNodes, getEdges, setNodes, setEdges, vueFlowRef, toObject } = useVueFlow()
 
 // 提示框状态
-const activeTooltip = ref<'clear' | 'export' | 'save' | 'import' | 'help' | null>(null)
+const activeTooltip = ref<'clear' | 'export' | 'save' | 'import' | 'help' | 'saveToAPI' | null>(null)
 
 // 帮助模态框状态
 const showHelpModal = ref(false)
@@ -706,43 +712,12 @@ const loadFromAPI = async (apiEndpoint: string, options?: RequestInit): Promise<
  * @param apiEndpoint API端点URL
  * @param options 可选的请求配置
  */
-const saveToAPI = async (apiEndpoint: string, options?: RequestInit) => {
+const saveToAPI = async () => {
   try {
-    // 获取节点和边的数据
-    const nodes = getNodes.value.map((node: VueFlowNode) => ({
-      ...node,
-      id: node.id,
-      type: node.type,
-      position: { ...node.position },
-      data: {
-        ...node.data,
-        label: node.data?.label || '',
-        fontSize: node.data?.fontSize || 14,
-        color: node.data?.color || '#000000',
-        style: node.data?.style || {}
-      },
-      selected: false
-    }))
-
-    const edges = getEdges.value.map((edge: VueFlowEdge) => ({
-      ...edge,
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      type: edge.type || 'smoothstep',
-      style: {
-        ...(typeof edge.style === 'object' ? edge.style : {}),
-        strokeWidth: typeof edge.style === 'object' ? edge.style.strokeWidth || 1 : 1,
-        stroke: typeof edge.style === 'object' ? edge.style.stroke || '#555555' : '#555555'
-      },
-      markerEnd: edge.markerEnd,
-      markerStart: edge.markerStart,
-      selected: false
-    }))
-
+    // 生成画布数据
     const flowData = {
-      nodes,
-      edges,
+      nodes: getNodes.value,
+      edges: getEdges.value,
       metadata: {
         version: '1.0.0',
         timestamp: new Date().toISOString(),
@@ -750,26 +725,25 @@ const saveToAPI = async (apiEndpoint: string, options?: RequestInit) => {
       }
     }
 
-    const response = await fetch(apiEndpoint, {
+    // 调用 API 保存数据
+    const response = await fetch('YOUR_API_ENDPOINT', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(flowData),
-      ...options
+      body: JSON.stringify(flowData)
     })
 
     if (!response.ok) {
       throw new Error('保存到API失败: ' + response.statusText)
     }
 
-    return true
+    // 可以添加成功提示
+    alert('保存成功')
   } catch (error) {
     console.error('保存到API失败:', error)
     apiErrorMessage.value = error instanceof Error ? error.message : '保存到API失败'
     showAPIError.value = true
-    return false
   }
 }
 
@@ -778,6 +752,33 @@ const handleAPIError = () => {
   showAPIError.value = false
   apiErrorMessage.value = ''
 }
+
+// 定义按钮配置接口
+interface ButtonsConfig {
+  clear?: boolean
+  export?: boolean
+  import?: boolean
+  saveLocal?: boolean
+  saveAPI?: boolean
+  help?: boolean
+}
+
+// 定义组件属性
+interface Props {
+  buttons?: ButtonsConfig
+}
+
+// 设置默认值
+const props = withDefaults(defineProps<Props>(), {
+  buttons: () => ({
+    clear: true,
+    export: true,
+    import: true,
+    saveLocal: true,
+    saveAPI: true,
+    help: true
+  })
+})
 </script>
 
 <style scoped>
