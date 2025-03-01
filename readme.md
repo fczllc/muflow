@@ -8,11 +8,12 @@
 -->
 # MuFlow
 
-一个基于 Vue 3 的流程图编辑器组件。
+一个基于 Vue 3 的简洁流程图编辑器组件。
 
 ## 声明
 
-本项目基于 [Vue Flow](https://github.com/bcakmakoglu/vue-flow) 开发，Vue Flow 是一个强大的 Vue 3 流程图组件库。
+- 本项目基于 [Vue Flow](https://github.com/bcakmakoglu/vue-flow) 开发，Vue Flow 是一个强大的 Vue 3 流程图组件库。
+- 本项目主要用于制作简易流程图的需求，适合以组件形式的嵌入到用户系统做简单的流程图的绘制，并提供保存为本地Json文件和保存到API的功能。
 
 ### 致谢
 
