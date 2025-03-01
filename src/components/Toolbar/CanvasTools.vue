@@ -871,13 +871,13 @@ const props = withDefaults(defineProps<Props>(), {
   font-size: 24px;
   color: #999;
   cursor: pointer;
-  padding: 0;
+  padding-bottom: 6px;
   width: 24px;
   height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 3px;
   transition: all 0.2s;
 }
 

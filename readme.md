@@ -6,9 +6,34 @@
  * @LastEditTime: 2025-02-23 18:46:05
  * @FilePath: \muflow\readme.md
 -->
-# MuFlow - Vue Flow 流程图编辑器
+# MuFlow
 
-基于 Vue 3 + TypeScript + Vite + Vue Flow 开发的流程图编辑器组件。
+一个基于 Vue 3 的流程图编辑器组件。
+
+## 声明
+
+本项目基于 [Vue Flow](https://github.com/bcakmakoglu/vue-flow) 开发，Vue Flow 是一个强大的 Vue 3 流程图组件库。
+
+### 致谢
+
+特别感谢 [Vue Flow](https://github.com/bcakmakoglu/vue-flow) 的作者 [bcakmakoglu](https://github.com/bcakmakoglu) 提供了如此优秀的开源项目。本项目在 Vue Flow 的基础上进行了以下扩展：
+
+- 添加了对齐和分布功能
+- 增强了节点编辑功能
+- 提供了更多的样式设置选项
+- 添加了本地存储和 API 集成功能
+- 实现了完整的工具栏
+
+### 使用的开源项目
+
+- [Vue Flow](https://github.com/bcakmakoglu/vue-flow) - MIT License
+  - 用于实现流程图的核心功能
+  - 包括节点渲染、连线处理、画布缩放等基础功能
+  - 版本：1.42.1
+
+### 许可证
+
+本项目采用 MIT 许可证，与 Vue Flow 保持一致。完整的许可证文本请参见 [LICENSE](LICENSE) 文件。
 
 ## 项目进度
 

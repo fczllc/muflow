@@ -1,3 +1,13 @@
+<!--
+ * MuFlow - Vue Flow based flow chart editor
+ * Copyright (c) 2024 tianyi
+ * 
+ * This project is based on Vue Flow (https://github.com/bcakmakoglu/vue-flow)
+ * Vue Flow Copyright (c) bcakmakoglu - Released under MIT License
+ * 
+ * @license MIT
+ -->
+
 <template>
   <div class="flow-editor">
     <TopToolbar 
