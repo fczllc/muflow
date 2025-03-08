@@ -121,6 +121,19 @@
   - [x] 示例代码
   - [x] 部署文档
 
+### ✅ 第七阶段：组件拆分与功能扩展
+- [x] 拆分编辑器和查看器组件
+  - [x] FlowEditor 组件（完整编辑功能）
+  - [x] FlowViewer 组件（纯展示功能）
+- [x] FlowViewer 组件功能
+  - [x] 只读模式展示
+  - [x] 禁用所有编辑操作
+  - [x] 支持画布缩放和平移
+  - [x] 自适应画布大小
+  - [x] API数据加载
+  - [x] 错误提示功能
+  - [x] 保持原有样式
+
 ## 开发环境
 
 - Vue 3.4.19
@@ -295,6 +308,7 @@ npm run build
 
 ### 基本使用
 
+#### FlowEditor 组件
 ```vue
 <template>
   <div class="flow-container">
@@ -303,26 +317,110 @@ npm run build
 </template>
 ```
 
-### 自定义工具按钮
-
-可以通过 `buttons` 属性控制工具按钮的显示/隐藏：
+#### FlowViewer 组件
+用于只读展示流程图，支持从API加载数据：
 
 ```vue
 <template>
   <div class="flow-container">
-    <FlowEditor>
-      <LeftSidebar :buttons="{
-        clear: true,      // 显示清除按钮
-        export: true,     // 显示导出按钮
-        import: false,    // 隐藏导入按钮
-        saveLocal: true,  // 显示本地保存按钮
-        saveAPI: false,   // 隐藏API保存按钮
-        help: true       // 显示帮助按钮
-      }" />
-    </FlowEditor>
+    <FlowViewer 
+      :flowId="currentFlowId"
+      :apiUrl="apiBaseUrl"
+    />
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import FlowViewer from './components/FlowViewer.vue'
+
+const currentFlowId = ref('flow-123')
+const apiBaseUrl = 'https://your-api-base-url'
+</script>
 ```
 
-所有按钮默认显示，可以根据需要选择性隐藏。
+### FlowViewer 组件特性
+
+1. 只读模式
+   - 禁用节点拖拽
+   - 禁用连线编辑
+   - 禁用选择功能
+   - 保持原有样式显示
+
+2. 视图控制
+   - 支持画布缩放（鼠标滚轮）
+   - 支持画布平移（鼠标拖动）
+   - 自动适应画布大小
+   - 缩放范围：0.1x - 2x
+
+3. 数据加载
+   - 支持API数据加载
+   - 自动验证数据格式
+   - 错误信息显示
+   - 实时数据更新
+
+4. 错误处理
+   - 数据格式错误提示
+   - API加载失败提示
+   - 友好的错误信息展示
+   - 清晰的错误状态展示
+
+### 组件属性
+
+#### FlowViewer Props
+
+| 属性名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| flowId | string | 否 | - | 流程图ID，用于从API加载数据 |
+| apiUrl | string | 否 | - | API基础URL，用于构建完整的API请求地址 |
+
+### 使用示例
+
+1. 基础用法：
+```vue
+<FlowViewer flowId="flow-123" />
+```
+
+2. 完整配置：
+```vue
+<FlowViewer
+  flowId="flow-123"
+  apiUrl="https://api.example.com"
+/>
+```
+
+3. 动态加载：
+```vue
+<template>
+  <FlowViewer :flowId="currentFlowId" />
+  <button @click="loadNextFlow">加载下一个流程图</button>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const currentFlowId = ref('flow-1')
+
+const loadNextFlow = () => {
+  currentFlowId.value = 'flow-2' // 切换到新的流程图
+}
+</script>
+```
+
+### 注意事项
+
+1. API 格式要求
+   - 接口路径：`/api/flows/${flowId}`
+   - 返回格式：标准的 Vue Flow 数据格式
+   - 必须包含 nodes 和 edges 数组
+
+2. 数据格式要求
+   - 节点必须包含：id、type、position
+   - 边必须包含：id、source、target
+   - 支持的节点类型：roundedRect、textLabel
+
+3. 性能考虑
+   - 大量节点时会自动优化显示
+   - 建议节点数量控制在 1000 个以内
+   - 连线数量建议控制在 2000 条以内
 
