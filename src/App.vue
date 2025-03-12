@@ -9,24 +9,29 @@
  -->
 
 <template>
-  <div class="app">
-    <FlowViewer />
+  <div class="app-container">
+    <FlowEditor />
   </div>
 </template>
 
 <script setup lang="ts">
-import FlowViewer from './components/FlowViewer.vue'
+import FlowEditor from './components/FlowEditor.vue'
 </script>
 
 <style>
-.app {
-  width: 100vw;
-  height: 100vh;
-}
-
 html, body {
   margin: 0;
   padding: 0;
+  height: 100vh;
+  width: 100vw;
   overflow: hidden;
+}
+
+.app-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f8f8;
 }
 </style> 
