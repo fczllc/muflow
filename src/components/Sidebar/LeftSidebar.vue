@@ -20,6 +20,16 @@
       <ToolbarIcon type="roundedRect" />
     </button>
 
+    <!-- 直线控件 -->
+    <button 
+      class="sidebar-btn" 
+      draggable="true" 
+      @dragstart="onDragStart($event, 'line')" 
+      title="直线"
+    >
+      <ToolbarIcon type="line" />
+    </button>
+
     <!-- 添加画布工具到底部 -->
     <div class="canvas-tools-wrapper">
       <CanvasTools />

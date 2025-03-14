@@ -1,0 +1,967 @@
+{
+  "nodes": [
+    {
+      "id": "roundedRect-1",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 120,
+        "height": 42
+      },
+      "computedPosition": {
+        "x": 120,
+        "y": 80,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-1",
+            "type": "source",
+            "x": 115,
+            "y": 17,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-1",
+            "type": "source",
+            "x": 56,
+            "y": 37,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-1",
+            "type": "target",
+            "x": -3,
+            "y": 17,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-1",
+            "type": "target",
+            "x": 56,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 120,
+        "y": 80
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        },
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "120px",
+        "height": "42px"
+      }
+    },
+    {
+      "id": "roundedRect-2",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 120,
+        "height": 42
+      },
+      "computedPosition": {
+        "x": 320,
+        "y": 160,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-2",
+            "type": "source",
+            "x": 115,
+            "y": 17,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-2",
+            "type": "source",
+            "x": 56,
+            "y": 37,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-2",
+            "type": "target",
+            "x": -3,
+            "y": 17,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-2",
+            "type": "target",
+            "x": 56,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 320,
+        "y": 160
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        },
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "120px",
+        "height": "42px"
+      }
+    },
+    {
+      "id": "roundedRect-3",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 120,
+        "height": 42
+      },
+      "computedPosition": {
+        "x": 160,
+        "y": 300,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-3",
+            "type": "source",
+            "x": 115,
+            "y": 17,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-3",
+            "type": "source",
+            "x": 56,
+            "y": 37,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-3",
+            "type": "target",
+            "x": -3,
+            "y": 17,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-3",
+            "type": "target",
+            "x": 56,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 160,
+        "y": 300
+      },
+      "data": {
+        "label": "节点",
+        "fontSize": 14,
+        "color": "#000000",
+        "style": {}
+      },
+      "events": {}
+    },
+    {
+      "id": "roundedRect-4",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 120,
+        "height": 42
+      },
+      "computedPosition": {
+        "x": 580,
+        "y": 160,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-4",
+            "type": "source",
+            "x": 115,
+            "y": 17,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-4",
+            "type": "source",
+            "x": 56,
+            "y": 37,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-4",
+            "type": "target",
+            "x": -3,
+            "y": 17,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-4",
+            "type": "target",
+            "x": 56,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 580,
+        "y": 160
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        },
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "120px",
+        "height": "42px"
+      }
+    },
+    {
+      "id": "line-5",
+      "type": "line",
+      "dimensions": {
+        "width": 599,
+        "height": 1
+      },
+      "computedPosition": {
+        "x": 120,
+        "y": 380,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 120,
+        "y": 380
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "strokeWidth": 1,
+          "stroke": "#000000",
+          "strokeDasharray": ""
+        },
+        "width": 599.0534199885683,
+        "angle": 0,
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {}
+    },
+    {
+      "id": "line-6",
+      "type": "line",
+      "dimensions": {
+        "width": 211,
+        "height": 1
+      },
+      "computedPosition": {
+        "x": 160,
+        "y": 440,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 160,
+        "y": 440
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "strokeWidth": 4,
+          "stroke": "#3f19d7",
+          "strokeDasharray": "2 2"
+        },
+        "width": 211.24866863485792,
+        "angle": 17.920329911804835,
+        "arrowStyle": "target",
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": "eroundedRect-1-roundedRect-2",
+      "type": "smoothstep",
+      "source": "roundedRect-1",
+      "target": "roundedRect-2",
+      "sourceHandle": "right-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "dotted",
+        "savedArrowStyle": "target"
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555",
+        "strokeDasharray": "2 2"
+      },
+      "markerEnd": "arrowclosed",
+      "sourceNode": {
+        "id": "roundedRect-1",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 120,
+          "height": 42
+        },
+        "computedPosition": {
+          "x": 120,
+          "y": 80,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 115,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 56,
+              "y": 37,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": -3,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": 56,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 120,
+          "y": 80
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "120px",
+            "height": "42px"
+          }
+        },
+        "events": {},
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      },
+      "targetNode": {
+        "id": "roundedRect-2",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 120,
+          "height": 42
+        },
+        "computedPosition": {
+          "x": 320,
+          "y": 160,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-2",
+              "type": "source",
+              "x": 115,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-2",
+              "type": "source",
+              "x": 56,
+              "y": 37,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-2",
+              "type": "target",
+              "x": -3,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-2",
+              "type": "target",
+              "x": 56,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 320,
+          "y": 160
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "120px",
+            "height": "42px"
+          }
+        },
+        "events": {},
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      },
+      "sourceX": 243,
+      "sourceY": 101,
+      "targetX": 380,
+      "targetY": 157,
+      "selected": false
+    },
+    {
+      "id": "eroundedRect-1-roundedRect-3",
+      "type": "smoothstep",
+      "source": "roundedRect-1",
+      "target": "roundedRect-3",
+      "sourceHandle": "bottom-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "both"
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": "arrowclosed",
+      "sourceNode": {
+        "id": "roundedRect-1",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 120,
+          "height": 42
+        },
+        "computedPosition": {
+          "x": 120,
+          "y": 80,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 115,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 56,
+              "y": 37,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": -3,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": 56,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 120,
+          "y": 80
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "120px",
+            "height": "42px"
+          }
+        },
+        "events": {},
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      },
+      "targetNode": {
+        "id": "roundedRect-3",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 120,
+          "height": 42
+        },
+        "computedPosition": {
+          "x": 160,
+          "y": 300,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-3",
+              "type": "source",
+              "x": 115,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-3",
+              "type": "source",
+              "x": 56,
+              "y": 37,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-3",
+              "type": "target",
+              "x": -3,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-3",
+              "type": "target",
+              "x": 56,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 160,
+          "y": 300
+        },
+        "data": {
+          "label": "节点"
+        },
+        "events": {}
+      },
+      "sourceX": 180,
+      "sourceY": 125,
+      "targetX": 220,
+      "targetY": 297,
+      "selected": false,
+      "markerStart": "arrowclosed"
+    },
+    {
+      "id": "eroundedRect-2-roundedRect-4",
+      "type": "smoothstep",
+      "source": "roundedRect-2",
+      "target": "roundedRect-4",
+      "sourceHandle": "right-handle",
+      "targetHandle": "left-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#7124e5",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target"
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#7124e5"
+      },
+      "markerEnd": "arrowclosed",
+      "sourceNode": {
+        "id": "roundedRect-2",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 120,
+          "height": 42
+        },
+        "computedPosition": {
+          "x": 320,
+          "y": 160,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-2",
+              "type": "source",
+              "x": 115,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-2",
+              "type": "source",
+              "x": 56,
+              "y": 37,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-2",
+              "type": "target",
+              "x": -3,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-2",
+              "type": "target",
+              "x": 56,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 320,
+          "y": 160
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "120px",
+            "height": "42px"
+          }
+        },
+        "events": {},
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      },
+      "targetNode": {
+        "id": "roundedRect-4",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 120,
+          "height": 42
+        },
+        "computedPosition": {
+          "x": 580,
+          "y": 160,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-4",
+              "type": "source",
+              "x": 115,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-4",
+              "type": "source",
+              "x": 56,
+              "y": 37,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-4",
+              "type": "target",
+              "x": -3,
+              "y": 17,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-4",
+              "type": "target",
+              "x": 56,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 580,
+          "y": 160
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "120px",
+            "height": "42px"
+          }
+        },
+        "events": {},
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      },
+      "sourceX": 443,
+      "sourceY": 181,
+      "targetX": 577,
+      "targetY": 181,
+      "selected": false
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "timestamp": "2025-03-14T15:22:05.934Z",
+    "title": "流程图_20250314_2322"
+  }
+}

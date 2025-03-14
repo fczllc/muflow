@@ -11,6 +11,11 @@
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
     </svg>
     
+    <!-- 直线图标 -->
+    <svg v-else-if="type === 'line'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+    
     <!-- 输入节点图标 -->
     <svg v-else-if="type === 'inputNode'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 12h8"></path>
@@ -201,7 +206,7 @@ type IconType =
   // 分隔线
   | 'separator' | 'divider'
   // 左侧栏控件图标
-  | 'textLabel' | 'roundedRect'
+  | 'textLabel' | 'roundedRect' | 'line'
   // 新增节点类型
   | 'inputNode' | 'topBottomNode' | 'leftRightNode' | 'outputNode'
   | 'import' // 添加导入图标类型

@@ -76,6 +76,7 @@ import TopToolbar from './Toolbar/TopToolbar.vue'
 import LeftSidebar from './Sidebar/LeftSidebar.vue'
 import RoundedRectNode from './Nodes/RoundedRectNode.vue'
 import TextLabelNode from './Nodes/TextLabelNode.vue'
+import LineNode from './Nodes/LineNode.vue'
 import type { FlowNode, FlowEdge, AlignDirection, DistributeDirection, NodeDimensions } from '../types/flow'
 import { debounce } from 'lodash-es'
 import AlignmentLines from './AlignmentLines.vue'
@@ -97,7 +98,8 @@ const {
   onConnect, 
   onNodeDragStop: registerNodeDragStop, 
   updateNode,
-  onEdgeClick: registerEdgeClick
+  onEdgeClick: registerEdgeClick,
+  project
 } = useVueFlow()
 
 // 状态定义
@@ -114,7 +116,8 @@ const nodeDimensionsCache = new Map<string, NodeDimensions>()
 // 注册自定义节点类型
 const nodeTypes = {
   roundedRect: markRaw(RoundedRectNode),
-  textLabel: markRaw(TextLabelNode)
+  textLabel: markRaw(TextLabelNode),
+  line: markRaw(LineNode)
 }
 
 // 计算属性
@@ -332,57 +335,41 @@ const onDragOver = (event: DragEvent) => {
 }
 
 const onDrop = (event: DragEvent) => {
-  event.preventDefault()
+  const nodeType = event.dataTransfer?.getData('application/vueflow')
   
-  const type = event.dataTransfer?.getData('application/vueflow')
-  if (!type) return
+  if (typeof nodeType === 'string' && nodeType) {
+    const { left, top } = (event.target as HTMLDivElement).getBoundingClientRect()
+    const position = project({
+      x: event.clientX - left,
+      y: event.clientY - top,
+    })
 
-  const wrapper = event.target as HTMLDivElement
-  const { left, top } = wrapper.getBoundingClientRect()
-  
-  const position = {
-    x: event.clientX - left - (type === 'textLabel' ? 75 : 100),
-    y: event.clientY - top - (type === 'textLabel' ? 20 : 25)
-  }
-
-  let newNode: any = {
-    id: `${type}-${Date.now()}`,
-    position,
-    data: { 
-      label: getDefaultLabel(type),
-      fontSize: 14,
-      color: '#000000'
+    let newNode: Node = {
+      id: `${nodeType}-${getNodes.value.length + 1}`,
+      type: nodeType,
+      position,
+      data: { label: getDefaultLabel(nodeType) }
     }
-  }
-  
-  switch (type) {
-    case 'textLabel':
-      newNode.type = 'textLabel'
-      break
-    case 'roundedRect':
-      newNode.type = 'roundedRect'
-      break
-    case 'input':
-      newNode.type = 'input'
-      break
-    case 'output':
-      newNode.type = 'output'
-      break
-    case 'topBottom':
-      newNode.type = 'default'
-      newNode.sourcePosition = Position.Bottom
-      newNode.targetPosition = Position.Top
-      break
-    case 'leftRight':
-      newNode.type = 'default'
-      newNode.sourcePosition = Position.Right
-      newNode.targetPosition = Position.Left
-      break
-    default:
-      newNode.type = type
-  }
 
-  addNodes([newNode])
+    // 为直线节点设置特殊属性
+    if (nodeType === 'line') {
+      newNode = {
+        ...newNode,
+        data: {
+          ...newNode.data,
+          style: {
+            strokeWidth: 1,
+            stroke: '#000000',
+            strokeDasharray: ''
+          }
+        },
+        draggable: true,
+        selectable: true
+      }
+    }
+
+    addNodes([newNode])
+  }
 }
 
 const onNodeClick = (event: NodeMouseEvent) => {

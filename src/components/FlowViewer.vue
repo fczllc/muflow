@@ -46,6 +46,9 @@
           <template #node-textLabel="nodeProps">
             <TextLabelNode v-bind="nodeProps" />
           </template>
+          <template #node-line="nodeProps">
+            <LineNode v-bind="nodeProps" />
+          </template>
         </VueFlow>
         <!-- 错误提示 -->
         <div v-if="error" class="error-message">
@@ -68,10 +71,11 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import { markRaw, ref, watch, nextTick } from 'vue'
+import { markRaw, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { VueFlow, useVueFlow, ConnectionMode } from '@vue-flow/core'
 import RoundedRectNode from './Nodes/RoundedRectNode.vue'
 import TextLabelNode from './Nodes/TextLabelNode.vue'
+import LineNode from './Nodes/LineNode.vue'
 import type { Node, Edge } from '@vue-flow/core'
 
 // 引入必要的样式
@@ -91,7 +95,8 @@ const {
 // 注册自定义节点类型
 const nodeTypes = {
   roundedRect: markRaw(RoundedRectNode),
-  textLabel: markRaw(TextLabelNode)
+  textLabel: markRaw(TextLabelNode),
+  line: markRaw(LineNode)
 }
 
 // 错误状态
@@ -116,7 +121,7 @@ const validateFlowData = (flowData: any) => {
     if (typeof node.position.x !== 'number' || typeof node.position.y !== 'number') {
       return false
     }
-    if (!['roundedRect', 'textLabel'].includes(node.type)) {
+    if (!['roundedRect', 'textLabel', 'line'].includes(node.type)) {
       return false
     }
     return true
@@ -182,13 +187,16 @@ const processFlowData = (flowData: any) => {
     setNodes(nodesWithDisabledDrag as Node[])
     setEdges(edgesWithStyle as Edge[])
     
-    // 等待节点渲染完成后自适应视图
-    nextTick(() => {
-      fitView({
-        padding: 0.2,
-        includeHiddenNodes: false,
-        minZoom: 0.1,
-        maxZoom: 2
+    // 使用 Promise 包装 nextTick 和 fitView
+    return new Promise<void>((resolve) => {
+      nextTick(() => {
+        fitView({
+          padding: 0.2,
+          includeHiddenNodes: false,
+          minZoom: 0.1,
+          maxZoom: 2
+        })
+        resolve()
       })
     })
     
@@ -196,6 +204,7 @@ const processFlowData = (flowData: any) => {
     error.value = err.message || '流程图数据格式不正确'
     setNodes([])
     setEdges([])
+    return Promise.reject(err)
   }
 }
 
@@ -208,7 +217,7 @@ const loadFlowDataFromApi = async (flowId: string) => {
       throw new Error('获取流程图数据失败')
     }
     const flowData = await response.json()
-    processFlowData(flowData)
+    await processFlowData(flowData)
   } catch (err: any) {
     error.value = err.message || '加载流程图数据失败'
     setNodes([])
@@ -222,12 +231,39 @@ const props = defineProps<{
   apiUrl?: string
 }>()
 
+// 创建一个取消控制器的引用
+let abortController: AbortController | null = null
+
 // 监听属性变化
 watch(() => props.flowId, (newFlowId) => {
+  // 如果存在之前的请求，取消它
+  if (abortController) {
+    abortController.abort()
+  }
+  
   if (newFlowId) {
+    // 创建新的取消控制器
+    abortController = new AbortController()
     loadFlowDataFromApi(newFlowId)
   }
 }, { immediate: true })
+
+// 组件挂载时
+onMounted(() => {
+  // 初始化时的逻辑（如果需要）
+})
+
+// 组件卸载前
+onBeforeUnmount(() => {
+  // 取消所有未完成的请求
+  if (abortController) {
+    abortController.abort()
+  }
+  
+  // 清理节点和边
+  setNodes([])
+  setEdges([])
+})
 </script>
 
 <style>
