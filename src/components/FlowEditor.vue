@@ -33,6 +33,13 @@
           :snap-to-grid="true"
           :snap-grid="[20, 20]"
           :multi-selection-key-code="'Control'"
+          :default-edge-options="{
+            type: 'smoothstep',
+            style: {
+              strokeWidth: 1,
+              stroke: '#555555'
+            }
+          }"
           class="vue-flow-wrapper"
           @connect="onConnectHandler"
           @drop="onDrop"
@@ -70,14 +77,14 @@ export default defineComponent({
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, markRaw, computed } from 'vue'
-import { VueFlow, useVueFlow, ConnectionMode, MarkerType, Position } from '@vue-flow/core'
-import type { Connection, NodeDragEvent, NodeMouseEvent, EdgeMouseEvent, Node, Edge, Elements } from '@vue-flow/core'
+import { VueFlow, useVueFlow, ConnectionMode, MarkerType } from '@vue-flow/core'
+import type { Connection, NodeDragEvent, NodeMouseEvent, EdgeMouseEvent, Node } from '@vue-flow/core'
 import TopToolbar from './Toolbar/TopToolbar.vue'
 import LeftSidebar from './Sidebar/LeftSidebar.vue'
 import RoundedRectNode from './Nodes/RoundedRectNode.vue'
 import TextLabelNode from './Nodes/TextLabelNode.vue'
 import LineNode from './Nodes/LineNode.vue'
-import type { FlowNode, FlowEdge, AlignDirection, DistributeDirection, NodeDimensions } from '../types/flow'
+import type { FlowNode, AlignDirection, DistributeDirection, NodeDimensions } from '../types/flow'
 import { debounce } from 'lodash-es'
 import AlignmentLines from './AlignmentLines.vue'
 
@@ -97,7 +104,6 @@ const {
   setEdges,
   onConnect, 
   onNodeDragStop: registerNodeDragStop, 
-  updateNode,
   onEdgeClick: registerEdgeClick,
   project
 } = useVueFlow()
@@ -194,17 +200,6 @@ const getNodeDimensions = (node: any): NodeDimensions => {
 
 const clearNodeDimensionsCache = (nodeId: string) => {
   nodeDimensionsCache.delete(nodeId)
-}
-
-const updateNodePosition = (nodeId: string, position: { x: number, y: number }) => {
-  try {
-    const nodes = getNodes.value.map(node => 
-      node.id === nodeId ? { ...node, position } : node
-    )
-    setNodes(nodes)
-  } catch (error) {
-    console.error('Failed to update node position:', error)
-  }
 }
 
 // 对齐和分布方法
@@ -321,7 +316,19 @@ const onConnectHandler = (connection: Connection) => {
       strokeWidth: 1,
       stroke: '#555555'
     },
-    markerEnd: MarkerType.ArrowClosed,
+    markerEnd: {
+      type: MarkerType.Arrow,
+      color: '#555555',
+      width: 15,
+      height: 15,
+      strokeWidth: 2
+    },
+    data: {
+      savedLineWidth: 1,
+      savedLineColor: '#555555',
+      savedLineStyle: 'solid',
+      savedArrowStyle: 'target'
+    }
   }
   
   addEdges([edge])
@@ -665,6 +672,48 @@ const calculateAlignment = (draggedNode: any, otherNodes: any[]) => {
   }
 }
 
+/* 修改箭头样式 */
+.vue-flow__edge-path {
+  pointer-events: stroke !important;
+  cursor: pointer !important;
+}
+
+.vue-flow__arrowhead {
+  stroke: none !important;
+  fill: currentColor !important;
+  transform: scale(1.5) !important;
+  transform-origin: center !important;
+}
+
+.vue-flow__edge.selected .vue-flow__arrowhead {
+  fill: #409eff !important;
+}
+
+.vue-flow__edge:hover .vue-flow__arrowhead {
+  fill: #8080FF !important;
+}
+
+/* 调整箭头大小随线条粗细的变化比例 */
+.vue-flow__edge[style*="stroke-width: 1px"] .vue-flow__arrowhead {
+  transform: scale(1.5) !important;
+}
+
+.vue-flow__edge[style*="stroke-width: 2px"] .vue-flow__arrowhead {
+  transform: scale(1.7) !important;
+}
+
+.vue-flow__edge[style*="stroke-width: 3px"] .vue-flow__arrowhead {
+  transform: scale(1.9) !important;
+}
+
+.vue-flow__edge[style*="stroke-width: 4px"] .vue-flow__arrowhead {
+  transform: scale(2.1) !important;
+}
+
+.vue-flow__edge[style*="stroke-width: 5px"] .vue-flow__arrowhead {
+  transform: scale(2.3) !important;
+}
+
 .vue-flow__edge-interaction-path {
   cursor: pointer !important;
   pointer-events: all !important;
@@ -674,13 +723,8 @@ const calculateAlignment = (draggedNode: any, otherNodes: any[]) => {
 
 .vue-flow__edge.edge-selected .vue-flow__edge-path,
 .vue-flow__edge.selected .vue-flow__edge-path {
-  stroke-width: 2px !important;
+  stroke: #409eff !important;
   filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
-}
-
-.vue-flow__edge-path {
-  pointer-events: stroke !important;
-  cursor: pointer !important;
 }
 
 .resize-handle {

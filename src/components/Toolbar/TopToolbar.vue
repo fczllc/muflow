@@ -423,29 +423,6 @@ const arrowStyle = ref('target')
 const selectedNodeId = ref<string | null>(null)
 const selectedEdgeId = ref<string | null>(null)
 
-// 监听选中的节点变化
-watch(() => getSelectedNodes.value, (nodes) => {
-  if (nodes.length === 1) {
-    // 如果只选中了一个节点，获取其样式
-    const node = nodes[0]
-    selectedNodeId.value = node.id
-    selectedEdgeId.value = null
-    
-    // 获取节点的字体样式
-    fontSize.value = node.data?.fontSize || 14
-    fontColor.value = node.data?.color || '#000000'
-  } else if (nodes.length > 1) {
-    // 如果选中了多个节点，使用默认值
-    selectedNodeId.value = null
-    selectedEdgeId.value = null
-    fontSize.value = 14
-    fontColor.value = '#000000'
-  } else {
-    // 如果没有选中节点，清空选中状态
-    selectedNodeId.value = null
-  }
-}, { immediate: true })
-
 // 监听选中的边变化
 watch(() => getSelectedEdges.value, (edges) => {
   if (edges.length === 1) {
@@ -498,16 +475,53 @@ watch(() => getSelectedEdges.value, (edges) => {
         arrowStyle.value = 'none'
       }
     }
-  } else if (edges.length > 1) {
-    // 如果选中了多条边，使用默认值
+  }
+}, { immediate: true })
+
+// 监听选中的节点变化
+watch(() => getSelectedNodes.value, (nodes) => {
+  const selectedLineNode = nodes.find(node => node.type === 'line')
+  
+  if (selectedLineNode) {
+    // 如果选中了直线节点，获取其样式
+    selectedNodeId.value = selectedLineNode.id
     selectedEdgeId.value = null
-    lineWidth.value = 1
-    lineColor.value = '#555555'
-    lineStyle.value = 'solid'
-    arrowStyle.value = 'target'
+    
+    const style = selectedLineNode.data?.style || {}
+    
+    // 设置线条宽度
+    lineWidth.value = parseInt(String(style.strokeWidth || '1').replace('px', '')) || 1
+    
+    // 设置线条颜色
+    lineColor.value = style.stroke || '#000000'
+    
+    // 设置线条样式
+    if (style.strokeDasharray) {
+      if (style.strokeDasharray === '5 5') {
+        lineStyle.value = 'dashed'
+      } else if (style.strokeDasharray === '2 2') {
+        lineStyle.value = 'dotted'
+      } else {
+        lineStyle.value = 'solid'
+      }
+    } else {
+      lineStyle.value = 'solid'
+    }
+    
+    // 设置箭头样式
+    arrowStyle.value = selectedLineNode.data?.arrowStyle || 'none'
   } else {
-    // 如果没有选中边，清空选中状态
-    selectedEdgeId.value = null
+    // 检查是否选中了文本节点或流程节点
+    const textNode = nodes.find(node => node.type === 'textLabel' || node.type === 'roundedRect')
+    if (textNode) {
+      selectedNodeId.value = textNode.id
+      selectedEdgeId.value = null
+      
+      // 同步字体大小
+      fontSize.value = textNode.data?.fontSize || 14
+      // 同步字体颜色
+      fontColor.value = textNode.data?.color || '#000000'
+    }
   }
 }, { immediate: true })
 
@@ -543,19 +557,6 @@ const applyEdgeStyle = () => {
     strokeDasharray = '2 2'
   }
   
-  // 设置箭头
-  let markerStart: MarkerType | undefined = undefined
-  let markerEnd: MarkerType | undefined = undefined
-  
-  if (arrowStyle.value === 'both') {
-    markerStart = MarkerType.ArrowClosed
-    markerEnd = MarkerType.ArrowClosed
-  } else if (arrowStyle.value === 'source') {
-    markerStart = MarkerType.ArrowClosed
-  } else if (arrowStyle.value === 'target') {
-    markerEnd = MarkerType.ArrowClosed
-  }
-  
   // 更新选中的边
   if (selectedEdges.length > 0) {
     try {
@@ -571,9 +572,51 @@ const applyEdgeStyle = () => {
         strokeDasharray
       }
       
-      // 方法1: 直接在 getEdges.value 中查找并更新边
       const edges = getEdges.value.map(edge => {
         if (edge.selected) {
+          // 处理箭头配置
+          let markerStart: any = edge.markerStart
+          let markerEnd: any = edge.markerEnd
+          
+          // 如果改变箭头样式
+          if (arrowStyle.value !== edge.data?.savedArrowStyle) {
+            const defaultMarker = {
+              type: MarkerType.Arrow,
+              color: lineColor.value,
+              width: 15,
+              height: 15,
+              strokeWidth: 2
+            }
+            
+            // 设置新的箭头配置
+            if (arrowStyle.value === 'both') {
+              markerStart = { ...defaultMarker }
+              markerEnd = { ...defaultMarker }
+            } else if (arrowStyle.value === 'source') {
+              markerStart = { ...defaultMarker }
+              markerEnd = undefined
+            } else if (arrowStyle.value === 'target') {
+              markerStart = undefined
+              markerEnd = { ...defaultMarker }
+            } else {
+              markerStart = markerEnd = undefined
+            }
+          } else {
+            // 保持原有箭头配置，只更新颜色
+            if (markerStart) {
+              markerStart = {
+                ...markerStart,
+                color: lineColor.value
+              }
+            }
+            if (markerEnd) {
+              markerEnd = {
+                ...markerEnd,
+                color: lineColor.value
+              }
+            }
+          }
+          
           return {
             ...edge,
             style: { ...newStyle },
@@ -591,26 +634,9 @@ const applyEdgeStyle = () => {
         return edge
       })
       
-      // 设置新的边数组
       setEdges(edges)
-      
-      // 方法2: 直接修改 DOM 元素样式（作为备用方案）
-      setTimeout(() => {
-        selectedEdges.forEach(edge => {
-          const edgePath = document.querySelector(`.vue-flow__edge[data-id="${edge.id}"] .vue-flow__edge-path`)
-          if (edgePath) {
-            edgePath.setAttribute('stroke-width', String(width))
-            edgePath.setAttribute('stroke', lineColor.value)
-            if (strokeDasharray) {
-              edgePath.setAttribute('stroke-dasharray', strokeDasharray)
-            } else {
-              edgePath.removeAttribute('stroke-dasharray')
-            }
-          }
-        })
-      }, 0)
     } catch (error) {
-      // 忽略错误
+      console.error('Failed to update edge style:', error)
     }
   }
   

@@ -92,6 +92,11 @@
   - [x] Del：删除选中的节点或连线
   - [x] 双击：编辑节点文本
   - [x] Ctrl + 点击：多选对象
+  - [x] Shift：直线绘制时启用角度对齐（0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°）
+  - [x] 直线调整：
+    - 拖拽端点：调整直线长度
+    - Shift + 拖拽端点：按固定角度调整直线
+    - 显示角度值：实时显示当前直线的角度
 
 ### 🚀 第六阶段：测试与优化
 - [x] 功能测试
@@ -133,6 +138,14 @@
   - [x] API数据加载
   - [x] 错误提示功能
   - [x] 保持原有样式
+
+### 🚀 第八阶段：组件拆分优化
+- [x] FlowViewer 组件优化
+  - [x] 数据加载和验证逻辑优化
+  - [x] 节点和边的数据处理改进
+  - [x] API 集成功能完善
+  - [x] 错误处理机制增强
+  - [x] 样式和交互优化
 
 ## 开发环境
 
@@ -423,4 +436,197 @@ const loadNextFlow = () => {
    - 大量节点时会自动优化显示
    - 建议节点数量控制在 1000 个以内
    - 连线数量建议控制在 2000 条以内
+
+## 操作指南
+
+### 直线控件操作
+1. 基本操作
+   - 从左侧工具栏拖拽直线控件到画布
+   - 点击选中直线可调整样式（粗细、颜色、线型、箭头）
+   - 拖拽直线端点可调整长度和角度
+
+2. 快捷键操作
+   - Shift + 拖拽：启用角度对齐（每45度）
+   - 拖拽端点：自由调整直线长度和角度
+   - 拖拽时会实时显示当前角度值
+
+3. 角度对齐
+   - 按住 Shift 键时会显示对齐参考线
+   - 支持的对齐角度：0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°
+   - 对齐阈值：接近对齐角度 ±10° 时自动吸附
+
+4. 样式设置
+   - 线条粗细：支持 1-10 像素
+   - 线条样式：实线、虚线、点线
+   - 箭头样式：无、起点、终点、双向
+   - 颜色选择：支持自定义颜色
+
+## 组件说明
+
+### FlowViewer 组件
+
+#### 基本使用
+```vue
+<template>
+  <FlowViewer 
+    :flowId="currentFlowId"
+    :apiUrl="apiBaseUrl"
+    @load-success="handleLoadSuccess"
+    @load-error="handleLoadError"
+  />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import FlowViewer from './components/FlowViewer.vue'
+
+const currentFlowId = ref<string>('')
+const apiBaseUrl = ref('/api')
+
+const handleLoadSuccess = (data: any) => {
+  console.log('加载成功:', data)
+}
+
+const handleLoadError = (error: any) => {
+  console.error('加载失败:', error)
+}
+</script>
+```
+
+#### 组件属性
+
+| 属性名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| flowId | string | 否 | - | 流程图ID，用于从API加载数据 |
+| apiUrl | string | 否 | '/api' | API基础URL |
+
+#### 组件事件
+
+| 事件名 | 参数 | 说明 |
+|--------|------|------|
+| load-success | (data: any) | 数据加载成功时触发 |
+| load-error | (error: any) | 数据加载失败时触发 |
+
+### API 集成说明
+
+#### 1. 标准 API 集成
+```typescript
+// API 端点格式
+GET /api/flows/:flowId
+
+// 响应数据格式
+{
+  nodes: Array<Node>,
+  edges: Array<Edge>,
+  metadata: {
+    version: string,
+    timestamp: string,
+    title: string
+  }
+}
+```
+
+#### 2. 模拟 API 服务器
+```typescript
+// 在 App.vue 中设置模拟服务器
+const setupMockApi = () => {
+  const originalFetch = window.fetch
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const request = new Request(input, init)
+    const url = new URL(request.url, window.location.origin)
+    
+    if (url.pathname.startsWith('/api/flows/')) {
+      // 加载测试数据
+      const response = await originalFetch('/flowchart_20250315_0041.json')
+      const testData = await response.json()
+      return new Response(JSON.stringify(testData), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+    
+    return originalFetch(input, init)
+  }
+}
+```
+
+### 数据格式规范
+
+#### 节点数据格式
+```typescript
+interface Node {
+  id: string
+  type: 'roundedRect' | 'textLabel' | 'line'
+  position: { x: number, y: number }
+  data: {
+    label?: string
+    style?: Record<string, any>
+    fontSize?: number
+    color?: string
+    width?: number
+    angle?: number
+    arrowStyle?: string
+  }
+}
+```
+
+#### 边数据格式
+```typescript
+interface Edge {
+  id: string
+  source: string
+  target: string
+  type?: string
+  style?: {
+    strokeWidth?: number
+    stroke?: string
+    strokeDasharray?: string
+  }
+  data?: {
+    savedLineWidth?: number
+    savedLineColor?: string
+    savedLineStyle?: 'solid' | 'dashed' | 'dotted'
+    savedArrowStyle?: 'none' | 'source' | 'target' | 'both'
+  }
+}
+```
+
+### 最新更新内容
+
+1. 数据处理优化
+   - 改进了节点和边的数据验证
+   - 优化了数据格式转换逻辑
+   - 增强了错误处理机制
+
+2. API 集成改进
+   - 支持自定义 API 基础 URL
+   - 添加请求取消功能
+   - 完善错误处理和提示
+
+3. 性能优化
+   - 优化了节点和边的更新逻辑
+   - 改进了数据处理效率
+   - 减少不必要的重渲染
+
+4. 交互体验提升
+   - 优化了加载状态显示
+   - 改进了错误提示样式
+   - 增强了视图适配功能
+
+### 注意事项
+
+1. API 集成
+   - 确保 API 返回的数据格式符合规范
+   - 建议使用 TypeScript 类型检查
+   - 处理好跨域和认证问题
+
+2. 数据处理
+   - 注意数据验证的完整性
+   - 处理好默认值的设置
+   - 注意数据转换的兼容性
+
+3. 性能考虑
+   - 控制节点和边的数量
+   - 注意大数据量时的处理
+   - 适当使用节流和防抖
 

@@ -108,7 +108,10 @@
               <div class="shortcut-key">鼠标拖拽</div>
               <div class="shortcut-desc">移动节点位置</div>
             </div>
-
+            <div class="shortcut-item">
+              <div class="shortcut-key">直线操作</div>
+              <div class="shortcut-desc">shift+鼠标拖拽两端辅助角度调整</div>
+            </div>
           </div>
         </div>
       </div>

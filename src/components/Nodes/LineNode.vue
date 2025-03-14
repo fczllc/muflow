@@ -126,22 +126,30 @@ const showRightArrow = computed(() => {
 // 计算线条样式
 const lineStyle = computed<CSSProperties>(() => {
   const style = props.data?.style || {}
+  const strokeWidth = style.strokeWidth || 1
+  const color = selected.value ? '#409eff' : (style.stroke || '#000')
+  
   const baseStyle: CSSProperties = {
     width: '100%',
-    height: style.strokeWidth ? `${style.strokeWidth}px` : '1px',
-    backgroundColor: selected.value ? '#409eff' : (style.stroke || '#000'),
+    height: '1px',
+    backgroundColor: color,
     position: 'absolute',
     top: '50%',
     left: '0',
-    transform: 'translateY(-50%)',
-    borderStyle: 'none'
+    transform: `translateY(-50%) scaleY(${strokeWidth})`,
+    transformOrigin: 'center'
   }
 
+  // 如果是虚线或点线，使用特殊处理
   if (style.strokeDasharray) {
     return {
       ...baseStyle,
       backgroundColor: 'transparent',
-      borderTop: `${style.strokeWidth || 1}px ${style.strokeDasharray === '5 5' ? 'dashed' : 'dotted'} ${selected.value ? '#409eff' : (style.stroke || '#000')}`
+      height: `${strokeWidth}px`,
+      transform: 'translateY(-50%)',
+      borderStyle: style.strokeDasharray === '5 5' ? 'dashed' : 'dotted',
+      borderWidth: `${strokeWidth}px`,
+      borderColor: color
     }
   }
 
@@ -374,16 +382,19 @@ onMounted(() => {
 }
 
 .line-container {
-  position: absolute;
-  height: 1px;
-  top: 0;
-  left: 0;
+  position: absolute !important;
+  height: 1px !important;
+  top: 0 !important;
+  left: 0 !important;
   transform-origin: 0 center;
 }
 
 .line {
-  pointer-events: none;
-  margin: auto 0;
+  position: absolute !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: all !important;
+  z-index: 1 !important;
 }
 
 /* 箭头样式 */
@@ -395,6 +406,7 @@ onMounted(() => {
   border-style: solid;
   transform: translateY(-50%);
   pointer-events: none;
+  z-index: 2;
 }
 
 .left-arrow {
@@ -431,10 +443,23 @@ onMounted(() => {
 
 .resize-handle.right {
   right: 0;
+  top: 50%;
   transform: translate(50%, -50%);
 }
 
-/* 添加角度对齐指示器样式 */
+/* 增加可交互区域 */
+.line-node::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  cursor: pointer;
+  z-index: 0;
+}
+
+/* 角度对齐指示器样式 */
 .angle-indicator {
   position: absolute;
   top: 0;
@@ -446,7 +471,7 @@ onMounted(() => {
   transition: opacity 0.2s ease;
 }
 
-/* 修改角度值显示器样式 */
+/* 角度值显示器样式 */
 .angle-value {
   position: absolute;
   top: -24px;
@@ -457,6 +482,10 @@ onMounted(() => {
   pointer-events: none;
   z-index: 10;
   white-space: nowrap;
+  background-color: white;
+  padding: 2px 4px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 </style>
 
