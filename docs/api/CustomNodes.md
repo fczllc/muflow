@@ -149,6 +149,132 @@ interface NodeData {
 }
 ```
 
+## LineNode 组件
+
+直线节点组件，支持拖拽、调整长度和角度、样式设置。
+
+### 属性 (Props)
+
+继承自 Vue Flow 的 `NodeProps`：
+
+| 属性 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 节点唯一标识 |
+| type | string | 是 | 节点类型，固定为 'line' |
+| position | { x: number, y: number } | 是 | 节点位置 |
+| selected | boolean | 否 | 是否选中 |
+| data | object | 否 | 节点数据 |
+
+### 数据结构
+
+```typescript
+interface NodeData {
+  width?: number         // 线条长度，默认 120
+  angle?: number         // 旋转角度，默认 0
+  arrowStyle?: string    // 箭头样式：'none' | 'source' | 'target' | 'both'
+  style?: {             // 线条样式
+    strokeWidth?: number // 线条粗细，默认 1
+    stroke?: string     // 线条颜色，默认 #000000
+    strokeDasharray?: string // 线条类型，实线为空，虚线 '5 5'，点线 '2 2'
+  }
+}
+```
+
+### 调整点
+
+提供 2 个调整点：
+
+| 位置 | 类型 | 说明 |
+|------|------|------|
+| 左端 | left | 调整长度和角度 |
+| 右端 | right | 调整长度和角度 |
+
+### 快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| Shift + 拖拽 | 启用角度对齐（每45度） |
+
+### 角度对齐
+
+支持的对齐角度：
+- 0° (水平)
+- 45° (右上)
+- 90° (垂直)
+- 135° (右下)
+- 180° (水平)
+- 225° (左下)
+- 270° (垂直)
+- 315° (左上)
+
+### 样式定制
+
+```css
+.line-node {
+  /* 节点基本样式 */
+  position: relative;
+  height: 1px;
+  background: transparent;
+  
+  /* 线条容器 */
+  .line-container {
+    position: absolute;
+    height: 1px;
+    transform-origin: 0 center;
+  }
+  
+  /* 线条样式 */
+  .line {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* 箭头样式 */
+  .arrow {
+    position: absolute;
+    top: 50%;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    transform: translateY(-50%);
+  }
+  
+  /* 调整点样式 */
+  .resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border: 2px solid #409eff;
+    border-radius: 50%;
+    cursor: move;
+  }
+  
+  /* 角度指示器 */
+  .angle-indicator {
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background-color: #409eff;
+    opacity: 0.5;
+  }
+  
+  /* 角度值显示 */
+  .angle-value {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #666;
+  }
+}
+```
+
 ## 使用示例
 
 ```vue
@@ -161,10 +287,13 @@ interface NodeData {
     <template #node-textLabel="nodeProps">
       <TextLabelNode v-bind="nodeProps" />
     </template>
+    <template #node-line="nodeProps">
+      <LineNode v-bind="nodeProps" />
+    </template>
   </VueFlow>
 </template>
 
 <script setup lang="ts">
 import { VueFlow } from '@vue-flow/core'
-import { RoundedRectNode, TextLabelNode } from './components'
-</script> 
+import { RoundedRectNode, TextLabelNode, LineNode } from './components'
+</script>
