@@ -13,6 +13,7 @@
     class="line-node vue-flow__node-line"
     :class="{ selected }"
     ref="nodeRef"
+    @click="handleNodeClick"
     :style="{
       width: width + 'px'
     }"
@@ -346,6 +347,50 @@ onMounted(() => {
   // 更新节点内部状态
   updateNodeInternals([props.id])
 })
+
+// 处理节点点击事件
+const handleNodeClick = (event: MouseEvent) => {
+  // 阻止事件冒泡
+  event.stopPropagation()
+  
+  // 如果正在调整大小，不处理选中逻辑
+  if (isResizing) return
+  
+  // 获取当前所有节点
+  const nodes = getNodes.value
+  
+  if (event.ctrlKey) {
+    // Ctrl键按下时的多选逻辑
+    if (props.selected) {
+      // 如果当前节点已选中，则仅取消当前节点的选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id ? false : node.selected
+      })))
+    } else {
+      // 如果当前节点未选中，则添加到选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id ? true : node.selected
+      })))
+    }
+  } else {
+    // 没有按Ctrl键时的单选逻辑（保持原有逻辑）
+    if (props.selected) {
+      // 如果当前节点已选中，则取消所有节点的选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: false
+      })))
+    } else {
+      // 如果当前节点未选中，则只选中当前节点
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id
+      })))
+    }
+  }
+}
 </script>
 
 <style>

@@ -518,7 +518,7 @@ watch(() => getSelectedNodes.value, (nodes) => {
       selectedEdgeId.value = null
       
       // 同步字体大小
-      fontSize.value = textNode.data?.fontSize || 14
+      fontSize.value = textNode.data?.fontSize || 12
       // 同步字体颜色
       fontColor.value = textNode.data?.color || '#000000'
     }

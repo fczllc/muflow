@@ -61,6 +61,9 @@
           <template #node-textLabel="nodeProps">
             <TextLabelNode v-bind="nodeProps" />
           </template>
+          <template #node-line="nodeProps">
+            <LineNode v-bind="nodeProps" />
+          </template>
         </VueFlow>
       </div>
     </div>
@@ -84,9 +87,9 @@ import LeftSidebar from './Sidebar/LeftSidebar.vue'
 import RoundedRectNode from './Nodes/RoundedRectNode.vue'
 import TextLabelNode from './Nodes/TextLabelNode.vue'
 import LineNode from './Nodes/LineNode.vue'
+import AlignmentLines from './AlignmentLines.vue'
 import type { FlowNode, AlignDirection, DistributeDirection, NodeDimensions } from '../types/flow'
 import { debounce } from 'lodash-es'
-import AlignmentLines from './AlignmentLines.vue'
 
 // 引入必要的样式
 import '@vue-flow/core/dist/style.css'
@@ -118,6 +121,36 @@ const selectedNodes = ref<string[]>([])
 const alignmentLines = ref<Array<{ id: string; type: 'horizontal' | 'vertical'; position: number }>>([])
 const snapThreshold = 5
 const nodeDimensionsCache = new Map<string, NodeDimensions>()
+
+// 添加剪贴板状态
+interface ClipboardItem {
+  type: 'node'
+  data: {
+    id: string
+    type: string
+    position: { x: number; y: number }
+    data?: {
+      label?: string
+      fontSize?: number
+      color?: string
+      style?: Record<string, any>
+      draggable?: boolean
+      selectable?: boolean
+      connectable?: boolean
+      [key: string]: any
+    }
+  }
+}
+const clipboard = ref<ClipboardItem[]>([])
+
+// 添加历史记录状态
+interface HistoryState {
+  nodes: FlowNode[]
+  edges: any[]
+}
+
+const history = ref<HistoryState[]>([])
+const currentHistoryIndex = ref(-1)
 
 // 注册自定义节点类型
 const nodeTypes = {
@@ -158,10 +191,7 @@ const getDefaultLabel = (type: string): string => {
   switch (type) {
     case 'textLabel': return '文本'
     case 'roundedRect': return '节点'
-    case 'input': return '输入'
-    case 'topBottom': return '上下连接'
-    case 'leftRight': return '左右连接'
-    case 'output': return '输出'
+    case 'line': return '直线'
     default: return '节点'
   }
 }
@@ -301,8 +331,43 @@ const distributeNodes = (direction: DistributeDirection) => {
   }
 }
 
+// 添加保存历史记录的方法
+const saveToHistory = () => {
+  // 如果当前不在历史记录的最后，删除当前位置之后的记录
+  if (currentHistoryIndex.value < history.value.length - 1) {
+    history.value = history.value.slice(0, currentHistoryIndex.value + 1)
+  }
+  
+  // 获取当前节点和边的状态，确保选中状态是正确的
+  const currentNodes = getNodes.value.map(node => {
+    // 保留节点的选中状态，这样撤销后可以恢复到正确的选中状态
+    return { ...node }
+  })
+  
+  const currentEdges = getEdges.value.map(edge => {
+    // 保留边的选中状态
+    return { ...edge }
+  })
+  
+  // 保存当前状态
+  history.value.push({
+    nodes: JSON.parse(JSON.stringify(currentNodes)),
+    edges: JSON.parse(JSON.stringify(currentEdges))
+  })
+  currentHistoryIndex.value = history.value.length - 1
+  
+  // 限制历史记录数量，最多保存10步
+  if (history.value.length > 10) {
+    history.value.shift()
+    currentHistoryIndex.value--
+  }
+}
+
 // 事件处理方法
 const onConnectHandler = (connection: Connection) => {
+  // 先保存当前状态
+  saveToHistory()
+  
   const edgeId = `e${connection.source}-${connection.target}`
   
   const edge = {
@@ -375,7 +440,18 @@ const onDrop = (event: DragEvent) => {
       }
     }
 
+    // 添加新节点
     addNodes([newNode])
+    
+    // 取消选中其他节点，只选中新添加的节点
+    const nodes = getNodes.value.map(node => ({
+      ...node,
+      selected: node.id === newNode.id
+    }))
+    setNodes(nodes)
+    
+    // 在添加节点后保存历史记录
+    saveToHistory()
   }
 }
 
@@ -497,6 +573,7 @@ const handleNodeDragStop = debounce((e: NodeDragEvent) => {
   
   alignmentLines.value = []
   clearNodeDimensionsCache(node.id)
+  saveToHistory() // 保存历史记录
 }, 16)
 
 const onSelectionChange = debounce(({ nodes }: { nodes: any[] }) => {
@@ -506,20 +583,131 @@ const onSelectionChange = debounce(({ nodes }: { nodes: any[] }) => {
   })
 }, 16)
 
+// 修改键盘事件处理
+const handleKeyboard = (event: KeyboardEvent) => {
+  // 如果正在编辑文本，不处理快捷键
+  if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) {
+    return
+  }
+
+  // 撤销操作 (Ctrl+Z)
+  if (event.ctrlKey && event.key === 'z') {
+    if (currentHistoryIndex.value > 0) {
+      currentHistoryIndex.value--
+      const previousState = history.value[currentHistoryIndex.value]
+      
+      const nodesWithCorrectSelection = previousState.nodes.map(node => ({
+        ...node,
+        selected: previousState.nodes[previousState.nodes.length - 1] && node.id === previousState.nodes[previousState.nodes.length - 1].id
+      }));
+      
+      setNodes(nodesWithCorrectSelection)
+      setEdges(previousState.edges)
+      
+      // 更新选中节点的ID
+      selectedNodeId.value = previousState.nodes[previousState.nodes.length - 1] ? previousState.nodes[previousState.nodes.length - 1].id : null;
+    }
+  }
+
+  // 复制快捷键 (Ctrl+C)
+  if (event.ctrlKey && event.key === 'c') {
+    const selectedNodes = getNodes.value.filter(node => node.selected)
+    if (selectedNodes.length > 0) {
+      clipboard.value = selectedNodes.map(node => ({
+        type: 'node',
+        data: {
+          id: node.id,
+          type: node.type,
+          position: { ...node.position },
+          data: { 
+            ...node.data,
+            draggable: true,
+            selectable: true,
+            connectable: true
+          }
+        }
+      }))
+    }
+  }
+
+  // 粘贴快捷键 (Ctrl+V)
+  if (event.ctrlKey && event.key === 'v') {
+    if (clipboard.value.length > 0) {
+      const offset = { x: 20, y: 20 }
+      const newNodes = clipboard.value.map(item => {
+        if (item.type === 'node') {
+          const newId = `${item.data.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          return {
+            id: newId,
+            type: item.data.type,
+            position: {
+              x: item.data.position.x + offset.x,
+              y: item.data.position.y + offset.y
+            },
+            data: { 
+              ...item.data.data,
+              draggable: true,
+              selectable: true,
+              connectable: true
+            },
+            draggable: true,
+            selectable: true,
+            connectable: true
+          }
+        }
+        return null
+      }).filter(Boolean) as FlowNode[]
+
+      addNodes(newNodes)
+      
+      // 取消选中其他节点，只选中新添加的节点
+      const nodes = getNodes.value.map(node => ({
+        ...node,
+        selected: newNodes.some(n => n.id === node.id)
+      }))
+      setNodes(nodes)
+      
+      // 更新选中节点的ID，如果只粘贴了一个节点
+      if (newNodes.length === 1) {
+        selectedNodeId.value = newNodes[0].id;
+      } else {
+        selectedNodeId.value = null; // 多选状态
+      }
+      
+      // 在添加节点后保存历史记录
+      saveToHistory()
+    }
+  }
+}
+
 // 生命周期钩子
 onMounted(() => {
   // 添加事件监听器
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Delete') {
-      if (selectedNodeId.value) {
-        removeNodes([selectedNodeId.value])
+    // 删除键处理
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      // 获取所有选中的节点
+      const selectedNodes = getNodes.value.filter(node => node.selected)
+      if (selectedNodes.length > 0) {
+        // 先保存当前状态
+        saveToHistory()
+        // 删除所有选中的节点
+        removeNodes(selectedNodes.map(node => node.id))
         selectedNodeId.value = null
       }
-      if (selectedEdgeId.value) {
-        removeEdges([selectedEdgeId.value])
+      
+      // 获取所有选中的边
+      const selectedEdges = getEdges.value.filter(edge => edge.selected)
+      if (selectedEdges.length > 0) {
+        // 先保存当前状态
+        saveToHistory()
+        // 删除所有选中的边
+        removeEdges(selectedEdges.map(edge => edge.id))
         selectedEdgeId.value = null
       }
     }
+
+    handleKeyboard(event)
   }
 
   const handleResizeStart = () => {
@@ -541,6 +729,16 @@ onMounted(() => {
   onConnect(onConnectHandler)
   registerNodeDragStop(handleNodeDragStop)
   registerEdgeClick(onEdgeClick)
+
+  // 初始化历史记录 - 只有当画布上有内容时才保存初始状态
+  // 只有当画布上有节点或边时才初始化历史记录
+  if (getNodes.value.length > 0 || getEdges.value.length > 0) {
+    saveToHistory()
+  } else {
+    // 如果画布为空，只初始化索引，不保存状态
+    currentHistoryIndex.value = -1
+    history.value = []
+  }
 
   // 清理函数
   onUnmounted(() => {
@@ -623,16 +821,29 @@ const calculateAlignment = (draggedNode: any, otherNodes: any[]) => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background-color: #FFF;
+  position: relative;
+  overflow: hidden;
 }
 
 .main-content {
   flex: 1;
   display: flex;
+  position: relative;
+  overflow: hidden;
 }
 
 .canvas-container {
   flex: 1;
   height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.vue-flow-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* Vue Flow 相关样式 */
@@ -754,4 +965,4 @@ const calculateAlignment = (draggedNode: any, otherNodes: any[]) => {
 .vue-flow__node.resizing .vue-flow__edge-path {
   pointer-events: none !important;
 }
-</style> 
+</style>

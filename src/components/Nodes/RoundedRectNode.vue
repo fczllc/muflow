@@ -5,6 +5,7 @@
     ref="nodeRef"
     @mouseenter="showHandles = true" 
     @mouseleave="showHandles = false"
+    @click="handleNodeClick"
     :style="nodeStyle"
   >
     <!-- 左侧锚点 - 目标类型 -->
@@ -85,10 +86,10 @@ const selected = computed(() => props.selected)
 
 // 计算节点样式，包括字体样式
 const nodeStyle = computed(() => ({
-  fontSize: `${props.data.fontSize || 14}px`,
+  fontSize: `${props.data.fontSize || 12}px`,
   color: props.data.color || '#000000',
-  width: props.data.style?.width || '120px',
-  height: props.data.style?.height || '42px'
+  width: props.data.style?.width || '100px',
+  height: props.data.style?.height || '38px'
 }))
 
 const handleStyle = {
@@ -120,8 +121,8 @@ watch(() => props.selected, (newSelected) => {
     nextTick(() => {
       // 确保节点的 DOM 尺寸与数据一致
       if (nodeRef.value) {
-        const width = props.data.style?.width || '120px'
-        const height = props.data.style?.height || '42px'
+        const width = props.data.style?.width || '100px'
+        const height = props.data.style?.height || '38px'
         
         // 检查节点的实际尺寸
         const actualWidth = nodeRef.value.offsetWidth
@@ -260,8 +261,8 @@ const startResize = (event: MouseEvent, type: string) => {
   // 记录初始位置和大小
   const startX = event.clientX
   const startY = event.clientY
-  const currentWidth = nodeRef.value ? nodeRef.value.offsetWidth : 120
-  const currentHeight = nodeRef.value ? nodeRef.value.offsetHeight : 46
+  const currentWidth = nodeRef.value ? nodeRef.value.offsetWidth : 100
+  const currentHeight = nodeRef.value ? nodeRef.value.offsetHeight : 38
   const startWidth = currentWidth
   const startHeight = currentHeight
   
@@ -287,38 +288,38 @@ const startResize = (event: MouseEvent, type: string) => {
     
     switch (type) {
       case 'top':
-        newHeight = Math.max(46, startHeight - deltaY)
+        newHeight = Math.max(38, startHeight - deltaY)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'right':
-        newWidth = Math.max(120, startWidth + deltaX)
+        newWidth = Math.max(100, startWidth + deltaX)
         break
       case 'bottom':
-        newHeight = Math.max(46, startHeight + deltaY)
+        newHeight = Math.max(38, startHeight + deltaY)
         break
       case 'left':
-        newWidth = Math.max(120, startWidth - deltaX)
+        newWidth = Math.max(100, startWidth - deltaX)
         newPosition.x = startPosition.x + (startWidth - newWidth)
         break
       case 'topLeft':
-        newWidth = Math.max(100, startWidth - deltaX)
-        newHeight = Math.max(30, startHeight - deltaY)
+        newWidth = Math.max(80, startWidth - deltaX)
+        newHeight = Math.max(14, startHeight - deltaY)
         newPosition.x = startPosition.x + (startWidth - newWidth)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'topRight':
-        newWidth = Math.max(100, startWidth + deltaX)
-        newHeight = Math.max(30, startHeight - deltaY)
+        newWidth = Math.max(80, startWidth + deltaX)
+        newHeight = Math.max(14, startHeight - deltaY)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'bottomLeft':
-        newWidth = Math.max(100, startWidth - deltaX)
-        newHeight = Math.max(30, startHeight + deltaY)
+        newWidth = Math.max(80, startWidth - deltaX)
+        newHeight = Math.max(14, startHeight + deltaY)
         newPosition.x = startPosition.x + (startWidth - newWidth)
         break
       case 'bottomRight':
-        newWidth = Math.max(100, startWidth + deltaX)
-        newHeight = Math.max(30, startHeight + deltaY)
+        newWidth = Math.max(80, startWidth + deltaX)
+        newHeight = Math.max(14, startHeight + deltaY)
         break
     }
     
@@ -375,8 +376,8 @@ const startResize = (event: MouseEvent, type: string) => {
 onMounted(() => {
   // 确保节点的 DOM 尺寸与数据一致
   if (nodeRef.value) {
-    const width = props.data.style?.width || '120px'
-    const height = props.data.style?.height || '42px'
+    const width = props.data.style?.width || '100px'
+    const height = props.data.style?.height || '38px'
     
     nodeRef.value.style.width = width
     nodeRef.value.style.height = height
@@ -392,8 +393,8 @@ onMounted(() => {
   setTimeout(() => {
     if (nodeRef.value) {
       // 再次确保节点的 DOM 尺寸与数据一致
-      const width = props.data.style?.width || '120px'
-      const height = props.data.style?.height || '42px'
+      const width = props.data.style?.width || '100px'
+      const height = props.data.style?.height || '38px'
       
       nodeRef.value.style.width = width
       nodeRef.value.style.height = height
@@ -404,6 +405,50 @@ onMounted(() => {
     updateNodeInternals([props.id])
   }, 100)
 })
+
+// 处理节点点击事件
+const handleNodeClick = (event: MouseEvent) => {
+  // 阻止事件冒泡
+  event.stopPropagation()
+  
+  // 如果正在编辑，不处理选中逻辑
+  if (isEditing.value) return
+  
+  // 获取当前所有节点
+  const nodes = getNodes.value
+  
+  if (event.ctrlKey) {
+    // Ctrl键按下时的多选逻辑
+    if (props.selected) {
+      // 如果当前节点已选中，则仅取消当前节点的选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id ? false : node.selected
+      })))
+    } else {
+      // 如果当前节点未选中，则添加到选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id ? true : node.selected
+      })))
+    }
+  } else {
+    // 没有按Ctrl键时的单选逻辑（保持原有逻辑）
+    if (props.selected) {
+      // 如果当前节点已选中，则取消所有节点的选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: false
+      })))
+    } else {
+      // 如果当前节点未选中，则只选中当前节点
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id
+      })))
+    }
+  }
+}
 </script>
 
 <script lang="ts">
@@ -430,10 +475,10 @@ export default {
   border-radius: 3px;
   border: 1px solid #555;
   background: white;
-  width: 120px;      /* 设置默认宽度 */
-  height: 42px;      /* 设置默认高度 */
-  min-width: 120px;  /* 设置最小宽度 */
-  min-height: 42px;  /* 设置最小高度 */
+  width: 100px;      /* 设置默认宽度 */
+  height: 38px;      /* 设置默认高度 */
+  min-width: 100px;  /* 设置最小宽度 */
+  min-height: 38px;  /* 设置最小高度 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -444,8 +489,7 @@ export default {
 
 /* 选中状态样式 - 不改变边框宽度 */
 .rounded-rect-node.selected {
-  border: 1px solid #1a192b;  /* 保持 1px 边框 */
-  box-shadow: 0 0 0 1px #1a192b;  /* 使用阴影创建选中效果 */
+  border: 1px dotted #1a192b;  /* 保持 1px 边框 */
 }
 
 /* 连接点样式 */

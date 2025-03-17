@@ -30,6 +30,33 @@
       <ToolbarIcon type="line" />
     </button>
 
+        <!-- 起止控件 -->
+    <button 
+      class="sidebar-btn" 
+      draggable="true" 
+      @dragstart="onDragStart($event, 'startEnd')" 
+      title="起止节点"
+    >
+      <ToolbarIcon type="startEnd" />
+    </button>
+
+    <button 
+      class="sidebar-btn" 
+      draggable="true" 
+      @dragstart="onDragStart($event, 'condition')" 
+      title="条件节点"
+    >
+      <ToolbarIcon type="condition" />
+    </button>
+
+    <button 
+      class="sidebar-btn" 
+      draggable="true" 
+      @dragstart="onDragStart($event, 'circle')" 
+      title="圆形节点"
+    >
+      <ToolbarIcon type="circle" />
+    </button>
     <!-- 添加画布工具到底部 -->
     <div class="canvas-tools-wrapper">
       <CanvasTools />
@@ -45,6 +72,17 @@ const onDragStart = (event: DragEvent, nodeType: string) => {
   if (event.dataTransfer) {
     event.dataTransfer.setData('application/vueflow', nodeType)
     event.dataTransfer.effectAllowed = 'move'
+    
+    // 添加拖拽结束后移除焦点的处理
+    const button = event.target as HTMLButtonElement
+    
+    // 使用 dragend 事件移除焦点
+    const handleDragEnd = () => {
+      button.blur() // 移除焦点
+      button.removeEventListener('dragend', handleDragEnd)
+    }
+    
+    button.addEventListener('dragend', handleDragEnd)
   }
 }
 </script>
@@ -73,10 +111,20 @@ const onDragStart = (event: DragEvent, nodeType: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  outline: none; /* 移除焦点轮廓 */
 }
 
 .sidebar-btn:hover {
   background: var(--hover-color);
+}
+
+/* 移除焦点状态的轮廓 */
+.sidebar-btn:focus {
+  outline: none;
+}
+
+.sidebar-btn:focus-visible {
+  outline: none;
 }
 
 /* 添加画布工具容器样式 */

@@ -4,6 +4,7 @@
     :class="{ selected, editing: isEditing }"
     ref="nodeRef"
     @dblclick="handleDoubleClick"
+    @click="handleNodeClick"
     :style="nodeStyle"
   >
     <div class="node-content">
@@ -57,7 +58,7 @@ const editInputRef = ref<HTMLTextAreaElement | null>(null)
 
 // 计算节点样式，包括字体样式
 const nodeStyle = computed(() => ({
-  fontSize: `${props.data.fontSize || 14}px`,
+  fontSize: `${props.data.fontSize || 12}px`,
   color: props.data.color || '#000000'
 }))
 
@@ -229,6 +230,50 @@ const handleKeydown = (e: KeyboardEvent) => {
     isEditing.value = false
   }
   // 不处理Delete键，让浏览器默认行为删除选中文本
+}
+
+// 处理节点点击事件
+const handleNodeClick = (event: MouseEvent) => {
+  // 阻止事件冒泡
+  event.stopPropagation()
+  
+  // 如果正在编辑，不处理选中逻辑
+  if (isEditing.value) return
+  
+  // 获取当前所有节点
+  const nodes = getNodes.value
+  
+  if (event.ctrlKey) {
+    // Ctrl键按下时的多选逻辑
+    if (props.selected) {
+      // 如果当前节点已选中，则仅取消当前节点的选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id ? false : node.selected
+      })))
+    } else {
+      // 如果当前节点未选中，则添加到选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id ? true : node.selected
+      })))
+    }
+  } else {
+    // 没有按Ctrl键时的单选逻辑（保持原有逻辑）
+    if (props.selected) {
+      // 如果当前节点已选中，则取消所有节点的选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: false
+      })))
+    } else {
+      // 如果当前节点未选中，则只选中当前节点
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id
+      })))
+    }
+  }
 }
 </script>
 

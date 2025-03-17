@@ -97,9 +97,17 @@
               <div class="shortcut-desc">多选对象</div>
             </div>
             <div class="shortcut-item">
-              <div class="shortcut-key">Del</div>
+              <div class="shortcut-key">Del/Backspace</div>
               <div class="shortcut-desc">删除选中的对象</div>
             </div>
+                       <div class="shortcut-item">
+              <div class="shortcut-key">Ctrl+C/Ctrl+V</div>
+              <div class="shortcut-desc">复制/粘贴选中对象</div>
+            </div>
+            <div class="shortcut-item">
+              <div class="shortcut-key">Ctrl+Z</div>
+              <div class="shortcut-desc">撤销操作/最多10步</div>
+            </div> 
             <div class="shortcut-item">
               <div class="shortcut-key">双击</div>
               <div class="shortcut-desc">编辑节点文本</div>
@@ -112,6 +120,7 @@
               <div class="shortcut-key">直线操作</div>
               <div class="shortcut-desc">shift+鼠标拖拽两端辅助角度调整</div>
             </div>
+
           </div>
         </div>
       </div>

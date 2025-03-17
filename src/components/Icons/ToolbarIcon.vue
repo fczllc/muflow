@@ -181,6 +181,21 @@
       <path d="M21 15 L21 19"></path>
     </svg>
     
+    <!-- 起止节点图标 -->
+    <svg v-else-if="type === 'startEnd'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="6" width="20" height="12" rx="6" ry="6"></rect>
+    </svg>
+    
+    <!-- 条件节点图标（菱形） -->
+    <svg v-else-if="type === 'condition'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2L22 12L12 22L2 12L12 2"></path>
+    </svg>
+    
+    <!-- 圆形图标节点 -->
+    <svg v-else-if="type === 'circle'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+    </svg>
+    
     <!-- 默认图标 -->
     <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"></circle>
@@ -211,6 +226,7 @@ type IconType =
   | 'inputNode' | 'topBottomNode' | 'leftRightNode' | 'outputNode'
   | 'import' // 添加导入图标类型
   | 'saveToAPI' // 添加保存到API的图标类型
+  | 'startEnd' | 'condition' | 'circle' // 添加新的图标类型
 
 interface Props {
   type: IconType
