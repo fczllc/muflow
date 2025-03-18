@@ -64,6 +64,15 @@
           <template #node-line="nodeProps">
             <LineNode v-bind="nodeProps" />
           </template>
+          <template #node-startEnd="nodeProps">
+            <StartEndNode v-bind="nodeProps" />
+          </template>
+          <template #node-condition="nodeProps">
+            <ConditionNode v-bind="nodeProps" />
+          </template>
+          <template #node-circle="nodeProps">
+            <CircleNode v-bind="nodeProps" />
+          </template>
         </VueFlow>
       </div>
     </div>
@@ -87,6 +96,9 @@ import LeftSidebar from './Sidebar/LeftSidebar.vue'
 import RoundedRectNode from './Nodes/RoundedRectNode.vue'
 import TextLabelNode from './Nodes/TextLabelNode.vue'
 import LineNode from './Nodes/LineNode.vue'
+import StartEndNode from './Nodes/StartEndNode.vue'
+import ConditionNode from './Nodes/ConditionNode.vue'
+import CircleNode from './Nodes/CircleNode.vue'
 import AlignmentLines from './AlignmentLines.vue'
 import type { FlowNode, AlignDirection, DistributeDirection, NodeDimensions } from '../types/flow'
 import { debounce } from 'lodash-es'
@@ -156,7 +168,10 @@ const currentHistoryIndex = ref(-1)
 const nodeTypes = {
   roundedRect: markRaw(RoundedRectNode),
   textLabel: markRaw(TextLabelNode),
-  line: markRaw(LineNode)
+  line: markRaw(LineNode),
+  startEnd: markRaw(StartEndNode),
+  condition: markRaw(ConditionNode),
+  circle: markRaw(CircleNode)
 }
 
 // 计算属性
@@ -192,6 +207,9 @@ const getDefaultLabel = (type: string): string => {
     case 'textLabel': return '文本'
     case 'roundedRect': return '节点'
     case 'line': return '直线'
+    case 'startEnd': return '起止节点'
+    case 'condition': return '条件节点'
+    case 'circle': return ''
     default: return '节点'
   }
 }

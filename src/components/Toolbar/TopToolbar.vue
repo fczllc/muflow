@@ -394,7 +394,7 @@ const hasSelectedLineNodes = computed(() => {
 
 // 计算属性：是否有选中的文本节点
 const hasSelectedTextNodes = computed(() => {
-  return getSelectedNodes.value.some(node => node.type === 'textLabel' || node.type === 'roundedRect')
+  return getSelectedNodes.value.some(node => node.type === 'textLabel' || node.type === 'roundedRect' || node.type === 'startEnd' || node.type === 'condition' || node.type === 'circle')
 })
 
 // 计算是否有两个或更多节点被选中（用于对齐功能）
@@ -511,8 +511,8 @@ watch(() => getSelectedNodes.value, (nodes) => {
     // 设置箭头样式
     arrowStyle.value = selectedLineNode.data?.arrowStyle || 'none'
   } else {
-    // 检查是否选中了文本节点或流程节点
-    const textNode = nodes.find(node => node.type === 'textLabel' || node.type === 'roundedRect')
+    // 检查是否选中了文本节点、流程节点、起止节点、条件节点或圆形节点
+    const textNode = nodes.find(node => node.type === 'textLabel' || node.type === 'roundedRect' || node.type === 'startEnd' || node.type === 'condition' || node.type === 'circle')
     if (textNode) {
       selectedNodeId.value = textNode.id
       selectedEdgeId.value = null
