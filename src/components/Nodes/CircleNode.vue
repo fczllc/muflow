@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import { ref, computed, nextTick, onMounted, watch, onUnmounted } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import type { NodeProps } from '@vue-flow/core'
 
@@ -449,7 +449,7 @@ onMounted(() => {
   updateNodeInternals([props.id])
   
   // 添加一个小延时，确保节点完全初始化
-  setTimeout(() => {
+  const initTimer = setTimeout(() => {
     if (nodeRef.value) {
       // 再次确保节点的 DOM 尺寸与数据一致
       const width = props.data.style?.width || '38px'
@@ -463,6 +463,11 @@ onMounted(() => {
     }
     updateNodeInternals([props.id])
   }, 100)
+
+  // 在组件卸载时清除定时器
+  onUnmounted(() => {
+    clearTimeout(initTimer)
+  })
 })
 
 // 处理节点点击事件

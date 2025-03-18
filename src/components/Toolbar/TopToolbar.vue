@@ -18,14 +18,25 @@
           <option value="18">18px</option>
           <option value="20">20px</option>
         </select>
-        <input 
-          type="color" 
-          v-model="fontColor" 
-          class="color-picker" 
-          title="字体颜色"
-          :disabled="!hasSelectedTextNodes"
-          @change="applyFontStyle"
-        >
+        <div class="color-icon-wrapper" :class="{ 'disabled': !hasSelectedTextNodes }">
+          <button 
+            class="color-icon-btn" 
+            title="字体颜色"
+            :disabled="!hasSelectedTextNodes" 
+            @click="openFontColorPicker"
+          >
+            <span class="text-icon">A</span>
+            <div class="color-indicator" :style="{ backgroundColor: fontColor }"></div>
+          </button>
+          <input 
+            type="color" 
+            v-model="fontColor" 
+            ref="fontColorInput"
+            class="color-picker-hidden" 
+            :disabled="!hasSelectedTextNodes"
+            @change="applyFontStyle"
+          >
+        </div>
       </div>
 
       <ToolbarIcon type="separator" />
@@ -43,14 +54,27 @@
           :disabled="!hasSelectedEdges && !hasSelectedLineNodes"
           @change="applyEdgeStyle"
         >
-        <input 
-          type="color" 
-          v-model="lineColor" 
-          class="color-picker" 
-          title="线条颜色"
-          :disabled="!hasSelectedEdges && !hasSelectedLineNodes"
-          @change="applyEdgeStyle"
-        >
+        <div class="color-icon-wrapper" :class="{ 'disabled': !hasSelectedEdges && !hasSelectedLineNodes }">
+          <button 
+            class="color-icon-btn" 
+            title="线条颜色"
+            :disabled="!hasSelectedEdges && !hasSelectedLineNodes" 
+            @click="openLineColorPicker"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pen-icon">
+              <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+            </svg>
+            <div class="color-indicator" :style="{ backgroundColor: lineColor }"></div>
+          </button>
+          <input 
+            type="color" 
+            v-model="lineColor" 
+            ref="lineColorInput"
+            class="color-picker-hidden" 
+            :disabled="!hasSelectedEdges && !hasSelectedLineNodes"
+            @change="applyEdgeStyle"
+          >
+        </div>
         <select 
           v-model="lineStyle" 
           class="line-style-select" 
@@ -360,6 +384,69 @@ color: #666;
 .logo {
   width: 42px;
   height: 16px;
+}
+
+.color-picker-hidden {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.color-icon-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.color-icon-wrapper.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.color-icon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 24px;
+  height: 24px;
+  padding: 3px 0 0 0;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.text-icon {
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 16px;
+  font-family: "Times New Roman", serif;
+  margin-bottom: 5px;
+}
+
+.pen-icon {
+  margin-bottom: 5px;
+}
+
+.color-icon-btn:hover:not(:disabled) {
+  background: var(--hover-color);
+}
+
+.color-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.color-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
 }
 </style>
 
@@ -871,6 +958,20 @@ const loadFlowData = async (data: any) => {
     alert('加载数据失败，请检查数据格式')
     throw error
   }
+}
+
+// 添加对颜色选择器的引用
+const fontColorInput = ref<HTMLInputElement | null>(null)
+const lineColorInput = ref<HTMLInputElement | null>(null)
+
+// 打开字体颜色选择器
+const openFontColorPicker = () => {
+  fontColorInput.value?.click()
+}
+
+// 打开线条颜色选择器
+const openLineColorPicker = () => {
+  lineColorInput.value?.click()
 }
 </script>
 
