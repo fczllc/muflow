@@ -50,6 +50,7 @@
           @nodeDrag="onNodeDrag"
           @nodeDragStop="handleNodeDragStop"
           @selectionChange="onSelectionChange"
+          @edge-double-click="onEdgeDoubleClick"
         >
           <!-- 添加对齐线组件 -->
           <AlignmentLines :lines="alignmentLines" />
@@ -76,6 +77,32 @@
         </VueFlow>
       </div>
     </div>
+    
+    <!-- 边标签编辑对话框 -->
+    <div v-if="showEdgeLabelDialog" class="edge-label-dialog-overlay" @click.self="cancelEdgeLabel">
+      <div class="edge-label-dialog">
+        <div class="dialog-header">
+          <h3>编辑连线标签</h3>
+        </div>
+        <div class="dialog-body">
+          <input 
+            ref="edgeLabelInputRef"
+            v-model="edgeLabelInput"
+            type="text" 
+            class="label-input"
+            @keydown.enter="confirmEdgeLabel(edgeLabelInput)"
+            @keydown.esc="cancelEdgeLabel"
+            @keydown.delete.stop
+            @keydown.backspace.stop
+            placeholder="请输入标签文本"
+          />
+        </div>
+        <div class="dialog-footer">
+          <button class="cancel-btn" @click="cancelEdgeLabel">取消</button>
+          <button class="confirm-btn" @click="confirmEdgeLabel(edgeLabelInput)">确定</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -88,8 +115,8 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, markRaw, computed } from 'vue'
-import { VueFlow, useVueFlow, ConnectionMode, MarkerType } from '@vue-flow/core'
+import { ref, onMounted, onUnmounted, markRaw, computed, nextTick } from 'vue'
+import { VueFlow, useVueFlow, ConnectionMode, MarkerType, } from '@vue-flow/core'
 import type { Connection, NodeDragEvent, NodeMouseEvent, EdgeMouseEvent, Node } from '@vue-flow/core'
 import TopToolbar from './Toolbar/TopToolbar.vue'
 import LeftSidebar from './Sidebar/LeftSidebar.vue'
@@ -120,7 +147,7 @@ const {
   onConnect, 
   onNodeDragStop: registerNodeDragStop, 
   onEdgeClick: registerEdgeClick,
-  project
+  project,
 } = useVueFlow()
 
 // 状态定义
@@ -381,7 +408,13 @@ const saveToHistory = () => {
   }
 }
 
-// 事件处理方法
+// 在script setup部分添加模态对话框相关的变量
+const showEdgeLabelDialog = ref(false)
+const currentEditingEdge = ref<any>(null)
+const edgeLabelInput = ref('')
+const edgeLabelInputRef = ref<HTMLInputElement | null>(null)
+
+// 修改onConnectHandler函数，在创建新边时默认添加空标签
 const onConnectHandler = (connection: Connection) => {
   // 先保存当前状态
   saveToHistory()
@@ -410,8 +443,10 @@ const onConnectHandler = (connection: Connection) => {
       savedLineWidth: 1,
       savedLineColor: '#555555',
       savedLineStyle: 'solid',
-      savedArrowStyle: 'target'
-    }
+      savedArrowStyle: 'target',
+      label: ''  // 确保每条边都有一个空标签
+    },
+    label: ''  // 默认空标签
   }
   
   addEdges([edge])
@@ -698,10 +733,76 @@ const handleKeyboard = (event: KeyboardEvent) => {
   }
 }
 
+// 修改双击边的事件处理器，使用模态对话框
+const onEdgeDoubleClick = (event: EdgeMouseEvent) => {
+  event.event?.preventDefault()
+  event.event?.stopPropagation()
+
+  const { edge } = event
+   
+  // 设置当前编辑的边
+  currentEditingEdge.value = edge
+  
+  // 预填充已有标签
+  edgeLabelInput.value = typeof edge.label === 'string' ? edge.label : ''
+  
+  // 显示模态对话框
+  showEdgeLabelDialog.value = true
+  
+  // 在下一个 tick 中聚焦输入框
+  nextTick(() => {
+    if (edgeLabelInputRef.value) {
+      edgeLabelInputRef.value.focus()
+      edgeLabelInputRef.value.select()
+    }
+  })
+}
+
+// 添加确认编辑标签的方法
+const confirmEdgeLabel = (labelValue: string) => {
+  if (!currentEditingEdge.value) return
+  
+  // 更新边的标签
+  const updatedEdges = getEdges.value.map(e => {
+    if (e.id === currentEditingEdge.value.id) {
+      return { 
+        ...e, 
+        label: labelValue, 
+        data: {
+          ...e.data,
+          label: labelValue
+        }
+      }
+    }
+    return e
+  })
+  
+  // 保存当前状态到历史记录
+  saveToHistory()
+  
+  // 更新边集合
+  setEdges(updatedEdges)
+  
+  // 关闭对话框并清除当前编辑的边
+  showEdgeLabelDialog.value = false
+  currentEditingEdge.value = null
+}
+
+// 添加取消编辑标签的方法
+const cancelEdgeLabel = () => {
+  showEdgeLabelDialog.value = false
+  currentEditingEdge.value = null
+}
+
 // 生命周期钩子
 onMounted(() => {
   // 添加事件监听器
   const handleKeyDown = (event: KeyboardEvent) => {
+    // 如果模态对话框打开，不处理键盘事件
+    if (showEdgeLabelDialog.value) {
+      return
+    }
+    
     // 删除键处理
     if (event.key === 'Delete' || event.key === 'Backspace') {
       // 获取所有选中的节点
@@ -979,8 +1080,138 @@ const calculateAlignment = (draggedNode: any, otherNodes: any[]) => {
   pointer-events: auto !important;
 }
 
-.vue-flow__node.resizing .vue-flow__edge-interaction-path,
 .vue-flow__node.resizing .vue-flow__edge-path {
   pointer-events: none !important;
+}
+
+/* 边标签样式 - 强化字体控制，确保不加粗 */
+.vue-flow__edge text,
+.vue-flow__edge .vue-flow__edge-text,
+.vue-flow__edge-textwrapper text,
+.vue-flow .vue-flow__edge .vue-flow__edge-text {
+  font-weight: 400 !important; /* 明确使用常规字重 */
+  font-size: 12px !important;
+  fill: #333 !important;
+  font-family: Arial, sans-serif !important;
+  pointer-events: none;
+  stroke: none !important; /* 确保没有文字描边 */
+  stroke-width: 0 !important;
+  text-rendering: geometricPrecision !important; /* 提高文本渲染精度 */
+  letter-spacing: normal !important; /* 正常字间距 */
+  paint-order: normal !important; /* 正常绘制顺序 */
+}
+
+/* 保留白色背景提高可读性，但去除边框和阴影 */
+.vue-flow__edge .vue-flow__edge-textbg,
+.vue-flow__edge-textwrapper rect,
+.vue-flow .vue-flow__edge .vue-flow__edge-textbg {
+  fill: white !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+  filter: none !important;
+}
+
+/* 文本输入框自定义样式 */
+.edge-label-input {
+  font-size: 12px;
+  color: #555;
+  background-color: white;
+  border: 1px dotted #555;
+  border-radius: 3px;
+  text-align: center;
+  min-width: 60px;
+  height: 24px;
+  padding: 0 4px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* 边标签编辑对话框样式 */
+.edge-label-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.edge-label-dialog {
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  width: 350px;
+  max-width: 90%;
+  overflow: hidden;
+}
+
+.dialog-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.dialog-body {
+  padding: 20px;
+}
+
+.label-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.label-input:focus {
+  border-color: #4096ff;
+  box-shadow: 0 0 0 2px rgba(64, 150, 255, 0.1);
+}
+
+.dialog-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialog-footer button {
+  padding: 6px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s;
+}
+
+.confirm-btn {
+  background-color: #1677ff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #4096ff;
+}
+
+.cancel-btn {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #e6e6e6;
 }
 </style>
