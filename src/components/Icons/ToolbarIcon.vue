@@ -123,6 +123,34 @@
       <rect x="9" y="17" width="6" height="3" rx="1"></rect>
     </svg>
     
+    <!-- 置于顶层图标 -->
+    <svg v-else-if="type === 'layerTop'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path stroke="#333333" id="svg_8" d="m1.87007,16.6922l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#fff"/>
+  <path stroke="#333333" id="svg_7" d="m1.87007,11.69224l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#fff"/>
+  <path stroke="#333333" id="svg_5" d="m1.87007,7.06728l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87496l-10.03116,-4.87496z" fill="#333333"/>
+    </svg>
+    
+    <!-- 置于底层图标 -->
+    <svg v-else-if="type === 'layerBottom'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path stroke="#333333" id="svg_8" d="m1.87007,16.6922l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#333333"/>
+  <path stroke="#333333" id="svg_7" d="m1.87007,11.69224l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#fff"/>
+  <path stroke="#333333" id="svg_5" d="m1.80757,7.06728l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87496l-10.03116,-4.87496z" fill="#ffffff"/>
+    </svg>
+    
+    <!-- 上移一层图标 -->
+    <svg v-else-if="type === 'layerUp'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path stroke="#333333" id="svg_7" d="m1.87007,16.69217l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#ffffff"/>
+  <path stroke="#333333" id="svg_8" d="m1.87007,12.06721l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#333333"/>
+  <path transform="rotate(89.664 11.8924 4.60031)" stroke="#333333" id="svg_10" d="m11.72421,4.60031l1.66576,-6.09531l-2.99509,6.09531l2.99509,6.0953l-1.66576,-6.0953z" fill="#333333"/>
+    </svg>
+    
+    <!-- 下移一层图标 -->
+    <svg v-else-if="type === 'layerDown'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+ <path stroke="#333333" id="svg_8" d="m1.93257,13.00471l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#333333"/>
+  <path stroke="#333333" id="svg_7" d="m1.74507,7.87974l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#ffffff"/>
+  <path transform="rotate(89.664 11.9519 20.2227)" stroke="#333333" id="svg_10" d="m12.09937,20.22272l-1.45993,-6.09531l2.625,6.09531l-2.625,6.0953l1.45993,-6.0953z" fill="#333333"/>
+    </svg>
+    
     <!-- 清除画布 -->
     <svg v-else-if="type === 'clear'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <!-- 画布外框 -->
@@ -227,6 +255,7 @@ type IconType =
   | 'import' // 添加导入图标类型
   | 'saveToAPI' // 添加保存到API的图标类型
   | 'startEnd' | 'condition' | 'circle' // 添加新的图标类型
+  | 'layerTop' | 'layerBottom' | 'layerUp' | 'layerDown' // 添加图层排列图标类型
 
 interface Props {
   type: IconType

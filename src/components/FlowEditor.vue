@@ -48,6 +48,9 @@
           @nodeClick="onNodeClick"
           @edgeClick="onEdgeClick"
           @paneClick="onPaneClick"
+          @paneMousedown="onPaneMouseDown"
+          @paneMousemove="onPaneMouseMove"
+          @paneMouseup="onPaneMouseUp"
           @nodeDrag="onNodeDrag"
           @nodeDragStop="handleNodeDragStop"
           @selectionChange="onSelectionChange"
@@ -55,6 +58,9 @@
         >
           <!-- 添加对齐线组件 -->
           <AlignmentLines :lines="alignmentLines" />
+          
+          <!-- 添加独立的选择框div -->
+          <div id="selection-box" class="selection-area" style="display: none; position: absolute;"></div>
           
           <!-- 注册自定义节点 -->
           <template #node-roundedRect="nodeProps">
@@ -153,18 +159,27 @@ import '@vue-flow/core/dist/theme-default.css'
 
 // 获取 Vue Flow 实例和方法
 const { 
+  findNode, 
+  getNodes, 
+  getEdges, 
+  getViewport, 
+  getTransform,
+  setNodes, 
+  setEdges,
   addNodes, 
   addEdges, 
+  updateEdge, 
   removeNodes, 
   removeEdges, 
-  getNodes, 
-  getEdges,
-  setNodes,
-  setEdges,
-  onConnect, 
+  onConnect,
   onNodeDragStop: registerNodeDragStop, 
   onEdgeClick: registerEdgeClick,
+  updateNodeInternals, // 确保这个方法被正确导入
   project,
+  viewportRef,
+  fitView,
+  getNodeTypes,
+  updateNode, // 添加updateNode方法
 } = useVueFlow()
 
 // 状态定义
@@ -178,6 +193,12 @@ const alignmentLines = ref<Array<{ id: string; type: 'horizontal' | 'vertical'; 
 const snapThreshold = 2
 const nodeDimensionsCache = new Map<string, NodeDimensions>()
 const nodeCenterMap = new Map<string, {x: number, y: number}>()
+
+// 区域选择相关状态
+const isSelecting = ref(false)
+const startPoint = ref<{ x: number, y: number } | null>(null)
+const currentPoint = ref<{ x: number, y: number } | null>(null)
+const selectionBoxRef = ref<HTMLElement | null>(null)
 
 // 添加剪贴板状态
 interface ClipboardItem {
@@ -245,6 +266,23 @@ const selectedNodesBounds = computed(() => {
       bottom: Math.max(acc.bottom, node.position.y + height)
     }
   }, initialBounds)
+})
+
+// 选择区域样式计算
+const selectAreaStyle = computed(() => {
+  if (!startPoint.value || !currentPoint.value) return {}
+  
+  const left = Math.min(startPoint.value.x, currentPoint.value.x)
+  const top = Math.min(startPoint.value.y, currentPoint.value.y)
+  const width = Math.abs(currentPoint.value.x - startPoint.value.x)
+  const height = Math.abs(currentPoint.value.y - startPoint.value.y)
+  
+  return {
+    left: `${left}px`,
+    top: `${top}px`,
+    width: `${width}px`,
+    height: `${height}px`
+  }
 })
 
 // 工具方法
@@ -332,9 +370,14 @@ const updateNodeCenter = (node: any) => {
   nodeCenterMap.set(node.id, {x: centerX, y: centerY});
 }
 
-// 新增：初始化所有节点的中心点坐标，使用防抖处理
+// 修改防抖函数，确保组件卸载时不会继续执行
 const initNodeCenters = debounce(() => {
   try {
+    // 在执行更新前检查组件是否仍然存在
+    if (!document.querySelector('.flow-editor')) {
+      return; // 如果组件已卸载，不执行更新
+    }
+    
     getNodes.value.forEach(node => {
       // 直接使用节点的原始位置，不进行四舍五入
       updateNodeCenter(node);
@@ -343,6 +386,20 @@ const initNodeCenters = debounce(() => {
     // 错误处理但不输出日志
   }
 }, 100);
+
+// 添加observeNodes函数，监听节点变化，优化执行逻辑
+const observeNodes = () => {
+  // 在执行检查前确认组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    return; // 如果组件已卸载，不执行检查
+  }
+  
+  // 只有当节点发生变化时才更新中心点
+  const currentNodesCount = getNodes.value.length;
+  if (currentNodesCount > 0) {
+    initNodeCenters();
+  }
+}
 
 // 对齐和分布方法
 const alignNodes = (direction: AlignDirection) => {
@@ -484,6 +541,9 @@ const showEdgeLabelDialog = ref(false)
 const currentEditingEdge = ref<any>(null)
 const edgeLabelInput = ref('')
 const edgeLabelInputRef = ref<HTMLInputElement | null>(null)
+
+// 添加对框选节点状态的跟踪
+const selectedNodesViaAreaSelection = ref<string[]>([]);
 
 // 修改onConnectHandler函数，在创建新边时默认添加空标签
 const onConnectHandler = (connection: Connection) => {
@@ -677,6 +737,9 @@ const onEdgeClick = (event: EdgeMouseEvent) => {
 }
 
 const onPaneClick = (event: MouseEvent) => {
+  // 如果正在进行区域选择，不处理点击事件
+  if (isSelecting.value) return
+  
   if (recentlyClickedEdge.value || isResizing.value || resizeJustEnded.value) {
     resizeJustEnded.value = false
     return
@@ -1222,6 +1285,140 @@ const cancelEdgeLabel = () => {
 
 // 生命周期钩子
 onMounted(() => {
+  
+  // 添加DOM级别的全局鼠标事件监听，用于调试
+  const canvasContainer = document.querySelector('.canvas-container');
+  
+  // 获取全部画布元素，方便调试
+  const allVueFlowElements = {
+    vfWrapper: document.querySelector('.vue-flow-wrapper'),
+    vf: document.querySelector('.vue-flow'),
+    vfViewport: document.querySelector('.vue-flow__viewport'),
+    vfTransform: document.querySelector('.vue-flow__transform'),
+    vfPane: document.querySelector('.vue-flow__pane'),
+    vfContainer: document.querySelector('.vue-flow__container')
+  };
+
+  // 手动获取选择框元素
+  const selectionBox = document.getElementById('selection-box');
+  if (selectionBox) {
+    selectionBoxRef.value = selectionBox;
+  } else {
+    console.error('找不到选择框元素，创建一个新的');
+    // 如果找不到，创建一个
+    const newSelectionBox = document.createElement('div');
+    newSelectionBox.id = 'selection-box';
+    newSelectionBox.className = 'selection-area';
+    newSelectionBox.style.display = 'none';
+    newSelectionBox.style.position = 'absolute';
+    newSelectionBox.style.zIndex = '1000';
+    
+    // 添加到画布容器中
+    if (canvasContainer) {
+      canvasContainer.appendChild(newSelectionBox);
+      selectionBoxRef.value = newSelectionBox;
+    }
+  }
+  
+  // 直接在Vue Flow的pane元素上添加原生事件监听器
+  const paneElement = document.querySelector('.vue-flow__pane');
+  if (paneElement) {
+       
+    // 原生鼠标按下事件
+    const paneMouseDownHandler = (e: MouseEvent) => {
+      // 手动调用我们的处理函数
+      onPaneMouseDown(e);
+    };
+    
+    // 原生鼠标移动事件
+    const paneMouseMoveHandler = (e: MouseEvent) => {
+      if (isSelecting.value) {
+        // 手动调用我们的处理函数
+        onPaneMouseMove(e);
+      }
+    };
+    
+    // 原生鼠标松开事件
+    const paneMouseUpHandler = (e: MouseEvent) => {
+      // 手动调用我们的处理函数
+      onPaneMouseUp(e);
+    };
+    
+    // 添加事件监听器
+    paneElement.addEventListener('mousedown', paneMouseDownHandler);
+    document.addEventListener('mousemove', paneMouseMoveHandler);
+    document.addEventListener('mouseup', paneMouseUpHandler);
+    
+    // 卸载时清除事件监听器
+    onUnmounted(() => {
+      paneElement.removeEventListener('mousedown', paneMouseDownHandler);
+      document.removeEventListener('mousemove', paneMouseMoveHandler);
+      document.removeEventListener('mouseup', paneMouseUpHandler);
+    });
+  }
+  
+  if (canvasContainer) {
+    
+    // 全局鼠标按下事件 - 使用类型断言解决类型问题
+    const handleGlobalMouseDown = (event: Event) => {
+      const mouseEvent = event as MouseEvent;
+      console.log('DOM: mousedown', { 
+        target: mouseEvent.target,
+        button: mouseEvent.button, 
+        coords: { x: mouseEvent.clientX, y: mouseEvent.clientY },
+        timestamp: new Date().toISOString()
+      });
+    };
+    
+    // 全局鼠标移动事件 - 使用类型断言解决类型问题
+    const handleGlobalMouseMove = (event: Event) => {
+      const mouseEvent = event as MouseEvent;
+      // 只在选择状态下记录移动事件，避免日志过多
+      if (isSelecting.value) {
+        console.log('DOM: mousemove', { 
+          isSelecting: isSelecting.value,
+          coords: { x: mouseEvent.clientX, y: mouseEvent.clientY }
+        });
+      }
+    };
+    
+    // 全局鼠标松开事件 - 使用类型断言解决类型问题
+    const handleGlobalMouseUp = (event: Event) => {
+      const mouseEvent = event as MouseEvent;
+      console.log('DOM: mouseup', { 
+        target: mouseEvent.target,
+        isSelecting: isSelecting.value,
+        coords: { x: mouseEvent.clientX, y: mouseEvent.clientY },
+        timestamp: new Date().toISOString()
+      });
+      
+      // 如果存在选择状态但没有触发onPaneMouseUp，手动触发重置
+      if (isSelecting.value) {
+        console.log('DOM: 检测到选择状态未重置，手动触发重置');
+        if (selectionBoxRef.value) {
+          selectionBoxRef.value.style.display = 'none';
+        }
+        isSelecting.value = false;
+        startPoint.value = null;
+        currentPoint.value = null;
+      }
+    };
+    
+    // 添加事件监听器 - 使用类型断言解决类型问题
+    canvasContainer.addEventListener('mousedown', handleGlobalMouseDown as EventListener);
+    window.addEventListener('mousemove', handleGlobalMouseMove as EventListener);
+    window.addEventListener('mouseup', handleGlobalMouseUp as EventListener);
+    
+    // 卸载时清除这些事件监听器
+    onUnmounted(() => {
+      canvasContainer.removeEventListener('mousedown', handleGlobalMouseDown as EventListener);
+      window.removeEventListener('mousemove', handleGlobalMouseMove as EventListener);
+      window.removeEventListener('mouseup', handleGlobalMouseUp as EventListener);
+    });
+  } else {
+    console.error('Canvas container not found, DOM-level events will not be tracked');
+  }
+  
   // 添加事件监听器
   const handleKeyDown = (event: KeyboardEvent) => {
     // 如果模态对话框打开，不处理键盘事件
@@ -1288,18 +1485,9 @@ onMounted(() => {
   // 初始化所有节点的中心点坐标
   initNodeCenters();
 
-  // 添加observeNodes函数，监听节点变化
-  const observeNodes = () => {
-    // 只有当节点发生变化时才更新中心点
-    const currentNodesCount = getNodes.value.length;
-    if (currentNodesCount > 0) {
-      initNodeCenters();
-    }
-  }
-  
   // 监听节点变化，使用较长的间隔
-  const nodeObserver = setInterval(observeNodes, 1500);
-
+  let nodeObserver = setInterval(observeNodes, 1500);
+  
   // 在卸载组件前清理所有的计时器和监听器
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown)
@@ -1307,9 +1495,9 @@ onMounted(() => {
     window.removeEventListener('resize-end', handleResizeEnd)
     
     // 取消所有的防抖函数
-    handleNodeDragStop.cancel()
-    onSelectionChange.cancel()
-    initNodeCenters.cancel()
+    if (handleNodeDragStop.cancel) handleNodeDragStop.cancel()
+    if (onSelectionChange.cancel) onSelectionChange.cancel()
+    if (initNodeCenters.cancel) initNodeCenters.cancel()
     
     // 清除定时器
     if (nodeObserver) {
@@ -1382,6 +1570,266 @@ const arrangeLayers = (action: 'top' | 'bottom' | 'up' | 'down') => {
   
   // 保存历史记录
   saveToHistory()
+}
+
+// 处理画布鼠标按下事件
+const onPaneMouseDown = (event: MouseEvent) => {
+  // 只处理鼠标左键事件，忽略右键
+  if (event.button !== 0) return;
+  
+  // 检查点击的目标是否是画布
+  const target = event.target as HTMLElement;
+  
+  // 只有在点击画布空白区域或者特定情况下才触发框选
+  const isCanvas = target.classList.contains('vue-flow__pane') || 
+                 target.classList.contains('vue-flow__container');
+  
+  if (!isCanvas) {
+    return;
+  }
+  
+  // 阻止默认行为，防止触发其他事件
+  event.preventDefault();
+  event.stopPropagation();
+  
+  // 获取画布元素的边界矩形
+  const canvasContainer = document.querySelector('.canvas-container');
+  const vueFlowElement = document.querySelector('.vue-flow');
+  
+  const canvas = canvasContainer || vueFlowElement;
+  
+  if (canvas) {
+    const rect = canvas.getBoundingClientRect();
+    
+    // 计算相对于画布的点击位置
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    // 设置起始点
+    startPoint.value = { x, y };
+    
+    // 设置为选择状态
+    isSelecting.value = true;
+    
+    // 显示选择框
+    const selectionBox = document.getElementById('selection-box');
+    if (selectionBox) {
+      selectionBoxRef.value = selectionBox;
+      selectionBox.style.display = 'block';
+      selectionBox.style.position = 'absolute';
+      selectionBox.style.left = `${x}px`;
+      selectionBox.style.top = `${y}px`;
+      selectionBox.style.width = '0px';
+      selectionBox.style.height = '0px';
+      selectionBox.style.border = '2px dashed cornflowerblue';
+      selectionBox.style.backgroundColor = 'rgba(100, 149, 237, 0.1)';
+      selectionBox.style.zIndex = '1000';
+      selectionBox.style.pointerEvents = 'none';
+    }
+    
+    // 设置当前点为起始点
+    currentPoint.value = { x, y };
+  }
+}
+
+// 处理画布鼠标移动事件
+const onPaneMouseMove = (event: MouseEvent) => {
+  // 如果没有进入选择状态，不处理
+  if (!isSelecting.value || !startPoint.value) {
+    return;
+  }
+  
+  // 阻止默认的画布拖拽行为
+  event.preventDefault();
+  event.stopPropagation();
+  
+  // 获取画布元素的边界矩形
+  const canvasContainer = document.querySelector('.canvas-container');
+  const vueFlowElement = document.querySelector('.vue-flow');
+  
+  const canvas = canvasContainer || vueFlowElement;
+  
+  if (canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    currentPoint.value = { x, y };
+    
+    // 计算选择框的位置和尺寸
+    const left = Math.min(startPoint.value.x, x);
+    const top = Math.min(startPoint.value.y, y);
+    const width = Math.abs(x - startPoint.value.x);
+    const height = Math.abs(y - startPoint.value.y);
+    
+
+    // 更新选择框的位置和尺寸
+    if (selectionBoxRef.value) {
+      selectionBoxRef.value.style.left = `${left}px`;
+      selectionBoxRef.value.style.top = `${top}px`;
+      selectionBoxRef.value.style.width = `${width}px`;
+      selectionBoxRef.value.style.height = `${height}px`;
+    } else {
+      console.error('移动时选择框引用不存在');
+    }
+  } else {
+    console.error('onPaneMouseMove: 找不到画布元素');
+  }
+}
+
+// 处理画布鼠标松开事件
+const onPaneMouseUp = (event: MouseEvent) => {
+  // 只有在选择模式下处理
+  if (isSelecting.value && startPoint.value && currentPoint.value) {
+    // 阻止默认行为
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // 只有当选择区域足够大时才执行选择（避免意外点击）
+    const minSelectionSize = 5; // 最小选择区域大小
+    const width = Math.abs(currentPoint.value.x - startPoint.value.x);
+    const height = Math.abs(currentPoint.value.y - startPoint.value.y);
+    
+    if (width > minSelectionSize || height > minSelectionSize) {
+      const left = Math.min(startPoint.value.x, currentPoint.value.x);
+      const top = Math.min(startPoint.value.y, currentPoint.value.y);
+      const right = Math.max(startPoint.value.x, currentPoint.value.x);
+      const bottom = Math.max(startPoint.value.y, currentPoint.value.y);
+      
+      // 获取画布缩放和平移信息
+      const transform = getTransform();
+      const zoom = transform.zoom || 1;
+      const xOffset = transform.x || 0;
+      const yOffset = transform.y || 0;
+      
+      // 转换选择区域坐标到流图坐标系统
+      const selectionArea = {
+        left: (left - xOffset) / zoom,
+        top: (top - yOffset) / zoom,
+        right: (right - xOffset) / zoom,
+        bottom: (bottom - yOffset) / zoom
+      };
+      
+      // 存储要选中的节点ID列表
+      const nodesInSelectionArea: string[] = [];
+      
+      // 检查每个节点是否在选择区域内
+      getNodes.value.forEach(node => {
+        // 获取节点尺寸
+        const nodeDimensions = getNodeDimensions(node);
+        const nodeWidth = nodeDimensions?.width || 100;  // 默认尺寸
+        const nodeHeight = nodeDimensions?.height || 40; // 默认尺寸
+        
+        // 计算节点的四个角
+        const nodeLeft = node.position.x;
+        const nodeTop = node.position.y;
+        const nodeRight = nodeLeft + nodeWidth;
+        const nodeBottom = nodeTop + nodeHeight;
+        
+        // 检查节点是否在选择区域内 (完全包含或部分包含)
+        const isInArea = 
+          nodeLeft < selectionArea.right &&
+          nodeRight > selectionArea.left &&
+          nodeTop < selectionArea.bottom &&
+          nodeBottom > selectionArea.top;
+        
+        if (isInArea) {
+          nodesInSelectionArea.push(node.id);
+        }
+      });
+      
+      // 如果找到了要选中的节点
+      if (nodesInSelectionArea.length > 0) {
+        // 获取当前所有节点
+        const nodes = getNodes.value;
+        
+        if (event.ctrlKey) {
+          // Ctrl键按下时的多选逻辑
+          // 将框选中的节点添加到已选中的节点中，不影响其他已选中的节点
+          setNodes(nodes.map(node => {
+            if (nodesInSelectionArea.includes(node.id)) {
+              // 如果节点在框选区域内，则添加到选中状态（如果已选中则保持选中）
+              return {
+                ...node,
+                selected: true
+              };
+            }
+            // 不在框选区域内的节点保持原状态
+            return node;
+          }));
+        } else {
+          // 没有按Ctrl键时的框选逻辑（单选逻辑）
+          // 只选中框选区域内的节点，取消其他节点的选中状态
+          setNodes(nodes.map(node => ({
+            ...node,
+            selected: nodesInSelectionArea.includes(node.id)
+          })));
+        }
+        
+        // 使用一个延时确保DOM更新和Vue Flow内部状态同步
+        setTimeout(() => {
+          // 直接使用框选的节点IDs更新selectedNodes
+          selectedNodes.value = nodesInSelectionArea;
+          
+          // 验证选中状态是否正确应用
+          const allNodesSelected = nodesInSelectionArea.every(id => {
+            const node = getNodes.value.find(n => n.id === id);
+            return node && node.selected === true;
+          });
+          
+          if (!allNodesSelected) {
+            // 再次尝试应用选中状态
+            const updatedNodes = getNodes.value.map(node => ({
+              ...node,
+              selected: nodesInSelectionArea.includes(node.id) || 
+                       (event.ctrlKey && node.selected)
+            }));
+            setNodes(updatedNodes);
+            
+            // 强制更新节点内部结构
+            nodesInSelectionArea.forEach(nodeId => {
+              updateNodeInternals([nodeId]);
+            });
+          }
+          
+          // 确保selectedNodes数组与实际选中的节点同步
+          const actualSelectedNodes = getNodes.value
+            .filter(node => node.selected)
+            .map(node => node.id);
+          
+          if (JSON.stringify([...actualSelectedNodes].sort()) !== 
+              JSON.stringify([...selectedNodes.value].sort())) {
+            selectedNodes.value = actualSelectedNodes;
+          }
+        }, 100);
+        
+        // 保存历史记录
+        saveToHistory();
+      } else {
+        // 如果没有找到节点并且没有按下Ctrl键，则清除所有选择
+        if (!event.ctrlKey) {
+          const updatedNodes = getNodes.value.map(node => ({
+            ...node,
+            selected: false
+          }));
+          setNodes(updatedNodes);
+          
+          // 清空selectedNodes数组
+          selectedNodes.value = [];
+        }
+      }
+    }
+  }
+  
+  // 隐藏选择框
+  if (selectionBoxRef.value) {
+    selectionBoxRef.value.style.display = 'none';
+  }
+  
+  // 重置选择状态
+  isSelecting.value = false;
+  startPoint.value = null;
+  currentPoint.value = null;
 }
 </script>
 
@@ -1688,5 +2136,32 @@ const arrangeLayers = (action: 'top' | 'bottom' | 'up' | 'down') => {
 .vue-flow .vue-flow__node.vue-flow__node-svgIcon::before,
 .vue-flow .vue-flow__node.vue-flow__node-svgIcon::after {
   display: none !important;
+}
+
+/* 区域选择框样式 */
+.selection-area {
+  position: absolute;
+  border: 2px dashed #6495ed;
+  background-color: rgba(100, 149, 237, 0.1);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* 确保画布容器定位正确 */
+.canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.editor-main {
+  position: relative;
+  flex: 1;
+  height: 100%;
+}
+
+.flow-canvas {
+  width: 100%;
+  height: 100%;
 }
 </style>

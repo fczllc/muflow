@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import WidgetTool from './WidgetTool.vue'
 import ResourceTool from './ResourceTool.vue'
 import CanvasTools from '../Toolbar/CanvasTools.vue'
