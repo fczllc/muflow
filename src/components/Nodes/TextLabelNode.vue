@@ -40,7 +40,7 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { useVueFlow } from '@vue-flow/core'
 import type { NodeProps } from '@vue-flow/core'
 
@@ -55,6 +55,14 @@ const selected = computed(() => props.selected)
 const isEditing = ref(false)
 const editLabel = ref('')
 const editInputRef = ref<HTMLTextAreaElement | null>(null)
+
+// 监听节点编辑状态变化
+watch(() => props.data.isEditing, (newIsEditing) => {
+  // 如果外部将编辑状态设为false，同步更新本地状态
+  if (newIsEditing === false && isEditing.value === true) {
+    isEditing.value = false
+  }
+})
 
 // 计算节点样式，包括字体样式
 const nodeStyle = computed(() => ({
@@ -180,6 +188,14 @@ const handleDoubleClick = () => {
   isEditing.value = true
   editLabel.value = props.data.label || ''
   
+  // 更新节点数据，标记为编辑状态
+  updateNode(props.id, { 
+    data: { 
+      ...props.data, 
+      isEditing: true
+    } 
+  })
+  
   // 等待DOM更新后设置输入框焦点
   nextTick(() => {
     if (editInputRef.value) {
@@ -198,6 +214,9 @@ const handleDoubleClick = () => {
 // 完成编辑
 const finishEditing = () => {
   if (!isEditing.value) return
+  
+  // 清除所有文本选择
+  window.getSelection()?.removeAllRanges()
   
   // 获取当前节点尺寸
   const currentWidth = nodeRef.value?.offsetWidth || 100
@@ -228,6 +247,15 @@ const handleKeydown = (e: KeyboardEvent) => {
     finishEditing()
   } else if (e.key === 'Escape') {
     isEditing.value = false
+    // 清除所有文本选择
+    window.getSelection()?.removeAllRanges()
+    // 更新节点数据，标记为非编辑状态
+    updateNode(props.id, { 
+      data: { 
+        ...props.data, 
+        isEditing: false
+      } 
+    })
   }
   // 不处理Delete键，让浏览器默认行为删除选中文本
 }

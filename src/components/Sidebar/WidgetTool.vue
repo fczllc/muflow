@@ -30,21 +30,6 @@
       <div class="tooltip" v-show="activeTooltip === 'roundedRect'">矩形节点</div>
     </div>
 
-    <!-- 直线控件 -->
-    <div class="tool-btn-wrapper">
-      <button 
-        class="sidebar-btn" 
-        draggable="true" 
-        @dragstart="onDragStart($event, 'line')" 
-        @mouseover="showTooltip('line')"
-        @mouseleave="hideTooltip"
-        title="直线"
-      >
-        <ToolbarIcon type="line" />
-      </button>
-      <div class="tooltip" v-show="activeTooltip === 'line'">直线</div>
-    </div>
-
     <!-- 起止控件 -->
     <div class="tool-btn-wrapper">
       <button 
@@ -88,6 +73,22 @@
         <ToolbarIcon type="circle" />
       </button>
       <div class="tooltip" v-show="activeTooltip === 'circle'">圆形节点</div>
+    </div>
+
+    
+    <!-- 直线控件 -->
+    <div class="tool-btn-wrapper">
+      <button 
+        class="sidebar-btn" 
+        draggable="true" 
+        @dragstart="onDragStart($event, 'line')" 
+        @mouseover="showTooltip('line')"
+        @mouseleave="hideTooltip"
+        title="直线"
+      >
+        <ToolbarIcon type="line" />
+      </button>
+      <div class="tooltip" v-show="activeTooltip === 'line'">直线</div>
     </div>
   </div>
 </template>

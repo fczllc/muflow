@@ -158,6 +158,14 @@ watch(() => props.selected, (newSelected) => {
   }
 })
 
+// 监听节点编辑状态变化
+watch(() => props.data.isEditing, (newIsEditing) => {
+  // 如果外部将编辑状态设为false，同步更新本地状态
+  if (newIsEditing === false && isEditing.value === true) {
+    isEditing.value = false
+  }
+})
+
 const isEditing = ref(false)
 const editLabel = ref('')
 const editInputRef = ref<HTMLInputElement | null>(null)
@@ -210,6 +218,9 @@ const handleDoubleClick = (event: MouseEvent) => {
 const finishEditing = () => {
   isEditing.value = false
   
+  // 清除所有文本选择
+  window.getSelection()?.removeAllRanges()
+  
   // 获取当前节点尺寸
   const currentWidth = nodeRef.value?.offsetWidth || 0
   const currentHeight = nodeRef.value?.offsetHeight || 0
@@ -243,6 +254,15 @@ const handleKeydown = (e: KeyboardEvent) => {
     finishEditing()
   } else if (e.key === 'Escape') {
     isEditing.value = false
+    // 清除所有文本选择
+    window.getSelection()?.removeAllRanges()
+    // 更新节点数据，标记为非编辑状态
+    updateNode(props.id, { 
+      data: { 
+        ...props.data, 
+        isEditing: false
+      } 
+    })
   }
   // 不处理Delete键，让浏览器默认行为删除选中文本
 }

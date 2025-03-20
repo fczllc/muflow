@@ -26,11 +26,14 @@
           :connection-mode="ConnectionMode.Loose"
           :zoom-on-scroll="false"     
           :zoom-on-pinch="false" 
+          :zoom-on-double-click="false"
           :pan-on-drag="false"
           :min-zoom="0.1"
           :max-zoom="2"
           :default-zoom="1"
           :pannable="false"
+          :autoPanOnNodeDrag="false"
+          :node-extent-pad="0"
           :snap-to-grid="false"
           :snap-grid="[2, 2]"
           :multi-selection-key-code="'Control'"
@@ -48,6 +51,7 @@
           @nodeClick="onNodeClick"
           @edgeClick="onEdgeClick"
           @paneClick="onPaneClick"
+          @paneDoubleClick="onPaneDoubleClick"
           @paneMousedown="onPaneMouseDown"
           @paneMousemove="onPaneMouseMove"
           @paneMouseup="onPaneMouseUp"
@@ -55,6 +59,12 @@
           @nodeDragStop="handleNodeDragStop"
           @selectionChange="onSelectionChange"
           @edge-double-click="onEdgeDoubleClick"
+          :pan-on-scroll="false"
+          :prevent-scrolling="true"
+          :auto-connect="false"
+          :elevate-edges-on-select="true"
+          :disable-pan-on-node-drag="true"
+          :disable-zoom-on-scroll="true"
         >
           <!-- 添加对齐线组件 -->
           <AlignmentLines :lines="alignmentLines" />
@@ -736,15 +746,41 @@ const onEdgeClick = (event: EdgeMouseEvent) => {
   selectedNodeId.value = null
 }
 
-const onPaneClick = (event: MouseEvent) => {
-  // 如果正在进行区域选择，不处理点击事件
-  if (isSelecting.value) return
+// 定义一个公共函数来处理取消选择和编辑状态
+const clearSelectionAndEditingState = () => {
+  // 清除所有文本选择
+  window.getSelection()?.removeAllRanges()
   
-  if (recentlyClickedEdge.value || isResizing.value || resizeJustEnded.value) {
-    resizeJustEnded.value = false
-    return
+  // 检查是否有节点处于编辑状态
+  const nodesInEditingState = getNodes.value.filter(node => 
+    node.data && node.data.isEditing === true
+  )
+  
+  // 如果有节点处于编辑状态，退出编辑状态
+  if (nodesInEditingState.length > 0) {
+    const updatedNodes = getNodes.value.map(node => {
+      if (node.data && node.data.isEditing === true) {
+        // 保留节点编辑前的其他数据，仅更新isEditing状态
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            isEditing: false
+          }
+        }
+      }
+      return node
+    })
+    
+    setNodes(updatedNodes)
+    
+    // 强制更新这些节点的内部结构
+    nodesInEditingState.forEach(node => {
+      updateNodeInternals([node.id])
+    })
   }
   
+  // 取消所有节点和边的选中状态
   const nodes = getNodes.value.map(n => ({
     ...n,
     selected: false
@@ -760,6 +796,26 @@ const onPaneClick = (event: MouseEvent) => {
   
   selectedNodeId.value = null
   selectedEdgeId.value = null
+}
+
+// 修改onPaneClick函数
+const onPaneClick = (event: MouseEvent) => {
+  // 如果正在进行区域选择，不处理点击事件
+  if (isSelecting.value) return
+  
+  if (recentlyClickedEdge.value || isResizing.value || resizeJustEnded.value) {
+    resizeJustEnded.value = false
+    return
+  }
+  
+  // 使用公共函数取消选择和编辑状态
+  clearSelectionAndEditingState()
+}
+
+// 修改onPaneDoubleClick函数
+const onPaneDoubleClick = (event: MouseEvent) => {
+  // 使用公共函数取消选择和编辑状态
+  clearSelectionAndEditingState()
 }
 
 // 对齐算法，使用中心点Map进行对齐计算
@@ -1063,6 +1119,16 @@ const handleKeyboard = (event: KeyboardEvent) => {
     return
   }
 
+  // 处理Escape键，退出节点编辑状态和取消选择
+  if (event.key === 'Escape') {
+    // 使用公共函数取消选择和编辑状态
+    clearSelectionAndEditingState()
+    
+    // 阻止默认行为
+    event.preventDefault()
+    return
+  }
+
   // 撤销操作 (Ctrl+Z)
   if (event.ctrlKey && event.key === 'z') {
     if (currentHistoryIndex.value > 0) {
@@ -1286,25 +1352,11 @@ const cancelEdgeLabel = () => {
 // 生命周期钩子
 onMounted(() => {
   
-  // 添加DOM级别的全局鼠标事件监听，用于调试
-  const canvasContainer = document.querySelector('.canvas-container');
-  
-  // 获取全部画布元素，方便调试
-  const allVueFlowElements = {
-    vfWrapper: document.querySelector('.vue-flow-wrapper'),
-    vf: document.querySelector('.vue-flow'),
-    vfViewport: document.querySelector('.vue-flow__viewport'),
-    vfTransform: document.querySelector('.vue-flow__transform'),
-    vfPane: document.querySelector('.vue-flow__pane'),
-    vfContainer: document.querySelector('.vue-flow__container')
-  };
-
   // 手动获取选择框元素
   const selectionBox = document.getElementById('selection-box');
   if (selectionBox) {
     selectionBoxRef.value = selectionBox;
   } else {
-    console.error('找不到选择框元素，创建一个新的');
     // 如果找不到，创建一个
     const newSelectionBox = document.createElement('div');
     newSelectionBox.id = 'selection-box';
@@ -1314,6 +1366,7 @@ onMounted(() => {
     newSelectionBox.style.zIndex = '1000';
     
     // 添加到画布容器中
+    const canvasContainer = document.querySelector('.canvas-container');
     if (canvasContainer) {
       canvasContainer.appendChild(newSelectionBox);
       selectionBoxRef.value = newSelectionBox;
@@ -1345,78 +1398,16 @@ onMounted(() => {
     };
     
     // 添加事件监听器
-    paneElement.addEventListener('mousedown', paneMouseDownHandler);
-    document.addEventListener('mousemove', paneMouseMoveHandler);
-    document.addEventListener('mouseup', paneMouseUpHandler);
+    paneElement.addEventListener('mousedown', paneMouseDownHandler as EventListener);
+    document.addEventListener('mousemove', paneMouseMoveHandler as EventListener);
+    document.addEventListener('mouseup', paneMouseUpHandler as EventListener);
     
     // 卸载时清除事件监听器
     onUnmounted(() => {
-      paneElement.removeEventListener('mousedown', paneMouseDownHandler);
-      document.removeEventListener('mousemove', paneMouseMoveHandler);
-      document.removeEventListener('mouseup', paneMouseUpHandler);
+      paneElement.removeEventListener('mousedown', paneMouseDownHandler as EventListener);
+      document.removeEventListener('mousemove', paneMouseMoveHandler as EventListener);
+      document.removeEventListener('mouseup', paneMouseUpHandler as EventListener);
     });
-  }
-  
-  if (canvasContainer) {
-    
-    // 全局鼠标按下事件 - 使用类型断言解决类型问题
-    const handleGlobalMouseDown = (event: Event) => {
-      const mouseEvent = event as MouseEvent;
-      console.log('DOM: mousedown', { 
-        target: mouseEvent.target,
-        button: mouseEvent.button, 
-        coords: { x: mouseEvent.clientX, y: mouseEvent.clientY },
-        timestamp: new Date().toISOString()
-      });
-    };
-    
-    // 全局鼠标移动事件 - 使用类型断言解决类型问题
-    const handleGlobalMouseMove = (event: Event) => {
-      const mouseEvent = event as MouseEvent;
-      // 只在选择状态下记录移动事件，避免日志过多
-      if (isSelecting.value) {
-        console.log('DOM: mousemove', { 
-          isSelecting: isSelecting.value,
-          coords: { x: mouseEvent.clientX, y: mouseEvent.clientY }
-        });
-      }
-    };
-    
-    // 全局鼠标松开事件 - 使用类型断言解决类型问题
-    const handleGlobalMouseUp = (event: Event) => {
-      const mouseEvent = event as MouseEvent;
-      console.log('DOM: mouseup', { 
-        target: mouseEvent.target,
-        isSelecting: isSelecting.value,
-        coords: { x: mouseEvent.clientX, y: mouseEvent.clientY },
-        timestamp: new Date().toISOString()
-      });
-      
-      // 如果存在选择状态但没有触发onPaneMouseUp，手动触发重置
-      if (isSelecting.value) {
-        console.log('DOM: 检测到选择状态未重置，手动触发重置');
-        if (selectionBoxRef.value) {
-          selectionBoxRef.value.style.display = 'none';
-        }
-        isSelecting.value = false;
-        startPoint.value = null;
-        currentPoint.value = null;
-      }
-    };
-    
-    // 添加事件监听器 - 使用类型断言解决类型问题
-    canvasContainer.addEventListener('mousedown', handleGlobalMouseDown as EventListener);
-    window.addEventListener('mousemove', handleGlobalMouseMove as EventListener);
-    window.addEventListener('mouseup', handleGlobalMouseUp as EventListener);
-    
-    // 卸载时清除这些事件监听器
-    onUnmounted(() => {
-      canvasContainer.removeEventListener('mousedown', handleGlobalMouseDown as EventListener);
-      window.removeEventListener('mousemove', handleGlobalMouseMove as EventListener);
-      window.removeEventListener('mouseup', handleGlobalMouseUp as EventListener);
-    });
-  } else {
-    console.error('Canvas container not found, DOM-level events will not be tracked');
   }
   
   // 添加事件监听器

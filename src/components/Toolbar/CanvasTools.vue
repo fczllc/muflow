@@ -90,7 +90,7 @@
             </div>
             <div class="shortcut-item">
               <div class="shortcut-key">ESC</div>
-              <div class="shortcut-desc">取消选中状态</div>
+              <div class="shortcut-desc">取消选中/编辑状态</div>
             </div>
             <div class="shortcut-item">
               <div class="shortcut-key">Ctrl + 点击</div>
@@ -100,13 +100,17 @@
               <div class="shortcut-key">Del/Backspace</div>
               <div class="shortcut-desc">删除选中的对象</div>
             </div>
-                       <div class="shortcut-item">
+            <div class="shortcut-item">
               <div class="shortcut-key">Ctrl+C/Ctrl+V</div>
               <div class="shortcut-desc">复制/粘贴选中对象</div>
             </div>
             <div class="shortcut-item">
               <div class="shortcut-key">Ctrl+Z</div>
               <div class="shortcut-desc">撤销操作/最多10步</div>
+            </div> 
+            <div class="shortcut-item">
+              <div class="shortcut-key">鼠标框选</div>
+              <div class="shortcut-desc">在空白处拖动鼠标框选对象</div>
             </div> 
             <div class="shortcut-item">
               <div class="shortcut-key">双击</div>
