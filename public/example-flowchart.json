@@ -1,0 +1,191 @@
+{
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "startEnd",
+      "position": { "x": 100, "y": 100 },
+      "data": {
+        "label": "开始",
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      }
+    },
+    {
+      "id": "node-2",
+      "type": "roundedRect",
+      "position": { "x": 100, "y": 200 },
+      "data": {
+        "label": "初始化数据",
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      }
+    },
+    {
+      "id": "node-3",
+      "type": "condition",
+      "position": { "x": 100, "y": 300 },
+      "data": {
+        "label": "数据是否有效?",
+        "style": {
+          "width": "120px",
+          "height": "80px"
+        }
+      }
+    },
+    {
+      "id": "node-4",
+      "type": "roundedRect",
+      "position": { "x": 300, "y": 300 },
+      "data": {
+        "label": "错误处理",
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      }
+    },
+    {
+      "id": "node-5",
+      "type": "roundedRect",
+      "position": { "x": 100, "y": 420 },
+      "data": {
+        "label": "处理数据",
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      }
+    },
+    {
+      "id": "node-6",
+      "type": "circle",
+      "position": { "x": 300, "y": 420 },
+      "data": {
+        "label": "数据节点",
+        "style": {
+          "width": "80px",
+          "height": "80px"
+        }
+      }
+    },
+    {
+      "id": "node-7",
+      "type": "textLabel",
+      "position": { "x": 400, "y": 200 },
+      "data": {
+        "label": "流程说明",
+        "fontSize": 16,
+        "color": "#0066cc"
+      }
+    },
+    {
+      "id": "node-8",
+      "type": "startEnd",
+      "position": { "x": 100, "y": 520 },
+      "data": {
+        "label": "结束",
+        "style": {
+          "width": "120px",
+          "height": "42px"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1-2",
+      "source": "node-1",
+      "target": "node-2",
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#555555"
+      },
+      "data": {
+        "savedLineWidth": 2,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target"
+      }
+    },
+    {
+      "id": "edge-2-3",
+      "source": "node-2",
+      "target": "node-3",
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#555555"
+      },
+      "data": {
+        "savedLineWidth": 2,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid", 
+        "savedArrowStyle": "target"
+      }
+    },
+    {
+      "id": "edge-3-4",
+      "source": "node-3",
+      "target": "node-4",
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#ff6600"
+      },
+      "data": {
+        "savedLineWidth": 2,
+        "savedLineColor": "#ff6600",
+        "savedLineStyle": "solid", 
+        "savedArrowStyle": "target"
+      }
+    },
+    {
+      "id": "edge-3-5",
+      "source": "node-3",
+      "target": "node-5",
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#0066cc"
+      },
+      "data": {
+        "savedLineWidth": 2,
+        "savedLineColor": "#0066cc",
+        "savedLineStyle": "solid", 
+        "savedArrowStyle": "target"
+      }
+    },
+    {
+      "id": "edge-5-6",
+      "source": "node-5",
+      "target": "node-6",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555",
+        "strokeDasharray": "5 5"
+      },
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "dashed", 
+        "savedArrowStyle": "target"
+      }
+    },
+    {
+      "id": "edge-5-8",
+      "source": "node-5",
+      "target": "node-8",
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#555555"
+      },
+      "data": {
+        "savedLineWidth": 2,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid", 
+        "savedArrowStyle": "target"
+      }
+    }
+  ]
+} 

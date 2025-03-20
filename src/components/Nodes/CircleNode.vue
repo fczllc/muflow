@@ -22,7 +22,7 @@
     <Handle
       type="target"
       :position="Position.Left"
-      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0 }]"
+      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0, left: '-4px', top: '50%', transform: 'translateY(-50%)' }]"
       id="left-handle"
       class="handle-point"
     />
@@ -31,7 +31,7 @@
     <Handle
       type="target"
       :position="Position.Top"
-      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0 }]"
+      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0, top: '-4px', left: '50%', transform: 'translateX(-50%)' }]"
       id="top-handle"
       class="handle-point"
     />
@@ -40,7 +40,7 @@
     <Handle
       type="source"
       :position="Position.Right"
-      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0 }]"
+      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0, right: '-4px', top: '50%', transform: 'translateY(-50%)' }]"
       id="right-handle"
       class="handle-point"
     />
@@ -49,7 +49,7 @@
     <Handle
       type="source"
       :position="Position.Bottom"
-      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0 }]"
+      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0, bottom: '-4px', left: '50%', transform: 'translateX(-50%)' }]"
       id="bottom-handle"
       class="handle-point"
     />
@@ -382,6 +382,23 @@ const startResize = (event: MouseEvent, type: string) => {
         break
     }
     
+    // 确保尺寸是2的倍数，有助于网格对齐
+    newWidth = Math.round(newWidth / 2) * 2
+    newHeight = newWidth  // 对于圆形节点，保持宽高完全相同
+    
+    // 重新计算位置偏移以适应调整后的尺寸
+    if (type.includes('left') || type === 'Left') {
+      newPosition.x = startPosition.x + (startWidth - newWidth)
+    }
+    if (type.includes('top') || type === 'Top') {
+      newPosition.y = startPosition.y + (startHeight - newHeight)
+    }
+    
+    // 居中调整，确保圆形节点在调整大小时保持居中
+    if (type === 'top' || type === 'bottom' || type === 'topRight' || type === 'bottomRight') {
+      newPosition.x = startPosition.x + (startWidth - newWidth) / 2
+    }
+    
     // 更新节点位置和大小
     if (nodeRef.value) {
       nodeRef.value.style.width = `${newWidth}px`
@@ -563,23 +580,28 @@ export default {
   border-radius: 50%;
   border: 2px solid white;
   z-index: 10;  /* 确保连接点在最上层 */
+  transform: translate(0, 0); /* 重置默认的transform避免冲突 */
 }
 
-/* 连接点位置调整 */
+/* 连接点位置调整 - 这些样式将被我们的内联样式覆盖 */
 .vue-flow__handle-top {
   top: -4px;
+  transform: translate(-50%, 0); /* 只在X轴保持居中 */
 }
 
 .vue-flow__handle-right {
   right: -4px;
+  transform: translate(0, -50%); /* 只在Y轴保持居中 */
 }
 
 .vue-flow__handle-bottom {
   bottom: -4px;
+  transform: translate(-50%, 0); /* 只在X轴保持居中 */
 }
 
 .vue-flow__handle-left {
   left: -4px;
+  transform: translate(0, -50%); /* 只在Y轴保持居中 */
 }
 
 /* 节点内容样式 */

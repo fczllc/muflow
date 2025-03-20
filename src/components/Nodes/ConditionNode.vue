@@ -22,7 +22,7 @@
     <Handle
       type="target"
       :position="Position.Left"
-      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0 }]"
+      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0, left: '-4px', top: '50%', transform: 'translateY(-50%)' }]"
       id="left-handle"
       class="handle-point"
     />
@@ -31,7 +31,7 @@
     <Handle
       type="target"
       :position="Position.Top"
-      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0 }]"
+      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0, top: '-4px', left: '50%', transform: 'translateX(-50%)' }]"
       id="top-handle"
       class="handle-point"
     />
@@ -40,7 +40,7 @@
     <Handle
       type="source"
       :position="Position.Right"
-      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0 }]"
+      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0, right: '-4px', top: '50%', transform: 'translateY(-50%)' }]"
       id="right-handle"
       class="handle-point"
     />
@@ -49,7 +49,7 @@
     <Handle
       type="source"
       :position="Position.Bottom"
-      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0 }]"
+      :style="[handleStyle, { opacity: showHandles || props.selected ? 1 : 0, bottom: '-4px', left: '50%', transform: 'translateX(-50%)' }]"
       id="bottom-handle"
       class="handle-point"
     />
@@ -323,14 +323,14 @@ const startResize = (event: MouseEvent, type: string) => {
     
     switch (type) {
       case 'top':
-        newHeight = Math.max(60, startHeight - deltaY)
+        newHeight = Math.max(80, startHeight - deltaY)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'right':
         newWidth = Math.max(100, startWidth + deltaX)
         break
       case 'bottom':
-        newHeight = Math.max(60, startHeight + deltaY)
+        newHeight = Math.max(80, startHeight + deltaY)
         break
       case 'left':
         newWidth = Math.max(100, startWidth - deltaX)
@@ -338,24 +338,36 @@ const startResize = (event: MouseEvent, type: string) => {
         break
       case 'topLeft':
         newWidth = Math.max(100, startWidth - deltaX)
-        newHeight = Math.max(60, startHeight - deltaY)
+        newHeight = Math.max(80, startHeight - deltaY)
         newPosition.x = startPosition.x + (startWidth - newWidth)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'topRight':
         newWidth = Math.max(100, startWidth + deltaX)
-        newHeight = Math.max(60, startHeight - deltaY)
+        newHeight = Math.max(80, startHeight - deltaY)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'bottomLeft':
         newWidth = Math.max(100, startWidth - deltaX)
-        newHeight = Math.max(60, startHeight + deltaY)
+        newHeight = Math.max(80, startHeight + deltaY)
         newPosition.x = startPosition.x + (startWidth - newWidth)
         break
       case 'bottomRight':
         newWidth = Math.max(100, startWidth + deltaX)
-        newHeight = Math.max(60, startHeight + deltaY)
+        newHeight = Math.max(80, startHeight + deltaY)
         break
+    }
+    
+    // 确保尺寸是2的倍数，有助于网格对齐
+    newWidth = Math.round(newWidth / 2) * 2
+    newHeight = Math.round(newHeight / 2) * 2
+    
+    // 重新计算位置偏移以适应调整后的尺寸
+    if (type.includes('Left')) {
+      newPosition.x = startPosition.x + (startWidth - newWidth)
+    }
+    if (type.includes('top') || type === 'Top') {
+      newPosition.y = startPosition.y + (startHeight - newHeight)
     }
     
     // 更新节点位置和大小
@@ -538,23 +550,28 @@ export default {
   border-radius: 50%;
   border: 2px solid white;
   z-index: 10;  /* 确保连接点在最上层 */
+  transform: translate(0, 0); /* 重置默认的transform避免冲突 */
 }
 
-/* 连接点位置调整 */
+/* 连接点位置调整 - 这些样式将被我们的内联样式覆盖 */
 .vue-flow__handle-top {
   top: -4px;
+  transform: translate(-50%, 0); /* 只在X轴保持居中 */
 }
 
 .vue-flow__handle-right {
   right: -4px;
+  transform: translate(0, -50%); /* 只在Y轴保持居中 */
 }
 
 .vue-flow__handle-bottom {
   bottom: -4px;
+  transform: translate(-50%, 0); /* 只在X轴保持居中 */
 }
 
 .vue-flow__handle-left {
   left: -4px;
+  transform: translate(0, -50%); /* 只在Y轴保持居中 */
 }
 
 /* 节点内容样式 */

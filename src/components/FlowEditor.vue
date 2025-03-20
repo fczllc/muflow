@@ -13,6 +13,7 @@
     <TopToolbar 
       @align="alignNodes"
       @distribute="distributeNodes"
+      @layer="arrangeLayers"
     />
     <div class="main-content">
       <LeftSidebar />
@@ -25,13 +26,13 @@
           :connection-mode="ConnectionMode.Loose"
           :zoom-on-scroll="false"     
           :zoom-on-pinch="false" 
-          :pan-On-Drag="false"
-          :min-zoom="1"               
-          :max-zoom="1"               
+          :pan-on-drag="false"
+          :min-zoom="0.1"
+          :max-zoom="2"
           :default-zoom="1"
           :pannable="false"
-          :snap-to-grid="true"
-          :snap-grid="[20, 20]"
+          :snap-to-grid="false"
+          :snap-grid="[2, 2]"
           :multi-selection-key-code="'Control'"
           :default-edge-options="{
             type: 'smoothstep',
@@ -74,6 +75,9 @@
           <template #node-circle="nodeProps">
             <CircleNode v-bind="nodeProps" />
           </template>
+          <template #node-svgIcon="nodeProps">
+            <SvgIconNode v-bind="nodeProps" />
+          </template>
         </VueFlow>
       </div>
     </div>
@@ -115,9 +119,21 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, markRaw, computed, nextTick } from 'vue'
-import { VueFlow, useVueFlow, ConnectionMode, MarkerType, } from '@vue-flow/core'
-import type { Connection, NodeDragEvent, NodeMouseEvent, EdgeMouseEvent, Node } from '@vue-flow/core'
+import { ref, onMounted, onUnmounted, markRaw, computed, nextTick, provide } from 'vue'
+import { 
+  VueFlow, 
+  useVueFlow, 
+  ConnectionMode, 
+  MarkerType
+} from '@vue-flow/core'
+import type { 
+  Connection, 
+  NodeDragEvent, 
+  NodeMouseEvent, 
+  EdgeMouseEvent, 
+  Node,
+  NodeComponent
+} from '@vue-flow/core'
 import TopToolbar from './Toolbar/TopToolbar.vue'
 import LeftSidebar from './Sidebar/LeftSidebar.vue'
 import RoundedRectNode from './Nodes/RoundedRectNode.vue'
@@ -126,6 +142,7 @@ import LineNode from './Nodes/LineNode.vue'
 import StartEndNode from './Nodes/StartEndNode.vue'
 import ConditionNode from './Nodes/ConditionNode.vue'
 import CircleNode from './Nodes/CircleNode.vue'
+import SvgIconNode from './Nodes/SvgIconNode.vue'
 import AlignmentLines from './AlignmentLines.vue'
 import type { FlowNode, AlignDirection, DistributeDirection, NodeDimensions } from '../types/flow'
 import { debounce } from 'lodash-es'
@@ -158,8 +175,9 @@ const isResizing = ref(false)
 const resizeJustEnded = ref(false)
 const selectedNodes = ref<string[]>([])
 const alignmentLines = ref<Array<{ id: string; type: 'horizontal' | 'vertical'; position: number }>>([])
-const snapThreshold = 5
+const snapThreshold = 2
 const nodeDimensionsCache = new Map<string, NodeDimensions>()
+const nodeCenterMap = new Map<string, {x: number, y: number}>()
 
 // 添加剪贴板状态
 interface ClipboardItem {
@@ -192,13 +210,14 @@ const history = ref<HistoryState[]>([])
 const currentHistoryIndex = ref(-1)
 
 // 注册自定义节点类型
-const nodeTypes = {
+const nodeTypes: Record<string, NodeComponent> = {
   roundedRect: markRaw(RoundedRectNode),
   textLabel: markRaw(TextLabelNode),
   line: markRaw(LineNode),
   startEnd: markRaw(StartEndNode),
   condition: markRaw(ConditionNode),
-  circle: markRaw(CircleNode)
+  circle: markRaw(CircleNode),
+  svgIcon: markRaw(SvgIconNode)
 }
 
 // 计算属性
@@ -237,6 +256,7 @@ const getDefaultLabel = (type: string): string => {
     case 'startEnd': return '起止节点'
     case 'condition': return '条件节点'
     case 'circle': return ''
+    case 'svgIcon': return '' // SVG图标节点默认无标签
     default: return '节点'
   }
 }
@@ -253,17 +273,35 @@ const getNodeDimensions = (node: any): NodeDimensions => {
   const cached = nodeDimensionsCache.get(node.id)
   if (cached) return cached
   
+  // 首先查找Vue Flow节点容器
   const element = document.querySelector(`[data-id="${node.id}"]`)
   if (element) {
+    // 在Vue Flow节点容器内查找实际节点组件
+    // 例如：.rounded-rect-node, .condition-node等
+    const innerElement = element.querySelector('.rounded-rect-node, .start-end-node, .condition-node, .circle-node, .text-label-node, .line-node, .svg-icon-node')
+    
+    // 如果找到内部节点组件，使用它的尺寸
+    if (innerElement) {
+      const rect = innerElement.getBoundingClientRect()
+      const dimensions = {
+        width: Math.round(rect.width),
+        height: Math.round(rect.height)
+      }
+      nodeDimensionsCache.set(node.id, dimensions)
+      return dimensions
+    }
+    
+    // 如果没有找到内部组件，返回到使用Vue Flow容器的尺寸
     const rect = element.getBoundingClientRect()
     const dimensions = {
-      width: rect.width,
-      height: rect.height
+      width: Math.round(rect.width),
+      height: Math.round(rect.height)
     }
     nodeDimensionsCache.set(node.id, dimensions)
     return dimensions
   }
   
+  // 如果找不到DOM元素，使用默认尺寸
   const defaultDimensions = {
     width: node.type === 'textLabel' ? 150 : 200,
     height: node.type === 'textLabel' ? 40 : 50
@@ -275,7 +313,36 @@ const getNodeDimensions = (node: any): NodeDimensions => {
 
 const clearNodeDimensionsCache = (nodeId: string) => {
   nodeDimensionsCache.delete(nodeId)
+  nodeCenterMap.delete(nodeId)
 }
+
+// 更新节点中心点坐标
+const updateNodeCenter = (node: any) => {
+  if (!node || !node.id) return;
+  
+  const { width, height } = getNodeDimensions(node);
+  // 直接使用精确计算值，不进行四舍五入
+  const centerX = node.position.x + width / 2;
+  const centerY = node.position.y + height / 2;
+  
+  // 记录更新前的坐标，用于日志
+  const prevCenter = nodeCenterMap.get(node.id);
+  
+  // 存储精确的中心点坐标
+  nodeCenterMap.set(node.id, {x: centerX, y: centerY});
+}
+
+// 新增：初始化所有节点的中心点坐标，使用防抖处理
+const initNodeCenters = debounce(() => {
+  try {
+    getNodes.value.forEach(node => {
+      // 直接使用节点的原始位置，不进行四舍五入
+      updateNodeCenter(node);
+    });
+  } catch (error) {
+    // 错误处理但不输出日志
+  }
+}, 100);
 
 // 对齐和分布方法
 const alignNodes = (direction: AlignDirection) => {
@@ -408,6 +475,10 @@ const saveToHistory = () => {
   }
 }
 
+// 提供addNodes和saveToHistory函数给子组件使用
+provide('addNodes', addNodes)
+provide('saveToHistory', saveToHistory)
+
 // 在script setup部分添加模态对话框相关的变量
 const showEdgeLabelDialog = ref(false)
 const currentEditingEdge = ref<any>(null)
@@ -460,19 +531,45 @@ const onDragOver = (event: DragEvent) => {
 }
 
 const onDrop = (event: DragEvent) => {
-  const nodeType = event.dataTransfer?.getData('application/vueflow')
+  const nodeTypeData = event.dataTransfer?.getData('application/vueflow')
   
-  if (typeof nodeType === 'string' && nodeType) {
+  if (typeof nodeTypeData === 'string' && nodeTypeData) {
+    let nodeType = nodeTypeData
+    let iconType: string | undefined
+    
+    // 尝试解析JSON数据，支持从图标选择器拖拽
+    try {
+      const parsedData = JSON.parse(nodeTypeData)
+      if (parsedData && typeof parsedData === 'object') {
+        nodeType = parsedData.nodeType || nodeType
+        iconType = parsedData.iconType
+      }
+    } catch {
+      // 如果解析失败，继续使用原始nodeType
+    }
+    
     const { left, top } = (event.target as HTMLDivElement).getBoundingClientRect()
     const position = project({
       x: event.clientX - left,
       y: event.clientY - top,
     })
 
+    // 保留一位小数并确保整数部分是偶数
+    let x = Number(position.x.toFixed(1));
+    let y = Number(position.y.toFixed(1));
+    
+    // 如果整数部分是奇数，则调整为偶数
+    if (Math.floor(x) % 2 !== 0) {
+      x = Number((Math.floor(x) + 1 + (x - Math.floor(x))).toFixed(1));
+    }
+    if (Math.floor(y) % 2 !== 0) {
+      y = Number((Math.floor(y) + 1 + (y - Math.floor(y))).toFixed(1));
+    }
+
     let newNode: Node = {
       id: `${nodeType}-${getNodes.value.length + 1}`,
       type: nodeType,
-      position,
+      position: { x, y },
       data: { label: getDefaultLabel(nodeType) }
     }
 
@@ -492,9 +589,31 @@ const onDrop = (event: DragEvent) => {
         selectable: true
       }
     }
+    
+    // 为SVG图标节点设置属性
+    if (nodeType === 'svgIcon' && iconType) {
+      newNode = {
+        ...newNode,
+        data: {
+          iconType,
+          width: 24,
+          height: 24,
+          strokeWidth: 2,
+          color: '#333333'
+        },
+        draggable: true,
+        selectable: true,
+        connectable: false
+      }
+    }
 
     // 添加新节点
     addNodes([newNode])
+    
+    // 立即更新中心点Map
+    setTimeout(() => {
+      updateNodeCenter(newNode);
+    }, 0);
     
     // 取消选中其他节点，只选中新添加的节点
     const nodes = getNodes.value.map(node => ({
@@ -580,61 +699,299 @@ const onPaneClick = (event: MouseEvent) => {
   selectedEdgeId.value = null
 }
 
-const onNodeDrag = (event: NodeDragEvent) => {
-  const { node } = event
-  const otherNodes = getNodes.value.filter(n => n.id !== node.id)
+// 对齐算法，使用中心点Map进行对齐计算
+const calculateAlignment = (draggedNode: any) => {
+  if (!draggedNode || !draggedNode.id || nodeCenterMap.size <= 1) return [];
   
-  alignmentLines.value = calculateAlignment(node, otherNodes)
+  // 获取当前拖动节点的中心点
+  const draggedCenter = nodeCenterMap.get(draggedNode.id);
+  if (!draggedCenter) {
+    // 如果Map中没有当前节点的中心点，先更新一下
+    updateNodeCenter(draggedNode);
+    const updatedDraggedCenter = nodeCenterMap.get(draggedNode.id);
+    if (!updatedDraggedCenter) return [];
+    return [];
+  }
+
+  const alignmentLines: Array<{id: string; type: 'horizontal' | 'vertical'; position: number}> = [];
+  let closestVertical = {nodeId: '', diff: Infinity, centerX: 0};
+  let closestHorizontal = {nodeId: '', diff: Infinity, centerY: 0};
   
-  if (alignmentLines.value.length > 0) {
-    const { width, height } = getNodeDimensions(node)
-    let newPosition = { ...node.position }
+  // 查找最近的垂直和水平对齐点
+  nodeCenterMap.forEach((center, nodeId) => {
+    if (nodeId === draggedNode.id) return;
     
-    alignmentLines.value.forEach(line => {
-      if (line.type === 'vertical') {
-        if (Math.abs(line.position - node.position.x) <= snapThreshold) {
-          newPosition.x = line.position
+    // 检查X轴对齐(垂直线)
+    const xDiff = Math.abs(center.x - draggedCenter.x);
+    if (xDiff <= snapThreshold && xDiff < closestVertical.diff) {
+      closestVertical = {nodeId, diff: xDiff, centerX: center.x};
+    }
+    
+    // 检查Y轴对齐(水平线)
+    const yDiff = Math.abs(center.y - draggedCenter.y);
+    if (yDiff <= snapThreshold && yDiff < closestHorizontal.diff) {
+      closestHorizontal = {nodeId, diff: yDiff, centerY: center.y};
+    }
+  });
+  
+  // 添加垂直对齐线 - 使用目标节点的X坐标
+  if (closestVertical.nodeId) {
+    alignmentLines.push({
+      id: `v-${closestVertical.nodeId}`,
+      type: 'vertical',
+      position: closestVertical.centerX // 对齐线X坐标使用目标节点的中心点X
+    });
+  }
+  
+  // 添加水平对齐线 - 使用目标节点的Y坐标
+  if (closestHorizontal.nodeId) {
+    alignmentLines.push({
+      id: `h-${closestHorizontal.nodeId}`,
+      type: 'horizontal',
+      position: closestHorizontal.centerY // 对齐线Y坐标使用目标节点的中心点Y
+    });
+  }
+  
+  return alignmentLines;
+};
+
+// 修改applySnap函数，确保所有计算结果都是保留一位小数
+const applySnap = (node: any, alignmentLines: any[]) => {
+  // 获取当前节点中心点
+  const nodeCenter = nodeCenterMap.get(node.id);
+  if (!nodeCenter) {
+    return node;
+  }
+  
+  // 获取节点尺寸
+  const { width, height } = node.dimensions || getNodeDimensions(node);
+  
+  // 记录原始位置
+  let { x, y } = node.position;
+  let adjusted = false;
+  
+  // 从alignmentLines中找到水平和垂直线
+  const horizontalLine = alignmentLines.find(line => line.type === 'horizontal');
+  const verticalLine = alignmentLines.find(line => line.type === 'vertical');
+  
+  if (horizontalLine || verticalLine) {
+    // 查找所有要对齐的节点ID
+    let targetNodeIdY = '';
+    let targetNodeIdX = '';
+    
+    // 遍历所有节点，找到与对齐线匹配的节点
+    nodeCenterMap.forEach((center, id) => {
+      if (id === node.id) return;
+      
+      // 如果水平对齐线的位置与节点中心点Y坐标接近，标记为目标节点
+      if (horizontalLine && Math.abs(horizontalLine.position - center.y) < 0.1) {
+        targetNodeIdY = id;
+      }
+      
+      // 如果垂直对齐线的位置与节点中心点X坐标接近，标记为目标节点
+      if (verticalLine && Math.abs(verticalLine.position - center.x) < 0.1) {
+        targetNodeIdX = id;
+      }
+    });
+    
+    // 应用水平对齐（中心点Y对齐）
+    if (horizontalLine && targetNodeIdY) {
+      // 获取目标节点
+      const targetNode = getNodes.value.find(n => n.id === targetNodeIdY);
+      if (targetNode) {
+        // 类似于alignNodes方法，直接计算精确位置
+        const targetNodeDim = getNodeDimensions(targetNode);
+        const targetCenterY = targetNode.position.y + targetNodeDim.height / 2;
+        
+        // 直接计算需要设置的Y位置，使得节点中心点与目标中心点对齐
+        y = targetCenterY - height / 2;
+        adjusted = true;
+      }
+    }
+    
+    // 应用垂直对齐（中心点X对齐）
+    if (verticalLine && targetNodeIdX) {
+      // 获取目标节点
+      const targetNode = getNodes.value.find(n => n.id === targetNodeIdX);
+      if (targetNode) {
+        // 类似于alignNodes方法，直接计算精确位置
+        const targetNodeDim = getNodeDimensions(targetNode);
+        const targetCenterX = targetNode.position.x + targetNodeDim.width / 2;
+        
+        // 直接计算需要设置的X位置，使得节点中心点与目标中心点对齐
+        x = targetCenterX - width / 2;
+        adjusted = true;
+      }
+    }
+  }
+  
+  // 返回更新后的节点对象（不修改原始对象）
+  return {
+    ...node,
+    position: { x, y }
+  };
+};
+
+// 修改onNodeDrag函数，添加日志
+const onNodeDrag = (event: NodeDragEvent) => {
+  try {
+    const { node } = event;
+    
+    // 直接使用节点位置，不再进行四舍五入和偶数化处理
+    let newPosition = { ...node.position };
+    
+    // 更新节点位置 - 创建新的节点对象
+    const updatedNodes = getNodes.value.map(n => 
+      n.id === node.id ? { ...n, position: newPosition } : n
+    );
+    
+    // 更新状态
+    setNodes(updatedNodes);
+    
+    // 获取更新后的节点
+    const updatedNode = updatedNodes.find(n => n.id === node.id);
+    if (!updatedNode) return;
+    
+    // 1. 更新拖动节点的中心点坐标
+    updateNodeCenter(updatedNode);
+    
+    // 2. 计算当前节点与其他节点的对齐位置
+    const lines = calculateAlignment(updatedNode);
+    
+    // 3. 更新对齐线显示
+    alignmentLines.value = lines;
+    
+    // 4. 获取当前节点的中心点
+    const centerPoint = nodeCenterMap.get(updatedNode.id);
+    if (centerPoint) {
+      // 查找所有X坐标差小于3px的节点
+      const closeNodesX = Array.from(nodeCenterMap.entries())
+        .filter(([id, center]) => {
+          if (id === updatedNode.id) return false;
+          return Math.abs(center.x - centerPoint.x) <= 3;
+        });
+      
+      // 查找所有Y坐标差小于3px的节点
+      const closeNodesY = Array.from(nodeCenterMap.entries())
+        .filter(([id, center]) => {
+          if (id === updatedNode.id) return false;
+          return Math.abs(center.y - centerPoint.y) <= 3;
+        });
+    }
+  } catch (error) {
+    // 错误处理但不输出日志
+    alignmentLines.value = [];
+  }
+};
+
+// 修改handleNodeDragStop，确保拖动结束时完全对齐到最近的对象
+const handleNodeDragStop = debounce((e: NodeDragEvent) => {
+  const { node } = e;
+  
+  try {
+    // 获取节点当前尺寸
+    const { width, height } = getNodeDimensions(node);
+    
+    // 在停止拖动时，我们应该确保节点与最近的对齐节点完全对齐
+    const lines = alignmentLines.value;
+    
+    // 记录原始位置
+    let newPosition = { ...node.position };
+    
+    // 如果有对齐线，应用吸附
+    if (lines.length > 0) {
+      // 获取当前节点中心点
+      const nodeCenter = nodeCenterMap.get(node.id);
+      if (!nodeCenter) {
+        return;
+      }
+      
+      // 从alignmentLines中找到水平和垂直线
+      const horizontalLine = lines.find(line => line.type === 'horizontal');
+      const verticalLine = lines.find(line => line.type === 'vertical');
+      
+      if (horizontalLine || verticalLine) {
+        // 查找所有要对齐的节点ID
+        let targetNodeIdY = '';
+        let targetNodeIdX = '';
+        
+        // 遍历所有节点，找到与对齐线匹配的节点
+        nodeCenterMap.forEach((center, id) => {
+          if (id === node.id) return;
+          
+          // 如果水平对齐线的位置与节点中心点Y坐标接近，标记为目标节点
+          if (horizontalLine && Math.abs(horizontalLine.position - center.y) < 0.1) {
+            targetNodeIdY = id;
+          }
+          
+          // 如果垂直对齐线的位置与节点中心点X坐标接近，标记为目标节点
+          if (verticalLine && Math.abs(verticalLine.position - center.x) < 0.1) {
+            targetNodeIdX = id;
+          }
+        });
+        
+        // 应用水平对齐（中心点Y对齐）
+        if (horizontalLine && targetNodeIdY) {
+          // 获取目标节点
+          const targetNode = getNodes.value.find(n => n.id === targetNodeIdY);
+          if (targetNode) {
+            // 类似于alignNodes方法，直接计算精确位置
+            const targetNodeDim = getNodeDimensions(targetNode);
+            const targetCenterY = targetNode.position.y + targetNodeDim.height / 2;
+            
+            // 直接计算需要设置的Y位置，使得节点中心点与目标中心点对齐
+            newPosition.y = targetCenterY - height / 2;
+          }
         }
-        else if (Math.abs(line.position - (node.position.x + width / 2)) <= snapThreshold) {
-          newPosition.x = line.position - width / 2
-        }
-        else if (Math.abs(line.position - (node.position.x + width)) <= snapThreshold) {
-          newPosition.x = line.position - width
-        }
-      } else {
-        if (Math.abs(line.position - node.position.y) <= snapThreshold) {
-          newPosition.y = line.position
-        }
-        else if (Math.abs(line.position - (node.position.y + height / 2)) <= snapThreshold) {
-          newPosition.y = line.position - height / 2
-        }
-        else if (Math.abs(line.position - (node.position.y + height)) <= snapThreshold) {
-          newPosition.y = line.position - height
+        
+        // 应用垂直对齐（中心点X对齐）
+        if (verticalLine && targetNodeIdX) {
+          // 获取目标节点
+          const targetNode = getNodes.value.find(n => n.id === targetNodeIdX);
+          if (targetNode) {
+            // 类似于alignNodes方法，直接计算精确位置
+            const targetNodeDim = getNodeDimensions(targetNode);
+            const targetCenterX = targetNode.position.x + targetNodeDim.width / 2;
+            
+            // 直接计算需要设置的X位置，使得节点中心点与目标中心点对齐
+            newPosition.x = targetCenterX - width / 2;
+          }
         }
       }
-    })
+    }
     
-    const nodes = getNodes.value.map(n => 
+    // 创建新的节点对象，而不是修改原始对象
+    // 这是关键步骤，确保Vue Flow正确更新节点位置
+    const updatedNodes = getNodes.value.map(n => 
       n.id === node.id ? { ...n, position: newPosition } : n
-    )
-    setNodes(nodes)
+    );
+    
+    // 更新状态
+    setNodes(updatedNodes);
+    
+    // 更新最终位置的中心点坐标
+    clearNodeDimensionsCache(node.id); // 清除缓存确保尺寸重新计算
+    
+    // 使用新创建的节点对象更新中心点
+    const updatedNode = updatedNodes.find(n => n.id === node.id);
+    if (updatedNode) {
+      updateNodeCenter(updatedNode);
+    }
+  } catch (error) {
+    // 错误处理但不输出日志
+  } finally {
+    // 清除对齐线
+    alignmentLines.value = [];
+    saveToHistory(); // 保存历史记录
   }
-}
-
-const handleNodeDragStop = debounce((e: NodeDragEvent) => {
-  const { node } = e
-  
-  alignmentLines.value = []
-  clearNodeDimensionsCache(node.id)
-  saveToHistory() // 保存历史记录
-}, 16)
+}, 50);
 
 const onSelectionChange = debounce(({ nodes }: { nodes: any[] }) => {
   selectedNodes.value = nodes.map(node => node.id)
   nodes.forEach(node => {
     clearNodeDimensionsCache(node.id)
   })
-}, 16)
+}, 50)
 
 // 修改键盘事件处理
 const handleKeyboard = (event: KeyboardEvent) => {
@@ -660,6 +1017,75 @@ const handleKeyboard = (event: KeyboardEvent) => {
       // 更新选中节点的ID
       selectedNodeId.value = previousState.nodes[previousState.nodes.length - 1] ? previousState.nodes[previousState.nodes.length - 1].id : null;
     }
+  }
+
+  // 方向键处理，移动选中的节点
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    // 获取所有选中的节点
+    const selectedNodes = getNodes.value.filter(node => node.selected);
+    if (selectedNodes.length === 0) return;
+
+    // 保存移动前的状态到历史记录
+    saveToHistory();
+
+    // 根据方向键计算移动距离（以2像素为增量）
+    let dx = 0;
+    let dy = 0;
+    
+    switch(event.key) {
+      case 'ArrowUp':
+        dy = -2;
+        break;
+      case 'ArrowDown':
+        dy = 2;
+        break;
+      case 'ArrowLeft':
+        dx = -2;
+        break;
+      case 'ArrowRight':
+        dx = 2;
+        break;
+    }
+    
+    // 更新节点位置
+    const updatedNodes = getNodes.value.map(node => {
+      if (!node.selected) return node;
+      
+      // 计算新位置并保留一位小数
+      let newX = Number((node.position.x + dx).toFixed(1));
+      let newY = Number((node.position.y + dy).toFixed(1));
+      
+      // 确保新位置的整数部分是2的倍数
+      if (Math.floor(newX) % 2 !== 0) {
+        newX = Number((Math.floor(newX) + 1 + (newX - Math.floor(newX))).toFixed(1));
+      }
+      if (Math.floor(newY) % 2 !== 0) {
+        newY = Number((Math.floor(newY) + 1 + (newY - Math.floor(newY))).toFixed(1));
+      }
+      
+      return {
+        ...node,
+        position: {
+          x: newX,
+          y: newY
+        }
+      };
+    });
+    
+    // 应用更新后的节点位置
+    setNodes(updatedNodes);
+    
+    // 更新节点中心点坐标
+    updatedNodes.forEach(node => {
+      if (node.selected) {
+        clearNodeDimensionsCache(node.id);
+        updateNodeCenter(node);
+      }
+    });
+    
+    // 阻止事件默认行为，防止页面滚动
+    event.preventDefault();
+    return;
   }
 
   // 复制快捷键 (Ctrl+C)
@@ -859,78 +1285,103 @@ onMounted(() => {
     history.value = []
   }
 
-  // 清理函数
+  // 初始化所有节点的中心点坐标
+  initNodeCenters();
+
+  // 添加observeNodes函数，监听节点变化
+  const observeNodes = () => {
+    // 只有当节点发生变化时才更新中心点
+    const currentNodesCount = getNodes.value.length;
+    if (currentNodesCount > 0) {
+      initNodeCenters();
+    }
+  }
+  
+  // 监听节点变化，使用较长的间隔
+  const nodeObserver = setInterval(observeNodes, 1500);
+
+  // 在卸载组件前清理所有的计时器和监听器
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown)
     window.removeEventListener('resize-start', handleResizeStart)
     window.removeEventListener('resize-end', handleResizeEnd)
     
+    // 取消所有的防抖函数
     handleNodeDragStop.cancel()
     onSelectionChange.cancel()
+    initNodeCenters.cancel()
+    
+    // 清除定时器
+    if (nodeObserver) {
+      clearInterval(nodeObserver);
+    }
   })
 })
 
-// 计算对齐位置
-const calculateAlignment = (draggedNode: any, otherNodes: any[]) => {
-  const lines: typeof alignmentLines.value = []
-  const { width, height } = getNodeDimensions(draggedNode)
+// 层级排列方法
+const arrangeLayers = (action: 'top' | 'bottom' | 'up' | 'down') => {
+  // 获取选中的节点
+  const selectedNodeList = getNodes.value.filter(node => node.selected)
+  if (selectedNodeList.length === 0) return
   
-  const draggedBounds = {
-    left: draggedNode.position.x,
-    right: draggedNode.position.x + width,
-    top: draggedNode.position.y,
-    bottom: draggedNode.position.y + height,
-    centerX: draggedNode.position.x + width / 2,
-    centerY: draggedNode.position.y + height / 2
+  // 获取所有节点，按zIndex排序，默认没有zIndex的节点视为0
+  const allNodes = getNodes.value.map(node => ({
+    ...node,
+    zIndex: node.zIndex !== undefined ? node.zIndex : 0
+  }))
+  
+  // 找出当前最大和最小zIndex
+  const maxZIndex = Math.max(...allNodes.map(node => node.zIndex || 0))
+  const minZIndex = Math.min(...allNodes.map(node => node.zIndex || 0))
+  
+  // 根据不同的操作更新节点的zIndex
+  let updatedNodes: FlowNode[] = []
+  
+  switch (action) {
+    case 'top': // 置于顶层
+      updatedNodes = getNodes.value.map(node => ({
+        ...node,
+        zIndex: node.selected ? maxZIndex + 1 : node.zIndex
+      }))
+      break
+    
+    case 'bottom': // 置于底层
+      updatedNodes = getNodes.value.map(node => ({
+        ...node,
+        zIndex: node.selected ? minZIndex - 1 : node.zIndex
+      }))
+      break
+    
+    case 'up': // 上移一层
+      updatedNodes = getNodes.value.map(node => {
+        if (!node.selected) return node
+        
+        const currentZIndex = node.zIndex !== undefined ? node.zIndex : 0
+        return {
+          ...node,
+          zIndex: currentZIndex + 1
+        }
+      })
+      break
+    
+    case 'down': // 下移一层
+      updatedNodes = getNodes.value.map(node => {
+        if (!node.selected) return node
+        
+        const currentZIndex = node.zIndex !== undefined ? node.zIndex : 0
+        return {
+          ...node,
+          zIndex: currentZIndex - 1
+        }
+      })
+      break
   }
   
-  otherNodes.forEach(node => {
-    if (node.id === draggedNode.id) return
-    
-    const { width: nodeWidth, height: nodeHeight } = getNodeDimensions(node)
-    const nodeBounds = {
-      left: node.position.x,
-      right: node.position.x + nodeWidth,
-      top: node.position.y,
-      bottom: node.position.y + nodeHeight,
-      centerX: node.position.x + nodeWidth / 2,
-      centerY: node.position.y + nodeHeight / 2
-    }
-    
-    const verticalAlignments = [
-      { reference: nodeBounds.left, dragged: draggedBounds.left, type: 'left' },
-      { reference: nodeBounds.centerX, dragged: draggedBounds.centerX, type: 'center' },
-      { reference: nodeBounds.right, dragged: draggedBounds.right, type: 'right' }
-    ]
-    
-    verticalAlignments.forEach(({ reference, dragged, type }) => {
-      if (Math.abs(reference - dragged) <= snapThreshold) {
-        lines.push({
-          id: `v-${node.id}-${type}`,
-          type: 'vertical',
-          position: reference
-        })
-      }
-    })
-    
-    const horizontalAlignments = [
-      { reference: nodeBounds.top, dragged: draggedBounds.top, type: 'top' },
-      { reference: nodeBounds.centerY, dragged: draggedBounds.centerY, type: 'center' },
-      { reference: nodeBounds.bottom, dragged: draggedBounds.bottom, type: 'bottom' }
-    ]
-    
-    horizontalAlignments.forEach(({ reference, dragged, type }) => {
-      if (Math.abs(reference - dragged) <= snapThreshold) {
-        lines.push({
-          id: `h-${node.id}-${type}`,
-          type: 'horizontal',
-          position: reference
-        })
-      }
-    })
-  })
+  // 更新节点
+  setNodes(updatedNodes)
   
-  return lines
+  // 保存历史记录
+  saveToHistory()
 }
 </script>
 
@@ -1213,5 +1664,29 @@ const calculateAlignment = (draggedNode: any, otherNodes: any[]) => {
 
 .cancel-btn:hover {
   background-color: #e6e6e6;
+}
+
+/* SVG图标节点特殊样式 - 使用更高优先级选择器覆盖Vue Flow默认样式 */
+.vue-flow .vue-flow__node.vue-flow__node-svgIcon {
+  border: none !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* 确保选中状态下也没有边框 */
+.vue-flow .vue-flow__node.vue-flow__node-svgIcon.selected,
+.vue-flow .vue-flow__node.vue-flow__node-svgIcon:focus,
+.vue-flow .vue-flow__node.vue-flow__node-svgIcon:focus-visible {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-color: transparent !important;
+}
+
+.vue-flow .vue-flow__node.vue-flow__node-svgIcon::before,
+.vue-flow .vue-flow__node.vue-flow__node-svgIcon::after {
+  display: none !important;
 }
 </style>

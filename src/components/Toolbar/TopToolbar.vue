@@ -3,8 +3,8 @@
     <img src="@/assets/logo.png" alt="logo" class="logo">
     
     <div class="style-tools">
-      <!-- 字体样式设置组 -->
-      <div class="tool-title">字体</div>
+      <!-- 字体样式设置组
+      <div class="tool-title">字体</div> -->
       <div class="tool-group" :class="{ 'disabled': !hasSelectedTextNodes }">
         <select 
           v-model="fontSize" 
@@ -42,7 +42,6 @@
       <ToolbarIcon type="separator" />
 
       <!-- 连线样式设置组 -->
-      <div class="tool-title">连线</div>
       <div class="tool-group" :class="{ 'disabled': !hasSelectedEdges && !hasSelectedLineNodes }">
         <input 
           type="number" 
@@ -117,8 +116,7 @@
       <ToolbarIcon type="separator" />
 
       <!-- 对齐分布设置组 -->
-      <div class="tool-title">布局</div>
-      <div class="tool-group" :class="{ 'disabled': !hasMultipleSelectedNodes }">
+       <div class="tool-group" :class="{ 'disabled': !hasMultipleSelectedNodes }">
         <button 
           class="icon-btn" 
           @click="handleAlignClick('left')" 
@@ -182,6 +180,45 @@
           :disabled="!hasThreeOrMoreSelectedNodes"
         >
           <ToolbarIcon type="distributeV" />
+        </button>
+      </div>
+      
+      <!-- 分隔线 -->
+      <ToolbarIcon type="separator" />
+      
+      <!-- 图层排列工具组 -->
+        <div class="tool-group" :class="{ 'disabled': !hasSelectedNodes }">
+        <button 
+          class="icon-btn" 
+          @click="handleLayerClick('top')" 
+          title="置于顶层"
+          :disabled="!hasSelectedNodes"
+        >
+          <ToolbarIcon type="layerTop" />
+        </button>
+        <button 
+          class="icon-btn" 
+          @click="handleLayerClick('bottom')" 
+          title="置于底层"
+          :disabled="!hasSelectedNodes"
+        >
+          <ToolbarIcon type="layerBottom" />
+        </button>
+        <button 
+          class="icon-btn" 
+          @click="handleLayerClick('up')" 
+          title="上移一层"
+          :disabled="!hasSelectedNodes"
+        >
+          <ToolbarIcon type="layerUp" />
+        </button>
+        <button 
+          class="icon-btn" 
+          @click="handleLayerClick('down')" 
+          title="下移一层"
+          :disabled="!hasSelectedNodes"
+        >
+          <ToolbarIcon type="layerDown" />
         </button>
       </div>
     </div>
@@ -755,6 +792,7 @@ const applyEdgeStyle = () => {
 const emit = defineEmits<{
   (e: 'align', direction: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'middle'): void
   (e: 'distribute', direction: 'horizontal' | 'vertical'): void
+  (e: 'layer', action: 'top' | 'bottom' | 'up' | 'down'): void
 }>()
 
 // 对齐按钮点击处理
@@ -766,6 +804,11 @@ const handleAlignClick = (direction: 'left' | 'right' | 'top' | 'bottom' | 'cent
 // 分布按钮点击处理
 const handleDistributeClick = (direction: 'horizontal' | 'vertical') => {
   emit('distribute', direction)
+}
+
+// 层级按钮点击处理
+const handleLayerClick = (action: 'top' | 'bottom' | 'up' | 'down') => {
+  emit('layer', action)
 }
 
 // 提示框状态
