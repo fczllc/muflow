@@ -7,6 +7,11 @@
       <path d="M12 4v16"></path>
     </svg>
     
+    <!-- 字体颜色图标 -->
+    <svg v-else-if="type === 'fontColor'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round">
+<path fill="#555555" d="M9.6 14L12 7.7l2.4 6.3M11 5L5.5 19h2.2l1.1-3H15l1.1 3h2.2L13 5z"/>
+    </svg>
+    
     <svg v-else-if="type === 'roundedRect'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
     </svg>
@@ -107,6 +112,26 @@
 <path stroke="#999999" id="svg_7" d="m1.87007,16.69217l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#ffffff"/>
   <path stroke="#666666" id="svg_8" d="m1.87007,12.06721l10.03116,-4.87496l10.03119,4.87496l-10.03119,4.87497l-10.03116,-4.87497z" fill="#666666"/>
   <path transform="rotate(89.664 11.8924 4.60031)" stroke="#999999" id="svg_10" d="m11.72421,4.60031l1.66576,-6.09531l-2.99509,6.09531l2.99509,6.0953l-1.66576,-6.0953z" fill="#999999"/>
+    </svg>
+    
+    <!-- 线条粗细图标 -->
+    <svg v-else-if="type === 'lineWidth'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+<path fill="#000000" d="M2.75 3.5a.75.75 0 0 0 0 1.5h18.5a.75.75 0 0 0 0-1.5zM2 10.75c0-.69.56-1.25 1.25-1.25h17.5a1.25 1.25 0 1 1 0 2.5H3.25C2.56 12 2 11.44 2 10.75m0 7.5c0-.966.784-1.75 1.75-1.75h16.5a1.75 1.75 0 1 1 0 3.5H3.75A1.75 1.75 0 0 1 2 18.25"/>
+    </svg>
+    
+    <!-- 线型图标 - 实线 -->
+    <svg v-else-if="type === 'lineStyleSolid'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 30 12" fill="none" stroke="currentColor" stroke-width="2">
+     <line x1="0" y1="1" x2="30" y2="1" />
+    </svg>
+    
+    <!-- 线型图标 - 虚线 -->
+    <svg v-else-if="type === 'lineStyleDashed'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 30 12" fill="none" stroke="black" stroke-width="2" >
+   <line x1="0" y1="3" x2="30" y2="3" stroke-dasharray="6" />
+          </svg>
+    
+    <!-- 线型图标 - 点线 -->
+    <svg v-else-if="type === 'lineStyleDotted'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 30 12" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="0" y1="5" x2="30" y2="5" stroke-dasharray="3" />
     </svg>
     
     <!-- 下移一层图标 -->
@@ -221,6 +246,7 @@ type IconType =
   | 'textAlignLeft' | 'textAlignCenter' | 'textAlignRight'
   // 连线样式图标
   | 'lineWidth' | 'lineColor' | 'lineStyle' | 'arrowStyle'
+  | 'lineStyleSolid' | 'lineStyleDashed' | 'lineStyleDotted' // 添加线型样式图标
   // 对齐图标
   | 'alignLeft' | 'alignRight' | 'alignTop' | 'alignBottom' | 'alignHCenter' | 'alignVCenter'
   // 分布图标

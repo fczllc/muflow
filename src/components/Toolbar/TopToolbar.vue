@@ -25,7 +25,7 @@
             :disabled="!hasSelectedTextNodes" 
             @click="openFontColorPicker"
           >
-            <span class="text-icon">A</span>
+            <ToolbarIcon type="fontColor" />
             <div class="color-indicator" :style="{ backgroundColor: fontColor }"></div>
           </button>
           <input 
@@ -105,16 +105,56 @@
 
       <!-- 连线样式设置组 -->
       <div class="tool-group" :class="{ 'disabled': !hasSelectedEdges && !hasSelectedLineNodes && !hasSelectedShapeNodes }">
-        <input 
-          type="number" 
-          v-model="lineWidth" 
-          min="1" 
-          max="10" 
-          class="number-input" 
-          title="线条粗细"
-          :disabled="!hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes)"
-          @change="applyEdgeStyle"
-        >
+        <!-- 线条粗细下拉菜单 -->
+        <div class="dropdown" :class="{ 'disabled': !hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes) }">
+          <button 
+            class="dropdown-btn" 
+            title="线条粗细"
+            :disabled="!hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes)" 
+            @click="toggleLineWidthDropdown"
+          >
+            <ToolbarIcon type="lineWidth" />
+            <span class="dropdown-value">{{ lineWidth }}px</span>
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <div class="dropdown-menu" v-if="showLineWidthDropdown">
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineWidth === 0, 'disabled': hasSelectedEdges || hasSelectedLineNodes }"
+              @click="selectLineWidth(0)"
+            >0px</div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineWidth === 0.5 }"
+              @click="selectLineWidth(0.5)"
+            >0.5px</div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineWidth === 1 }"
+              @click="selectLineWidth(1)"
+            >1px</div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineWidth === 1.5 }"
+              @click="selectLineWidth(1.5)"
+            >1.5px</div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineWidth === 2 }"
+              @click="selectLineWidth(2)"
+            >2px</div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineWidth === 3 }"
+              @click="selectLineWidth(3)"
+            >3px</div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineWidth === 4 }"
+              @click="selectLineWidth(4)"
+            >4px</div>
+          </div>
+        </div>
         <!-- 背景色设置按钮 -->
         <div class="color-icon-wrapper" :class="{ 'disabled': !hasSelectedShapeNodes }">
           <button 
@@ -123,9 +163,8 @@
             :disabled="!hasSelectedShapeNodes" 
             @click="openBgColorPicker"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bucket-icon">
-<path fill="none" stroke="#000000" stroke-miterlimit="10" stroke-width="32" d="M419.1 337.45a3.94 3.94 0 0 0-6.1 0c-10.5 12.4-45 46.55-45 77.66c0 27 21.5 48.89 48 48.89s48-22 48-48.89c0-31.11-34.3-65.26-44.9-77.66ZM387 287.9L155.61 58.36a36 36 0 0 0-51 0l-5.15 5.15a36 36 0 0 0 0 51l52.89 52.89l57-57L56.33 263.2a28 28 0 0 0 .3 40l131.2 126a28.05 28.05 0 0 0 38.9-.1c37.8-36.6 118.3-114.5 126.7-122.9c5.8-5.8 18.2-7.1 28.7-7.1h.3a6.53 6.53 0 0 0 4.57-11.2Z"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" class="bucket-icon">
+<path fill="#000000" d="M9.525.626L21.9 13L12 22.9L2.1 13l8.486-8.485L8.11 2.04zM5.93 12h12.142l-6.07-6.07zm14.82 5.39l1.315 1.66c.581.733.581 1.847 0 2.58a1.68 1.68 0 0 1-1.314.657c-.53 0-1-.26-1.314-.657c-.581-.733-.581-1.847 0-2.58z"/>            </svg>
             <div class="color-indicator" :style="{ backgroundColor: bgColor }"></div>
           </button>
           <input 
@@ -159,148 +198,231 @@
             @input="applyEdgeStyle"
           >
         </div>
-        <select 
-          v-model="lineStyle" 
-          class="select-input" 
-          title="线条样式"
-          :disabled="!hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes)"
-          @change="applyEdgeStyle"
-        >
-          <option value="solid">实线</option>
-          <option value="dashed">虚线</option>
-          <option value="dotted">点线</option>
-        </select>
-        <select 
-          v-model="arrowStyle" 
-          class="arrow-style-select" 
-          :disabled="(!hasSelectedEdges && !hasSelectedLineNodes) || hasSelectedShapeNodes"
-          @change="applyEdgeStyle"
-          title="箭头样式"
-        >
-          <option value="none">
-            ─
-          </option>
-          <option value="source">
-            ←
-          </option>
-          <option value="target">
-            →
-          </option>
-          <option value="both">
-            ↔
-          </option>
-        </select>
-      
-
+        <div class="dropdown" :class="{ 'disabled': !hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes) }">
+          <button 
+            class="dropdown-btn" 
+            title="线条样式"
+            :disabled="!hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes)" 
+            @click="toggleLineStyleDropdown"
+          >
+            <ToolbarIcon :type="getLineStyleIcon()" />
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <div class="dropdown-menu" v-if="showLineStyleDropdown">
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineStyle === 'solid' }"
+              @click="selectLineStyle('solid')"
+            >
+              <ToolbarIcon type="lineStyleSolid" />
+            </div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineStyle === 'dashed' }"
+              @click="selectLineStyle('dashed')"
+            >
+              <ToolbarIcon type="lineStyleDashed" />
+            </div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': lineStyle === 'dotted' }"
+              @click="selectLineStyle('dotted')"
+            >
+              <ToolbarIcon type="lineStyleDotted" />
+            </div>
+          </div>
+        </div>
+        <div class="dropdown" :class="{ 'disabled': (!hasSelectedEdges && !hasSelectedLineNodes) || hasSelectedShapeNodes }">
+          <button 
+            class="dropdown-btn" 
+            title="箭头样式"
+            :disabled="(!hasSelectedEdges && !hasSelectedLineNodes) || hasSelectedShapeNodes" 
+            @click="toggleArrowStyleDropdown"
+          >
+            <span class="arrow-icon">{{ getArrowStyleIcon() }}</span>
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <div class="dropdown-menu" v-if="showArrowStyleDropdown">
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': arrowStyle === 'none' }"
+              @click="selectArrowStyle('none')"
+            >
+              <span class="arrow-style-option">─</span>
+              <span class="dropdown-item-text">无箭头</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': arrowStyle === 'source' }"
+              @click="selectArrowStyle('source')"
+            >
+              <span class="arrow-style-option">←</span>
+              <span class="dropdown-item-text">起点箭头</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': arrowStyle === 'target' }"
+              @click="selectArrowStyle('target')"
+            >
+              <span class="arrow-style-option">→</span>
+              <span class="dropdown-item-text">终点箭头</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              :class="{ 'selected': arrowStyle === 'both' }"
+              @click="selectArrowStyle('both')"
+            >
+              <span class="arrow-style-option">↔</span>
+              <span class="dropdown-item-text">双向箭头</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <ToolbarIcon type="separator" />
 
       <!-- 对齐分布设置组 -->
-       <div class="tool-group" :class="{ 'disabled': !hasMultipleSelectedNodes }">
-        <button 
-          class="icon-btn" 
-          @click="handleAlignClick('left')" 
-          title="左对齐"
-          :disabled="!hasMultipleSelectedNodes"
-        >
-          <ToolbarIcon type="alignLeft" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleAlignClick('right')" 
-          title="右对齐"
-          :disabled="!hasMultipleSelectedNodes"
-        >
-          <ToolbarIcon type="alignRight" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleAlignClick('top')" 
-          title="顶对齐"
-          :disabled="!hasMultipleSelectedNodes"
-        >
-          <ToolbarIcon type="alignTop" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleAlignClick('bottom')" 
-          title="底对齐"
-          :disabled="!hasMultipleSelectedNodes"
-        >
-          <ToolbarIcon type="alignBottom" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleAlignClick('center')" 
-          title="水平居中"
-          :disabled="!hasMultipleSelectedNodes"
-        >
-          <ToolbarIcon type="alignHCenter" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleAlignClick('middle')" 
-          title="垂直居中"
-          :disabled="!hasMultipleSelectedNodes"
-        >
-          <ToolbarIcon type="alignVCenter" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleDistributeClick('horizontal')" 
-          title="水平分布"
-          :disabled="!hasThreeOrMoreSelectedNodes"
-        >
-          <ToolbarIcon type="distributeH" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleDistributeClick('vertical')" 
-          title="垂直分布"
-          :disabled="!hasThreeOrMoreSelectedNodes"
-        >
-          <ToolbarIcon type="distributeV" />
-        </button>
+      <div class="tool-group" :class="{ 'disabled': !hasMultipleSelectedNodes }">
+        <!-- 合并对齐和分布功能下拉菜单 -->
+        <div class="dropdown" :class="{ 'disabled': !hasMultipleSelectedNodes }">
+          <button 
+            class="dropdown-btn" 
+            title="对齐与分布"
+            :disabled="!hasMultipleSelectedNodes" 
+            @click="toggleAlignDropdown"
+          >
+            <ToolbarIcon type="alignLeft" />
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <div class="dropdown-menu align-dropdown-menu" v-if="showAlignDropdown">
+            <!-- 水平对齐组 -->
+            <div 
+              class="dropdown-item" 
+              @click="handleAlignClick('left')"
+              title="左对齐"
+            >
+              <ToolbarIcon type="alignLeft" />
+              <span class="dropdown-item-text">左对齐</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              @click="handleAlignClick('right')"
+              title="右对齐"
+            >
+              <ToolbarIcon type="alignRight" />
+              <span class="dropdown-item-text">右对齐</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              @click="handleAlignClick('center')"
+              title="水平居中"
+            >
+              <ToolbarIcon type="alignHCenter" />
+              <span class="dropdown-item-text">水平居中</span>
+            </div>
+            
+            <!-- 分隔线 -->
+            <div class="dropdown-divider"></div>
+            
+            <!-- 垂直对齐组 -->
+            <div 
+              class="dropdown-item" 
+              @click="handleAlignClick('top')"
+              title="顶对齐"
+            >
+              <ToolbarIcon type="alignTop" />
+              <span class="dropdown-item-text">顶对齐</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              @click="handleAlignClick('middle')"
+              title="垂直居中"
+            >
+              <ToolbarIcon type="alignVCenter" />
+              <span class="dropdown-item-text">垂直居中</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              @click="handleAlignClick('bottom')"
+              title="底对齐"
+            >
+              <ToolbarIcon type="alignBottom" />
+              <span class="dropdown-item-text">底对齐</span>
+            </div>
+            
+            <!-- 分隔线 -->
+            <div class="dropdown-divider"></div>
+            
+            <!-- 分布组 -->
+            <div 
+              class="dropdown-item" 
+              @click="handleDistributeClick('horizontal')"
+              title="水平分布"
+              :class="{ 'disabled': !hasThreeOrMoreSelectedNodes }"
+            >
+              <ToolbarIcon type="distributeH" />
+              <span class="dropdown-item-text">水平分布</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              @click="handleDistributeClick('vertical')"
+              title="垂直分布"
+              :class="{ 'disabled': !hasThreeOrMoreSelectedNodes }"
+            >
+              <ToolbarIcon type="distributeV" />
+              <span class="dropdown-item-text">垂直分布</span>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <!-- 分隔线 -->
-      <ToolbarIcon type="separator" />
-      
+
       <!-- 图层排列工具组 -->
-        <div class="tool-group" :class="{ 'disabled': !hasSelectedNodes }">
-        <button 
-          class="icon-btn" 
-          @click="handleLayerClick('top')" 
-          title="置于顶层"
-          :disabled="!hasSelectedNodes"
-        >
-          <ToolbarIcon type="layerTop" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleLayerClick('bottom')" 
-          title="置于底层"
-          :disabled="!hasSelectedNodes"
-        >
-          <ToolbarIcon type="layerBottom" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleLayerClick('up')" 
-          title="上移一层"
-          :disabled="!hasSelectedNodes"
-        >
-          <ToolbarIcon type="layerUp" />
-        </button>
-        <button 
-          class="icon-btn" 
-          @click="handleLayerClick('down')" 
-          title="下移一层"
-          :disabled="!hasSelectedNodes"
-        >
-          <ToolbarIcon type="layerDown" />
-        </button>
+      <div class="tool-group" :class="{ 'disabled': !hasSelectedNodes }">
+        <div class="dropdown" :class="{ 'disabled': !hasSelectedNodes }">
+          <button 
+            class="dropdown-btn" 
+            title="图层"
+            :disabled="!hasSelectedNodes" 
+            @click="toggleLayerDropdown"
+          >
+            <ToolbarIcon type="layerTop" />
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <div class="dropdown-menu layer-dropdown-menu" v-if="showLayerDropdown">
+            <div 
+              class="dropdown-item" 
+              @click="handleLayerClick('top')"
+              title="置于顶层"
+            >
+              <ToolbarIcon type="layerTop" />
+              <span class="dropdown-item-text">置于顶层</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              @click="handleLayerClick('bottom')"
+              title="置于底层"
+            >
+              <ToolbarIcon type="layerBottom" />
+              <span class="dropdown-item-text">置于底层</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              @click="handleLayerClick('up')"
+              title="上移一层"
+            >
+              <ToolbarIcon type="layerUp" />
+              <span class="dropdown-item-text">上移一层</span>
+            </div>
+            <div 
+              class="dropdown-item" 
+              @click="handleLayerClick('down')"
+              title="下移一层"
+            >
+              <ToolbarIcon type="layerDown" />
+              <span class="dropdown-item-text">下移一层</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -310,7 +432,7 @@
 .top-toolbar {
   display: flex;
   align-items: center;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
   border-bottom: 1px solid #ddd;
   height: 40px;
   padding: 0 10px;
@@ -332,8 +454,8 @@
 .style-tools {
   display: flex;
   align-items: center;
-  gap: 12px; /* 增加间距 */
-  padding: 0 16px;
+  gap: 2px; /* 增加间距 */
+  padding: 0 0 0 16px;
   margin-right: auto;
   flex-wrap: nowrap; /* 防止换行 */
   min-width: 480px; /* 设置最小宽度确保足够空间 */
@@ -342,7 +464,7 @@
 .tool-group {
   display: flex;
   align-items: center;
-  margin-right: 10px;
+  margin-right: 4px;
 }
 
 .tool-group.disabled {
@@ -438,62 +560,12 @@
   background-color: rgba(0, 0, 0, 0.75);
 }
 
-/* 添加连线样式下拉框样式 */
-.line-style-select,
-.arrow-style-select {
-  height: 24px;
-  width: 40px;
-  margin: 0 2px;
-  text-align: center;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  background-color: white;
-}
-
-.line-style-select option,
-.arrow-style-select option {
-  font-family: monospace;
-  text-align: center;
-  padding: 8px;
-}
-
-.line-style-option,
-.arrow-style-option {
-  display: inline-block;
-  white-space: nowrap;
-  font-size: 14px;
-}
-
-/* 禁用状态样式 */
-.line-style-select:disabled,
-.arrow-style-select:disabled {
-  background-color: #f5f7fa;
-  cursor: not-allowed;
-  border-color: #e4e7ed;
-  color: #c0c4cc;
-}
-
-/* 悬停效果 */
-.line-style-select:not(:disabled):hover,
-.arrow-style-select:not(:disabled):hover {
-  border-color: #409eff;
-}
-
-/* 选中状态 */
-.line-style-select option:checked,
-.arrow-style-select option:checked {
-  background-color: #f5f7fa;
-}
-
-/* 下拉选项悬停效果 */
-.line-style-select option:hover,
-.arrow-style-select option:hover {
-  background-color: #ecf5ff;
-}
-
 /* 自定义箭头样式 */
 .arrow-style-option {
   color: #606266;
+  font-family: sans-serif;
+  font-size: 16px;
+  padding: 0 4px;
 }
 
 /* 自定义线条样式 */
@@ -576,6 +648,146 @@
   min-width: 92px; /* 确保足够宽度放三个按钮 */
   flex-shrink: 0;
 }
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+.dropdown-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: auto;
+  min-width: 40px !important;
+  height: 24px;
+  padding: 0 5px;
+  background: #fff;
+  border: none !important;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.dropdown-value {
+  margin-left: 5px;
+  font-size: 12px;
+}
+
+.dropdown-arrow {
+  font-size: 8px;
+  color: #666;
+}
+
+.arrow-icon {
+  font-family: sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  min-width: 60px;
+  padding: 5px 0;
+  margin-top: 10px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+  margin: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+}
+
+.dropdown-item .toolbar-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.dropdown-item:hover {
+  background: #f5f5f5;
+}
+
+.dropdown-item.selected {
+  background: #e5e5e5;
+  font-weight: bold;
+}
+
+.dropdown-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dropdown.disabled .dropdown-btn {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dropdown-item-text {
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.align-dropdown-menu,
+.distribute-dropdown-menu,
+.layer-dropdown-menu {
+  width: 120px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+}
+
+.dropdown-divider {
+  height: 1px;
+  margin: 5px 0;
+  overflow: hidden;
+  background-color: #e9ecef;
+}
+
+/* 添加箭头样式图标样式 */
+.arrow-icon {
+  font-family: sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.dropdown-arrow {
+  font-size: 8px;
+  margin-left: 2px;
+  color: #666;
+}
+
+.dropdown-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: auto;
+  min-width: 50px;
+  height: 24px;
+  padding: 0 5px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
 </style>
 
 <script lang="ts">
@@ -585,10 +797,9 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useVueFlow, MarkerType } from '@vue-flow/core'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
-import html2canvas from 'html2canvas'
 
 // 获取 Vue Flow 实例
 const { 
@@ -661,6 +872,116 @@ const bgColor = ref('#ffffff') // 添加背景色变量，默认白色
 // 当前选中的节点和边的ID
 const selectedNodeId = ref<string | null>(null)
 const selectedEdgeId = ref<string | null>(null)
+
+// 线条粗细下拉菜单状态
+const showLineWidthDropdown = ref(false)
+const showLineStyleDropdown = ref(false)
+const showAlignDropdown = ref(false)
+const showLayerDropdown = ref(false)
+const showArrowStyleDropdown = ref(false)
+
+// 切换线条粗细下拉菜单
+const toggleLineWidthDropdown = () => {
+  showLineWidthDropdown.value = !showLineWidthDropdown.value
+  if (showLineWidthDropdown.value) {
+    showLineStyleDropdown.value = false
+    showAlignDropdown.value = false
+    showLayerDropdown.value = false
+    showArrowStyleDropdown.value = false
+  }
+}
+
+// 切换线条样式下拉菜单
+const toggleLineStyleDropdown = () => {
+  showLineStyleDropdown.value = !showLineStyleDropdown.value
+  if (showLineStyleDropdown.value) {
+    showLineWidthDropdown.value = false
+    showAlignDropdown.value = false
+    showLayerDropdown.value = false
+    showArrowStyleDropdown.value = false
+  }
+}
+
+// 切换对齐下拉菜单
+const toggleAlignDropdown = () => {
+  showAlignDropdown.value = !showAlignDropdown.value
+  if (showAlignDropdown.value) {
+    showLineWidthDropdown.value = false
+    showLineStyleDropdown.value = false
+    showLayerDropdown.value = false
+    showArrowStyleDropdown.value = false
+  }
+}
+
+// 切换图层下拉菜单
+const toggleLayerDropdown = () => {
+  showLayerDropdown.value = !showLayerDropdown.value
+  if (showLayerDropdown.value) {
+    showLineWidthDropdown.value = false
+    showLineStyleDropdown.value = false
+    showAlignDropdown.value = false
+    showArrowStyleDropdown.value = false
+  }
+}
+
+// 切换箭头样式下拉菜单
+const toggleArrowStyleDropdown = () => {
+  showArrowStyleDropdown.value = !showArrowStyleDropdown.value
+  if (showArrowStyleDropdown.value) {
+    showLineWidthDropdown.value = false
+    showLineStyleDropdown.value = false
+    showAlignDropdown.value = false
+    showLayerDropdown.value = false
+  }
+}
+
+// 根据当前线型获取对应图标
+const getLineStyleIcon = () => {
+  switch (lineStyle.value) {
+    case 'solid':
+      return 'lineStyleSolid'
+    case 'dashed':
+      return 'lineStyleDashed'
+    case 'dotted':
+      return 'lineStyleDotted'
+    default:
+      return 'lineStyleSolid'
+  }
+}
+
+// 选择线条粗细
+const selectLineWidth = (width: number) => {
+  lineWidth.value = width
+  showLineWidthDropdown.value = false
+  applyEdgeStyle()
+}
+
+// 选择线条样式
+const selectLineStyle = (style: string) => {
+  lineStyle.value = style
+  showLineStyleDropdown.value = false
+  applyEdgeStyle()
+}
+
+// 点击其他地方关闭下拉菜单
+const handleClickOutside = (event: MouseEvent) => {
+  const dropdowns = document.querySelectorAll('.dropdown')
+  let outsideClick = true
+  
+  dropdowns.forEach(dropdown => {
+    if (dropdown.contains(event.target as Node)) {
+      outsideClick = false
+    }
+  })
+  
+  if (outsideClick) {
+    showLineWidthDropdown.value = false
+    showLineStyleDropdown.value = false
+    showAlignDropdown.value = false
+    showLayerDropdown.value = false
+    showArrowStyleDropdown.value = false
+  }
+}
 
 // 初始化节点样式 - 独立出一个函数用来确保节点有样式属性
 const initNodeStyle = (nodeId: string) => {
@@ -1077,19 +1398,6 @@ const applyTextAlign = (direction: 'left' | 'center' | 'right') => {
   })
 }
 
-// 获取箭头样式
-const getMarkerEnd = (arrowStyle: string, color: string) => {
-  if (arrowStyle === 'none') return undefined
-  
-  return {
-    type: MarkerType.Arrow,
-    color: color,
-    width: 15,
-    height: 15,
-    strokeWidth: 2
-  }
-}
-
 // 应用背景色样式到选中的节点
 const applyBgStyle = () => {
   const selectedShapeNodes = getNodes.value.filter(node => 
@@ -1290,198 +1598,6 @@ const handleLayerClick = (action: 'top' | 'bottom' | 'up' | 'down') => {
   emit('layer', action)
 }
 
-// 提示框状态
-const activeTooltip = ref<'clear' | 'export' | 'save' | 'import' | null>(null)
-
-// 隐藏提示框
-const hideTooltip = () => {
-  activeTooltip.value = null
-}
-
-// 画布操作方法
-const showClearConfirm = ref(false)
-
-const clearCanvas = () => {
-  showClearConfirm.value = true
-}
-
-const handleClearConfirm = () => {
-  setNodes([])
-  setEdges([])
-  showClearConfirm.value = false
-}
-
-const handleClearCancel = () => {
-  showClearConfirm.value = false
-}
-
-// 导出图片方法
-const exportImage = async () => {
-  try {
-    // 获取 Vue Flow 容器
-    const flowContainer = document.querySelector('.vue-flow') as HTMLElement
-    if (!flowContainer) {
-      throw new Error('找不到画布元素')
-    }
-
-    // 使用 html2canvas 配置
-    const options = {
-      backgroundColor: '#ffffff', // 设置白色背景
-      scale: 2,  // 2倍清晰度，避免图片模糊
-      useCORS: true, // 处理跨域图片
-      logging: false, // 关闭日志
-      allowTaint: true, // 允许跨域图片
-      // 只导出可见区域
-      ignoreElements: (element: Element) => {
-        return element.classList.contains('vue-flow__minimap') || // 排除小地图
-               element.classList.contains('vue-flow__controls') || // 排除控制按钮
-               (element as HTMLElement).style.display === 'none' // 排除隐藏元素
-      }
-    }
-
-    // 转换为 canvas
-    const canvas = await html2canvas(flowContainer, options)
-
-    // 转换为 JPG 图片
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9) // 0.9 为图片质量参数
-
-    // 创建下载链接
-    const link = document.createElement('a')
-    link.download = `flowchart_${getTimestamp()}.jpg`
-    link.href = dataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-  } catch (error) {
-    console.error('导出图片失败:', error)
-    alert('导出图片失败，请稍后重试')
-  }
-}
-
-// 获取当前时间戳作为文件名的一部分
-const getTimestamp = () => {
-  const now = new Date()
-  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`
-}
-
-// 生成画布数据的方法 - 将来可以被其他保存方法复用
-const generateCanvasData = () => {
-  const flowData = {
-    nodes: getNodes.value,
-    edges: getEdges.value,
-    // 添加元数据
-    metadata: {
-      version: '1.0.0',
-      timestamp: new Date().toISOString(),
-      title: `流程图_${getTimestamp()}`
-    }
-  }
-  return flowData
-}
-
-// 下载JSON文件的方法
-const downloadJSON = (data: any, filename: string) => {
-  const jsonStr = JSON.stringify(data, null, 2)
-  const blob = new Blob([jsonStr], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-}
-
-// 保存画布方法
-const saveJSON = async () => {
-  try {
-    // 生成画布数据
-    const canvasData = generateCanvasData()
-    
-    // 生成文件名
-    const filename = `flowchart_${getTimestamp()}.json`
-    
-    // TODO: 如果需要调用API保存，可以在这里添加条件判断
-    // if (process.env.SAVE_TO_API) {
-    //   await saveToAPI(canvasData)
-    //   return
-    // }
-    
-    // 默认下载到本地
-    downloadJSON(canvasData, filename)
-    
-  } catch (error) {
-    console.error('保存失败:', error)
-    // 这里可以添加错误提示
-    alert('保存失败，请稍后重试')
-  }
-}
-
-// 文件输入引用
-const fileInput = ref<HTMLInputElement | null>(null)
-
-// 触发文件选择
-const importJSON = () => {
-  fileInput.value?.click()
-}
-
-// 处理文件导入
-const handleFileImport = async (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  
-  if (!file) return
-  
-  try {
-    // TODO: 如果需要从API加载数据，可以在这里添加条件判断
-    // if (process.env.LOAD_FROM_API) {
-    //   const data = await loadFromAPI()
-    //   await loadFlowData(data)
-    //   return
-    // }
-    
-    // 读取本地文件
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      try {
-        const jsonData = JSON.parse(e.target?.result as string)
-        await loadFlowData(jsonData)
-      } catch (error) {
-        console.error('JSON解析失败:', error)
-        alert('无效的JSON文件格式')
-      }
-    }
-    reader.readAsText(file)
-  } catch (error) {
-    console.error('导入失败:', error)
-    alert('导入失败，请检查文件格式')
-  } finally {
-    // 清空文件输入框,允许重复选择同一文件
-    input.value = ''
-  }
-}
-
-// 加载流程图数据
-const loadFlowData = async (data: any) => {
-  try {
-    // 基本验证
-    if (!data.nodes || !data.edges || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
-      throw new Error('无效的流程图数据格式')
-    }
-
-    // 设置节点和边
-    setNodes(data.nodes)
-    setEdges(data.edges)
-    
-  } catch (error) {
-    console.error('加载数据失败:', error)
-    alert('加载数据失败，请检查数据格式')
-    throw error
-  }
-}
-
 // 添加对颜色选择器的引用
 const fontColorInput = ref<HTMLInputElement | null>(null)
 const lineColorInput = ref<HTMLInputElement | null>(null)
@@ -1500,6 +1616,29 @@ const openLineColorPicker = () => {
 // 打开背景色选择器
 const openBgColorPicker = () => {
   bgColorInput.value?.click()
+}
+
+// 获取箭头样式图标
+const getArrowStyleIcon = () => {
+  switch (arrowStyle.value) {
+    case 'none':
+      return '─'
+    case 'source':
+      return '←'
+    case 'target':
+      return '→'
+    case 'both':
+      return '↔'
+    default:
+      return '─'
+  }
+}
+
+// 选择箭头样式
+const selectArrowStyle = (style: string) => {
+  arrowStyle.value = style
+  showArrowStyleDropdown.value = false
+  applyEdgeStyle()
 }
 
 // 设置初始工具栏状态并添加事件监听
@@ -1522,5 +1661,13 @@ onMounted(() => {
     // 无需额外操作，v-model 已经会更新 DOM
     console.log('背景色已更新:', newColor)
   })
+
+  // 添加点击事件监听器
+  document.addEventListener('click', handleClickOutside)
+})
+
+// 移除点击事件监听器
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script> 
