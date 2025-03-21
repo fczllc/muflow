@@ -237,23 +237,27 @@ const handleExportAlert = () => {
 
 // 使用简化的导出图片实现，模仿官方示例
 const exportImage = async () => {
+  console.log('[CanvasTools] 开始导出图片...')
   try {
     if (!vueFlowRef.value) {
-      console.error('找不到Vue Flow元素')
+      console.error('[CanvasTools] 找不到Vue Flow元素')
       alert('找不到流程图元素，无法导出')
       return
     }
 
     // 保存原始状态
+    console.log('[CanvasTools] 保存原始状态...')
     const originalTransform = { ...getTransform() }
     const originalNodes = getNodes.value.map(node => ({ ...node }))
     const originalEdges = getEdges.value.map(edge => ({ ...edge }))
 
     // 先将节点和边都设为非选中状态
+    console.log('[CanvasTools] 设置节点和边为非选中状态...')
     setNodes(getNodes.value.map(node => ({ ...node, selected: false })))
     setEdges(getEdges.value.map(edge => ({ ...edge, selected: false })))
 
     // 提前获取需要临时隐藏的控件元素
+    console.log('[CanvasTools] 获取需要隐藏的控件...')
     const controlsToHide = document.querySelectorAll('.vue-flow__controls, .vue-flow__minimap, .canvas-tools, .toolbar, .node-toolbar')
     const originalVisibility: Array<[Element, string]> = []
 
@@ -265,9 +269,22 @@ const exportImage = async () => {
 
     try {
       // 等待DOM更新
-      await new Promise<void>(resolve => setTimeout(resolve, 100))
+      console.log('[CanvasTools] 等待DOM更新...')
+      await new Promise<void>((resolve, reject) => {
+        try {
+          console.log('[CanvasTools] DOM更新Promise开始...')
+          setTimeout(() => {
+            console.log('[CanvasTools] DOM更新Promise完成')
+            resolve()
+          }, 100)
+        } catch (err) {
+          console.error('[CanvasTools] DOM更新Promise错误:', err)
+          reject(err)
+        }
+      })
 
       // 直接获取所有边元素
+      console.log('[CanvasTools] 处理边元素...')
       const edgeElements = vueFlowRef.value.querySelectorAll('.vue-flow__edge')
       
       // 预先处理所有边的样式 - 记录原始样式信息
@@ -408,31 +425,42 @@ const exportImage = async () => {
       })
 
       // 使用html-to-image直接对处理过的DOM进行截图
+      console.log('[CanvasTools] 开始生成图片...')
       const dataUrl = await toJpeg(vueFlowRef.value, {
         quality: 0.95,
         backgroundColor: 'white',
         pixelRatio: 2,
         skipAutoScale: true,
         // 包含所有相关样式
-        fontEmbedCSS: document.querySelector('link[rel="stylesheet"]')?.getAttribute('href'),
+        fontEmbedCSS: document.querySelector('link[rel="stylesheet"]')?.getAttribute('href') || undefined,
         // 只保留图形相关元素，过滤掉控件
         filter: (node: HTMLElement) => {
           if (!node || !node.classList) return true;
-          return !['vue-flow__controls', 'vue-flow__minimap', 'canvas-tools', 'toolbar', 'node-toolbar'].some(
+          const shouldFilter = !['vue-flow__controls', 'vue-flow__minimap', 'canvas-tools', 'toolbar', 'node-toolbar'].some(
             className => node.classList.contains(className)
-          )
+          );
+          if (!shouldFilter) {
+            console.log('[CanvasTools] 过滤元素:', node);
+          }
+          return shouldFilter;
         }
-      })
+      }).catch(error => {
+        console.error('[CanvasTools] 生成JPEG图片失败:', error);
+        throw error;
+      });
 
       // 下载图片
+      console.log('[CanvasTools] 准备下载图片...');
       const fileName = `flowchart_${getTimestamp()}`
       const link = document.createElement('a')
       link.download = `${fileName}.jpg`
       link.href = dataUrl
       link.click()
       
+      console.log('[CanvasTools] 图片导出完成');
     } finally {
       // 恢复原始状态 - 重要！
+      console.log('[CanvasTools] 恢复原始状态...');
       setNodes(originalNodes)
       setEdges(originalEdges)
       
@@ -442,12 +470,9 @@ const exportImage = async () => {
           ;(el as HTMLElement).style.display = originalVisibility[index][1]
         }
       })
-      
-      // 输出成功信息
-      console.log('导出图片处理完成')
     }
   } catch (error) {
-    console.error('导出图片失败:', error)
+    console.error('[CanvasTools] 导出图片失败:', error)
     alert('导出图片失败：' + (error instanceof Error ? error.message : String(error)))
   }
 }
@@ -463,12 +488,6 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 const importJSON = () => {
   fileInput.value?.click()
-}
-
-// 添加类型声明，解决html-to-image模块找不到问题
-declare module 'html-to-image' {
-  export function toJpeg(node: HTMLElement, options?: any): Promise<string>;
-  export function toPng(node: HTMLElement, options?: any): Promise<string>;
 }
 
 const handleFileImport = async (event: Event) => {

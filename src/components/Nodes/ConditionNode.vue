@@ -11,7 +11,7 @@
 <template>
   <div 
     class="condition-node" 
-    :class="{ selected, editing: isEditing }"
+    :class="{ selected, editing: isEditing, 'align-left': textAlign === 'left', 'align-center': textAlign === 'center', 'align-right': textAlign === 'right' }"
     ref="nodeRef"
     @mouseenter="showHandles = true" 
     @mouseleave="showHandles = false"
@@ -63,15 +63,21 @@
       preserveAspectRatio="none"
     >
       <path 
-        d="M50,0 L100,50 L50,100 L0,50 Z" 
-        fill="white"
-        :stroke="props.selected ? '#1a192b' : '#555'"
-        :stroke-width="props.selected ? '1' : '1'"
+        d="M50 5 L95 50 L50 95 L5 50 Z" 
+        :fill="props.data.savedBgColor || props.data.style?.backgroundColor || 'white'"
+        :stroke="props.selected ? '#1a192b' : (props.data.style?.borderColor || '#000000')"
+        :stroke-width="props.selected ? 1 : (props.data.style?.borderWidth ? parseFloat(props.data.style.borderWidth) : 1)"
+        :stroke-dasharray="!props.selected && props.data.style?.borderStyle === 'dashed' ? '5,5' : 
+                          !props.selected && props.data.style?.borderStyle === 'dotted' ? '2,2' : 'none'"
       />
     </svg>
     
     <div class="node-content" @dblclick="handleDoubleClick">
-      <span v-if="!isEditing">{{ data.label }}</span>
+      <span v-if="!isEditing" :style="{ 
+        textDecoration: props.data.style?.textDecoration || 'none',
+        fontWeight: props.data.style?.fontWeight || 'normal',
+        fontStyle: props.data.style?.fontStyle || 'normal'
+      }">{{ data.label }}</span>
       <input 
         v-else
         ref="editInputRef"
@@ -122,12 +128,58 @@ const nodeHeight = computed(() => {
 })
 
 // 计算节点样式，包括字体样式
-const nodeStyle = computed(() => ({
-  fontSize: `${props.data.fontSize || 12}px`,
-  color: props.data.color || '#000000',
-  width: `${nodeWidth.value}px`,
-  height: `${nodeHeight.value}px`
-}))
+const nodeStyle = computed(() => {
+  // 获取正确的边框宽度
+  const getBorderWidth = () => {
+    // 如果没有设置边框宽度，返回默认值
+    if (!props.data.style?.borderWidth) {
+      return '1px';
+    }
+    
+    const width = props.data.style.borderWidth;
+    
+    // 如果已经包含单位，直接返回
+    if (typeof width === 'string' && 
+        (width.endsWith('px') || 
+         width.endsWith('em') || 
+         width.endsWith('%'))) {
+      return width;
+    }
+    
+    // 如果是数字，添加px单位
+    if (typeof width === 'number') {
+      return `${width}px`;
+    }
+    
+    // 如果是字符串数字，添加px单位
+    if (typeof width === 'string' && !isNaN(parseFloat(width))) {
+      return `${parseFloat(width)}px`;
+    }
+    
+    // 默认返回1px
+    return '1px';
+  };
+
+  return {
+    fontSize: `${props.data.fontSize || 12}px`,
+    color: props.data.color || '#000000',
+    width: `${nodeWidth.value}px`,
+    height: `${nodeHeight.value}px`,
+    textAlign: props.data.style?.textAlign || 'center',
+    fontWeight: props.data.style?.fontWeight,
+    fontStyle: props.data.style?.fontStyle,
+    textDecoration: props.data.style?.textDecoration,
+    // 添加背景色支持 - 正确访问节点背景色
+    backgroundColor: 'transparent', // 条件节点使用SVG背景，设置透明
+    // 添加边框样式支持 - 与CircleNode保持一致
+    borderWidth: '0px', // 条件节点使用SVG边框，这里设为0
+    borderColor: 'transparent',
+    borderStyle: 'none'
+  }
+})
+
+// 计算当前文本对齐方式
+const textAlign = computed(() => props.data.style?.textAlign || 'center')
 
 const handleStyle = {
   width: '8px',
@@ -260,6 +312,9 @@ const finishEditing = () => {
   const currentWidth = nodeRef.value?.offsetWidth || 0
   const currentHeight = nodeRef.value?.offsetHeight || 0
   
+  // 确保样式对象存在
+  const currentStyle = props.data?.style || {}
+  
   // 更新节点标签并标记为非编辑状态，同时保持尺寸
   updateNode(props.id, { 
     data: { 
@@ -267,18 +322,17 @@ const finishEditing = () => {
       label: editLabel.value,
       isEditing: false,
       style: {
-        ...props.data.style,
+        ...currentStyle,
         width: `${currentWidth}px`,
-        height: `${currentHeight}px`
+        height: `${currentHeight}px`,
+        // 确保保留字体样式属性
+        fontWeight: currentStyle.fontWeight,
+        fontStyle: currentStyle.fontStyle,
+        textDecoration: currentStyle.textDecoration,
+        textAlign: currentStyle.textAlign || 'center'
       }
     } 
   })
-  
-  // 确保节点尺寸不变
-  if (nodeRef.value) {
-    nodeRef.value.style.width = `${currentWidth}px`
-    nodeRef.value.style.height = `${currentHeight}px`
-  }
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -395,6 +449,14 @@ const startResize = (event: MouseEvent, type: string) => {
       nodeRef.value.style.width = `${newWidth}px`
       nodeRef.value.style.height = `${newHeight}px`
       
+      // 确保保持borderWidth为纯数字
+      let currentBorderWidth = node.data?.style?.borderWidth || 1;
+      if (typeof currentBorderWidth === 'string') {
+        // 移除所有非数字字符(如'px')
+        const cleanBorderWidth = currentBorderWidth.replace(/[^\d.-]/g, '');
+        currentBorderWidth = parseFloat(cleanBorderWidth) || 1;
+      }
+      
       // 更新节点位置
       updateNode(props.id, {
         position: newPosition,
@@ -407,7 +469,9 @@ const startResize = (event: MouseEvent, type: string) => {
           style: {
             ...node.data.style,
             width: `${newWidth}px`,
-            height: `${newHeight}px`
+            height: `${newHeight}px`,
+            // 确保borderWidth是纯数字
+            borderWidth: currentBorderWidth
           }
         }
       })
@@ -441,6 +505,71 @@ const startResize = (event: MouseEvent, type: string) => {
 
 // 组件挂载时确保节点初始化正确
 onMounted(() => {
+  // 确保节点数据中有样式对象
+  if (!props.data.style) {
+    // 创建默认样式
+    updateNode(props.id, {
+      data: {
+        ...props.data,
+        style: {
+          textAlign: 'center',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          textDecoration: 'none',
+          width: '100px',
+          height: '60px',
+          backgroundColor: props.data.savedBgColor || '#ffffff',
+          borderWidth: 1, // 使用纯数字
+          borderColor: '#555',
+          borderStyle: 'solid'
+        }
+      }
+    })
+  } else {
+    // 确保样式对象包含所有需要的属性
+    const currentStyle = props.data.style
+    if (!currentStyle.fontWeight || !currentStyle.fontStyle || !currentStyle.textDecoration || !currentStyle.textAlign || !currentStyle.borderWidth || !currentStyle.borderColor || typeof currentStyle.borderWidth === 'string') {
+      // 确保borderWidth是数字类型
+      let borderWidth = currentStyle.borderWidth || 1;
+      
+      if (typeof borderWidth === 'string') {
+        // 移除所有非数字字符(如'px')
+        const cleanBorderWidth = borderWidth.replace(/[^\d.-]/g, '');
+        borderWidth = parseFloat(cleanBorderWidth) || 1;
+      }
+      
+      updateNode(props.id, {
+        data: {
+          ...props.data,
+          style: {
+            ...currentStyle,
+            fontWeight: currentStyle.fontWeight || 'normal',
+            fontStyle: currentStyle.fontStyle || 'normal',
+            textDecoration: currentStyle.textDecoration || 'none',
+            textAlign: currentStyle.textAlign || 'center',
+            backgroundColor: props.data.savedBgColor || currentStyle.backgroundColor || '#ffffff',
+            borderWidth: borderWidth, // 使用纯数字
+            borderColor: currentStyle.borderColor || '#555',
+            borderStyle: currentStyle.borderStyle || 'solid'
+          }
+        }
+      })
+    }
+  }
+
+  // 如果节点有保存的背景色，确保应用到style中
+  if (props.data.savedBgColor) {
+    updateNode(props.id, {
+      data: {
+        ...props.data,
+        style: {
+          ...props.data.style,
+          backgroundColor: props.data.savedBgColor
+        }
+      }
+    })
+  }
+
   // 确保节点的 DOM 尺寸与数据一致
   if (nodeRef.value) {
     const width = props.data.style?.width || '100px'
@@ -595,16 +724,48 @@ export default {
 }
 
 /* 节点内容样式 */
-.node-content {
-  text-align: center;
+.condition-node .node-content {
   user-select: none;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+/* 根据对齐方式设置内容对齐 */
+.condition-node.align-left .node-content {
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 15%;
+}
+
+.condition-node.align-center .node-content {
   justify-content: center;
-  position: relative;
-  z-index: 1;  /* 确保内容在菱形背景之上 */
+  text-align: center;
+}
+
+.condition-node.align-right .node-content {
+  justify-content: flex-end;
+  text-align: right;
+  padding-right: 15%;
+}
+
+/* 确保加粗、倾斜和下划线样式正确显示 */
+.condition-node .node-content span {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+  display: inline-block;
+  width: 100%;
+  /* 使用继承样式以确保正确显示下划线等文本装饰 */
+  text-decoration: inherit;
+  font-weight: inherit;
+  font-style: inherit;
 }
 
 /* 菱形背景样式 */
@@ -679,7 +840,6 @@ export default {
   min-height: 20px;
   border: none;
   background: transparent;
-  text-align: center;
   outline: none;
   font-size: inherit;
   color: inherit;
@@ -687,6 +847,18 @@ export default {
   margin: 0;
   font-family: inherit;
   box-sizing: border-box; /* 确保padding和border不会增加元素总宽高 */
+}
+
+.condition-node.align-left .edit-input {
+  text-align: left !important;
+}
+
+.condition-node.align-center .edit-input {
+  text-align: center !important;
+}
+
+.condition-node.align-right .edit-input {
+  text-align: right !important;
 }
 
 /* 调整大小锚点的位置和光标样式 */

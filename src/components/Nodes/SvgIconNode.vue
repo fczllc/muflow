@@ -105,7 +105,7 @@ const getIconHTML = (iconType: string): string => {
 // 处理双击事件
 const handleDoubleClick = () => {
   // 可以添加双击处理逻辑，例如修改图标大小或颜色
-  console.log('双击图标节点:', props.id)
+  // 移除log语句
 }
 
 // 处理调整大小逻辑
@@ -134,7 +134,13 @@ const startResize = (type: 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight'
   resizing.value = true
   
   // 创建自定义事件通知画布组件
-  window.dispatchEvent(new CustomEvent('resize-start'))
+  console.log('[SvgIconNode] 触发 resize-start 事件', { nodeId: props.id })
+  const startEvent = new CustomEvent('resize-start', { 
+    bubbles: true,
+    composed: true,
+    detail: { nodeId: props.id }
+  })
+  window.dispatchEvent(startEvent)
   
   // 添加临时事件监听器
   document.addEventListener('mousemove', handleResize)
@@ -202,7 +208,13 @@ const stopResize = () => {
   document.body.style.cursor = 'default'
   
   // 创建自定义事件通知画布组件
-  window.dispatchEvent(new CustomEvent('resize-end'))
+  console.log('[SvgIconNode] 触发 resize-end 事件', { nodeId: props.id })
+  const endEvent = new CustomEvent('resize-end', { 
+    bubbles: true,
+    composed: true,
+    detail: { nodeId: props.id }
+  })
+  window.dispatchEvent(endEvent)
 }
 
 // 清理
@@ -283,6 +295,6 @@ onUnmounted(() => {
 }
 
 .selected {
-  outline: none !important;
+  outline: 1px dashed #1a73e8 !important;
 }
 </style> 

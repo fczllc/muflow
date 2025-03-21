@@ -196,8 +196,11 @@ const {
 const selectedNodeId = ref<string | null>(null)
 const selectedEdgeId = ref<string | null>(null)
 const recentlyClickedEdge = ref(false)
+const pendingConnection = ref<Connection | null>(null)
 const isResizing = ref(false)
 const resizeJustEnded = ref(false)
+const componentMountedRef = ref(true) // 组件挂载状态跟踪
+const resizeEndTimeoutRef = ref<ReturnType<typeof setTimeout> | null>(null) // 用于存储resize-end事件处理的timeout引用
 const selectedNodes = ref<string[]>([])
 const alignmentLines = ref<Array<{ id: string; type: 'horizontal' | 'vertical'; position: number }>>([])
 const snapThreshold = 2
@@ -318,82 +321,99 @@ const isFlowNode = (node: any): node is FlowNode => {
 }
 
 const getNodeDimensions = (node: any): NodeDimensions => {
-  const cached = nodeDimensionsCache.get(node.id)
-  if (cached) return cached
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    // 返回默认尺寸以避免错误
+    return {
+      width: node.type === 'textLabel' ? 150 : 200,
+      height: node.type === 'textLabel' ? 40 : 50
+    };
+  }
+  
+  const cached = nodeDimensionsCache.get(node.id);
+  if (cached) return cached;
   
   // 首先查找Vue Flow节点容器
-  const element = document.querySelector(`[data-id="${node.id}"]`)
+  const element = document.querySelector(`[data-id="${node.id}"]`);
   if (element) {
     // 在Vue Flow节点容器内查找实际节点组件
     // 例如：.rounded-rect-node, .condition-node等
-    const innerElement = element.querySelector('.rounded-rect-node, .start-end-node, .condition-node, .circle-node, .text-label-node, .line-node, .svg-icon-node')
+    const innerElement = element.querySelector('.rounded-rect-node, .start-end-node, .condition-node, .circle-node, .text-label-node, .line-node, .svg-icon-node');
     
     // 如果找到内部节点组件，使用它的尺寸
     if (innerElement) {
-      const rect = innerElement.getBoundingClientRect()
+      const rect = innerElement.getBoundingClientRect();
       const dimensions = {
         width: Math.round(rect.width),
         height: Math.round(rect.height)
-      }
-      nodeDimensionsCache.set(node.id, dimensions)
-      return dimensions
+      };
+      nodeDimensionsCache.set(node.id, dimensions);
+      return dimensions;
     }
     
     // 如果没有找到内部组件，返回到使用Vue Flow容器的尺寸
-    const rect = element.getBoundingClientRect()
+    const rect = element.getBoundingClientRect();
     const dimensions = {
       width: Math.round(rect.width),
       height: Math.round(rect.height)
-    }
-    nodeDimensionsCache.set(node.id, dimensions)
-    return dimensions
+    };
+    nodeDimensionsCache.set(node.id, dimensions);
+    return dimensions;
   }
   
   // 如果找不到DOM元素，使用默认尺寸
   const defaultDimensions = {
     width: node.type === 'textLabel' ? 150 : 200,
     height: node.type === 'textLabel' ? 40 : 50
-  }
+  };
   
-  nodeDimensionsCache.set(node.id, defaultDimensions)
-  return defaultDimensions
-}
+  nodeDimensionsCache.set(node.id, defaultDimensions);
+  return defaultDimensions;
+};
 
 const clearNodeDimensionsCache = (nodeId: string) => {
-  nodeDimensionsCache.delete(nodeId)
-  nodeCenterMap.delete(nodeId)
-}
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    return;
+  }
+  
+  nodeDimensionsCache.delete(nodeId);
+  nodeCenterMap.delete(nodeId);
+};
 
 // 更新节点中心点坐标
 const updateNodeCenter = (node: any) => {
-  if (!node || !node.id) return;
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor') || !node || !node.id) {
+    return;
+  }
   
   const { width, height } = getNodeDimensions(node);
   // 直接使用精确计算值，不进行四舍五入
   const centerX = node.position.x + width / 2;
   const centerY = node.position.y + height / 2;
   
-  // 记录更新前的坐标，用于日志
-  const prevCenter = nodeCenterMap.get(node.id);
-  
   // 存储精确的中心点坐标
   nodeCenterMap.set(node.id, {x: centerX, y: centerY});
-}
+};
 
 // 修改防抖函数，确保组件卸载时不会继续执行
 const initNodeCenters = debounce(() => {
   try {
     // 在执行更新前检查组件是否仍然存在
     if (!document.querySelector('.flow-editor')) {
-      return; // 如果组件已卸载，不执行更新
+      return false; // 如果组件已卸载，不执行更新
     }
     
     getNodes.value.forEach(node => {
       // 直接使用节点的原始位置，不进行四舍五入
       updateNodeCenter(node);
     });
+    
+    return true; // 表示执行成功
   } catch (error) {
     // 错误处理但不输出日志
+    return false;
   }
 }, 100);
 
@@ -401,7 +421,7 @@ const initNodeCenters = debounce(() => {
 const observeNodes = () => {
   // 在执行检查前确认组件是否仍然存在
   if (!document.querySelector('.flow-editor')) {
-    return; // 如果组件已卸载，不执行检查
+    return false; // 如果组件已卸载，返回false表示不再继续执行
   }
   
   // 只有当节点发生变化时才更新中心点
@@ -409,6 +429,7 @@ const observeNodes = () => {
   if (currentNodesCount > 0) {
     initNodeCenters();
   }
+  return true; // 返回true表示函数执行成功
 }
 
 // 对齐和分布方法
@@ -512,35 +533,40 @@ const distributeNodes = (direction: DistributeDirection) => {
 
 // 添加保存历史记录的方法
 const saveToHistory = () => {
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    return;
+  }
+  
   // 如果当前不在历史记录的最后，删除当前位置之后的记录
   if (currentHistoryIndex.value < history.value.length - 1) {
-    history.value = history.value.slice(0, currentHistoryIndex.value + 1)
+    history.value = history.value.slice(0, currentHistoryIndex.value + 1);
   }
   
   // 获取当前节点和边的状态，确保选中状态是正确的
   const currentNodes = getNodes.value.map(node => {
     // 保留节点的选中状态，这样撤销后可以恢复到正确的选中状态
-    return { ...node }
-  })
+    return { ...node };
+  });
   
   const currentEdges = getEdges.value.map(edge => {
     // 保留边的选中状态
-    return { ...edge }
-  })
+    return { ...edge };
+  });
   
   // 保存当前状态
   history.value.push({
     nodes: JSON.parse(JSON.stringify(currentNodes)),
     edges: JSON.parse(JSON.stringify(currentEdges))
-  })
-  currentHistoryIndex.value = history.value.length - 1
+  });
+  currentHistoryIndex.value = history.value.length - 1;
   
   // 限制历史记录数量，最多保存10步
   if (history.value.length > 10) {
-    history.value.shift()
-    currentHistoryIndex.value--
+    history.value.shift();
+    currentHistoryIndex.value--;
   }
-}
+};
 
 // 提供addNodes和saveToHistory函数给子组件使用
 provide('addNodes', addNodes)
@@ -601,6 +627,11 @@ const onDragOver = (event: DragEvent) => {
 }
 
 const onDrop = (event: DragEvent) => {
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    return;
+  }
+  
   const nodeTypeData = event.dataTransfer?.getData('application/vueflow')
   
   if (typeof nodeTypeData === 'string' && nodeTypeData) {
@@ -640,7 +671,18 @@ const onDrop = (event: DragEvent) => {
       id: `${nodeType}-${getNodes.value.length + 1}`,
       type: nodeType,
       position: { x, y },
-      data: { label: getDefaultLabel(nodeType) }
+      data: { 
+        label: getDefaultLabel(nodeType),
+        // 为所有节点初始化样式对象
+        style: {
+          width: nodeType === 'circle' ? '38px' : '100px',
+          height: nodeType === 'circle' ? '38px' : nodeType === 'condition' ? '60px' : '38px',
+          textAlign: 'center',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          textDecoration: 'none'
+        }
+      }
     }
 
     // 为直线节点设置特殊属性
@@ -680,20 +722,25 @@ const onDrop = (event: DragEvent) => {
     // 添加新节点
     addNodes([newNode])
     
-    // 立即更新中心点Map
+    // 使用setTimeout来确保DOM已更新
     setTimeout(() => {
+      // 再次检查组件是否存在
+      if (!document.querySelector('.flow-editor')) {
+        return;
+      }
+      // 立即更新中心点Map
       updateNodeCenter(newNode);
-    }, 0);
-    
-    // 取消选中其他节点，只选中新添加的节点
-    const nodes = getNodes.value.map(node => ({
-      ...node,
-      selected: node.id === newNode.id
-    }))
-    setNodes(nodes)
-    
-    // 在添加节点后保存历史记录
-    saveToHistory()
+      
+      // 取消选中其他节点，只选中新添加的节点
+      const nodes = getNodes.value.map(node => ({
+        ...node,
+        selected: node.id === newNode.id
+      }));
+      setNodes(nodes);
+      
+      // 在添加节点后保存历史记录
+      saveToHistory();
+    }, 10);
   }
 }
 
@@ -820,6 +867,11 @@ const onPaneDoubleClick = (event: MouseEvent) => {
 
 // 对齐算法，使用中心点Map进行对齐计算
 const calculateAlignment = (draggedNode: any) => {
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    return [];
+  }
+  
   if (!draggedNode || !draggedNode.id || nodeCenterMap.size <= 1) return [];
   
   // 获取当前拖动节点的中心点
@@ -1005,6 +1057,12 @@ const onNodeDrag = (event: NodeDragEvent) => {
 
 // 修改handleNodeDragStop，确保拖动结束时完全对齐到最近的对象
 const handleNodeDragStop = debounce((e: NodeDragEvent) => {
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    // 如果组件已卸载，直接返回
+    return;
+  }
+  
   const { node } = e;
   
   try {
@@ -1101,11 +1159,20 @@ const handleNodeDragStop = debounce((e: NodeDragEvent) => {
   } finally {
     // 清除对齐线
     alignmentLines.value = [];
-    saveToHistory(); // 保存历史记录
+    
+    // 检查组件是否仍然存在
+    if (document.querySelector('.flow-editor')) {
+      saveToHistory(); // 保存历史记录
+    }
   }
 }, 50);
 
 const onSelectionChange = debounce(({ nodes }: { nodes: any[] }) => {
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    return;
+  }
+  
   selectedNodes.value = nodes.map(node => node.id)
   nodes.forEach(node => {
     clearNodeDimensionsCache(node.id)
@@ -1315,7 +1382,10 @@ const onEdgeDoubleClick = (event: EdgeMouseEvent) => {
 
 // 添加确认编辑标签的方法
 const confirmEdgeLabel = (labelValue: string) => {
-  if (!currentEditingEdge.value) return
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor') || !currentEditingEdge.value) {
+    return;
+  }
   
   // 更新边的标签
   const updatedEdges = getEdges.value.map(e => {
@@ -1327,30 +1397,38 @@ const confirmEdgeLabel = (labelValue: string) => {
           ...e.data,
           label: labelValue
         }
-      }
+      };
     }
-    return e
-  })
+    return e;
+  });
   
   // 保存当前状态到历史记录
-  saveToHistory()
+  saveToHistory();
   
   // 更新边集合
-  setEdges(updatedEdges)
+  setEdges(updatedEdges);
   
   // 关闭对话框并清除当前编辑的边
-  showEdgeLabelDialog.value = false
-  currentEditingEdge.value = null
+  showEdgeLabelDialog.value = false;
+  currentEditingEdge.value = null;
 }
 
-// 添加取消编辑标签的方法
 const cancelEdgeLabel = () => {
-  showEdgeLabelDialog.value = false
-  currentEditingEdge.value = null
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    return;
+  }
+  
+  showEdgeLabelDialog.value = false;
+  currentEditingEdge.value = null;
 }
 
 // 生命周期钩子
 onMounted(() => {
+  console.log('[FlowEditor] 组件挂载');
+  
+  // 注册事件监听器
+  registerEventListeners();
   
   // 手动获取选择框元素
   const selectionBox = document.getElementById('selection-box');
@@ -1376,15 +1454,26 @@ onMounted(() => {
   // 直接在Vue Flow的pane元素上添加原生事件监听器
   const paneElement = document.querySelector('.vue-flow__pane');
   if (paneElement) {
-       
     // 原生鼠标按下事件
     const paneMouseDownHandler = (e: MouseEvent) => {
+      // 检查组件是否仍挂载
+      if (!componentMountedRef.value) return;
+      
       // 手动调用我们的处理函数
       onPaneMouseDown(e);
     };
     
     // 原生鼠标移动事件
     const paneMouseMoveHandler = (e: MouseEvent) => {
+      // 检查组件是否仍挂载
+      if (!componentMountedRef.value) {
+        // 如果组件已卸载，重置状态
+        isSelecting.value = false;
+        startPoint.value = null;
+        currentPoint.value = null;
+        return;
+      }
+      
       if (isSelecting.value) {
         // 手动调用我们的处理函数
         onPaneMouseMove(e);
@@ -1393,6 +1482,15 @@ onMounted(() => {
     
     // 原生鼠标松开事件
     const paneMouseUpHandler = (e: MouseEvent) => {
+      // 检查组件是否仍挂载
+      if (!componentMountedRef.value) {
+        // 如果组件已卸载，重置状态
+        isSelecting.value = false;
+        startPoint.value = null;
+        currentPoint.value = null;
+        return;
+      }
+      
       // 手动调用我们的处理函数
       onPaneMouseUp(e);
     };
@@ -1409,93 +1507,228 @@ onMounted(() => {
       document.removeEventListener('mouseup', paneMouseUpHandler as EventListener);
     });
   }
+});
+
+// 处理键盘事件
+const handleKeyDown = (event: KeyboardEvent) => {
+  // 检查组件是否仍挂载
+  if (!componentMountedRef.value) return;
   
-  // 添加事件监听器
-  const handleKeyDown = (event: KeyboardEvent) => {
-    // 如果模态对话框打开，不处理键盘事件
-    if (showEdgeLabelDialog.value) {
-      return
+  // 如果模态对话框打开，不处理键盘事件
+  if (showEdgeLabelDialog.value) {
+    return;
+  }
+  
+  // 删除键处理
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    // 获取所有选中的节点
+    const selectedNodes = getNodes.value.filter(node => node.selected);
+    if (selectedNodes.length > 0) {
+      // 先保存当前状态
+      saveToHistory();
+      // 删除所有选中的节点
+      removeNodes(selectedNodes.map(node => node.id));
+      selectedNodeId.value = null;
     }
     
-    // 删除键处理
-    if (event.key === 'Delete' || event.key === 'Backspace') {
-      // 获取所有选中的节点
-      const selectedNodes = getNodes.value.filter(node => node.selected)
-      if (selectedNodes.length > 0) {
-        // 先保存当前状态
-        saveToHistory()
-        // 删除所有选中的节点
-        removeNodes(selectedNodes.map(node => node.id))
-        selectedNodeId.value = null
-      }
-      
-      // 获取所有选中的边
-      const selectedEdges = getEdges.value.filter(edge => edge.selected)
-      if (selectedEdges.length > 0) {
-        // 先保存当前状态
-        saveToHistory()
-        // 删除所有选中的边
-        removeEdges(selectedEdges.map(edge => edge.id))
-        selectedEdgeId.value = null
-      }
+    // 获取所有选中的边
+    const selectedEdges = getEdges.value.filter(edge => edge.selected);
+    if (selectedEdges.length > 0) {
+      // 先保存当前状态
+      saveToHistory();
+      // 删除所有选中的边
+      removeEdges(selectedEdges.map(edge => edge.id));
+      selectedEdgeId.value = null;
     }
-
-    handleKeyboard(event)
   }
 
-  const handleResizeStart = () => {
-    isResizing.value = true
+  handleKeyboard(event);
+};
+
+// 处理调整大小开始事件
+const handleResizeStart = (event: Event) => {
+  console.log('[FlowEditor] 接收到 resize-start 事件', (event as CustomEvent).detail);
+  isResizing.value = true;
+  // 在调整大小期间不需要特殊处理键盘事件
+};
+
+// 处理调整大小结束事件
+const handleResizeEnd = (event: Event) => {
+  console.log('[FlowEditor] 接收到 resize-end 事件', (event as CustomEvent).detail);
+  isResizing.value = false;
+  resizeJustEnded.value = true;
+  
+  // 清除任何可能存在的先前的定时器
+  if (resizeEndTimeoutRef.value) {
+    clearTimeout(resizeEndTimeoutRef.value);
+    resizeEndTimeoutRef.value = null;
   }
+  
+  // 在结束后略微延迟重新生成节点中心点，确保调整尺寸操作已经完全应用
+  resizeEndTimeoutRef.value = setTimeout(() => {
+    console.log('[FlowEditor] resize-end 延迟处理开始');
+    // 再次检查组件是否仍挂载
+    if (!componentMountedRef.value) {
+      console.log('[FlowEditor] 组件已卸载，取消延迟处理');
+      return;
+    }
+    
+    // 可以在这里获取节点的最新尺寸
+    try {
+      const nodeId = (event as CustomEvent).detail?.nodeId;
+      if (nodeId) {
+        const node = findNode(nodeId);
+        console.log('[FlowEditor] 节点大小调整完成:', { 
+          nodeId, 
+          dimensions: node?.dimensions || '未知'
+        });
+      }
+    } catch (error) {
+      console.error('[FlowEditor] 处理resize-end事件时出错:', error);
+    }
+    
+    console.log('[FlowEditor] 重置 resizeJustEnded 标志');
+    resizeJustEnded.value = false;
+    console.log('[FlowEditor] resize-end 延迟处理完成');
+    
+    // 重置引用
+    resizeEndTimeoutRef.value = null;
+  }, 100);
+  
+  // 确保不返回值，避免异步响应问题
+  return undefined;
+};
 
-  const handleResizeEnd = () => {
-    isResizing.value = false
-    resizeJustEnded.value = true
-    setTimeout(() => {
-      resizeJustEnded.value = false
-    }, 100)
+// 清除事件监听器
+const unregisterEventListeners = () => {
+  console.log('[FlowEditor] 清除事件监听器');
+  window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('resize-start', handleResizeStart);
+  window.removeEventListener('resize-end', handleResizeEnd);
+};
+
+// 注册事件监听器
+const registerEventListeners = () => {
+  console.log('[FlowEditor] 注册事件监听器');
+  
+  // 避免重复注册
+  unregisterEventListeners();
+  
+  // 注册全局事件监听器
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('resize-start', handleResizeStart);
+  window.addEventListener('resize-end', handleResizeEnd);
+  
+  // 注册Vue Flow事件
+  onConnect(onConnectHandler);
+  registerNodeDragStop(handleNodeDragStop);
+  registerEdgeClick(onEdgeClick);
+};
+
+// 在组件卸载时清理
+onUnmounted(() => {
+  console.log('[FlowEditor] 组件卸载');
+  componentMountedRef.value = false;
+  
+  // 清除resize-end的timeout
+  if (resizeEndTimeoutRef.value) {
+    clearTimeout(resizeEndTimeoutRef.value);
+    resizeEndTimeoutRef.value = null;
   }
+  
+  // 清除事件监听器
+  unregisterEventListeners();
+  
+  // 其他清理代码...
+});
 
-  // 注册事件监听器
-  window.addEventListener('keydown', handleKeyDown)
-  window.addEventListener('resize-start', handleResizeStart)
-  window.addEventListener('resize-end', handleResizeEnd)
-  onConnect(onConnectHandler)
-  registerNodeDragStop(handleNodeDragStop)
-  registerEdgeClick(onEdgeClick)
+// 初始化历史记录 - 只有当画布上有内容时才保存初始状态
+// 只有当画布上有节点或边时才初始化历史记录
+if (getNodes.value.length > 0 || getEdges.value.length > 0) {
+  saveToHistory();
+} else {
+  // 如果画布为空，只初始化索引，不保存状态
+  currentHistoryIndex.value = -1;
+  history.value = [];
+}
 
-  // 初始化历史记录 - 只有当画布上有内容时才保存初始状态
-  // 只有当画布上有节点或边时才初始化历史记录
-  if (getNodes.value.length > 0 || getEdges.value.length > 0) {
-    saveToHistory()
-  } else {
-    // 如果画布为空，只初始化索引，不保存状态
-    currentHistoryIndex.value = -1
-    history.value = []
+// 初始化所有节点的中心点坐标
+initNodeCenters();
+
+// 监听节点变化，使用较长的间隔
+let nodeObserverInterval: number | undefined;
+let isComponentMounted = true;
+  
+const nodeObserverCallback = () => {
+  if (!isComponentMounted || !componentMountedRef.value) {
+    // 如果组件已卸载，清除定时器
+    if (nodeObserverInterval) {
+      clearInterval(nodeObserverInterval);
+      nodeObserverInterval = undefined;
+    }
+    return;
   }
-
-  // 初始化所有节点的中心点坐标
-  initNodeCenters();
-
-  // 监听节点变化，使用较长的间隔
-  let nodeObserver = setInterval(observeNodes, 1500);
+    
+  // 调用observeNodes并检查返回值
+  const shouldContinue = observeNodes();
+    
+  // 如果返回false，表示应该停止观察
+  if (!shouldContinue && nodeObserverInterval) {
+    clearInterval(nodeObserverInterval);
+    nodeObserverInterval = undefined;
+  }
+};
+  
+nodeObserverInterval = window.setInterval(nodeObserverCallback, 1500);
   
   // 在卸载组件前清理所有的计时器和监听器
   onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyDown)
-    window.removeEventListener('resize-start', handleResizeStart)
-    window.removeEventListener('resize-end', handleResizeEnd)
+    // 设置标志，表示组件已卸载
+    isComponentMounted = false;
+    
+    // 取消所有的间隔调用
+    if (nodeObserverInterval) {
+      clearInterval(nodeObserverInterval);
+      nodeObserverInterval = undefined;
+    }
+    
+    window.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('resize-start', handleResizeStart);
+    window.removeEventListener('resize-end', handleResizeEnd);
     
     // 取消所有的防抖函数
-    if (handleNodeDragStop.cancel) handleNodeDragStop.cancel()
-    if (onSelectionChange.cancel) onSelectionChange.cancel()
-    if (initNodeCenters.cancel) initNodeCenters.cancel()
-    
-    // 清除定时器
-    if (nodeObserver) {
-      clearInterval(nodeObserver);
+    if (typeof handleNodeDragStop.cancel === 'function') {
+      handleNodeDragStop.cancel();
     }
-  })
-})
+    
+    if (typeof onSelectionChange.cancel === 'function') {
+      onSelectionChange.cancel();
+    }
+    
+    if (typeof initNodeCenters.cancel === 'function') {
+      initNodeCenters.cancel();
+    }
+    
+    // 清除所有选择状态和编辑状态，避免状态残留
+    clearSelectionAndEditingState();
+    
+    // 清除对齐线
+    alignmentLines.value = [];
+    
+    // 清除当前点和起始点
+    currentPoint.value = null;
+    startPoint.value = null;
+    isSelecting.value = false;
+    
+    // 如果选择框还存在，清除它
+    if (selectionBoxRef.value) {
+      selectionBoxRef.value.style.display = 'none';
+    }
+    
+    // 清除所有缓存
+    nodeDimensionsCache.clear();
+    nodeCenterMap.clear();
+  });
 
 // 层级排列方法
 const arrangeLayers = (action: 'top' | 'bottom' | 'up' | 'down') => {
@@ -1630,6 +1863,15 @@ const onPaneMouseMove = (event: MouseEvent) => {
     return;
   }
   
+  // 检查组件是否仍然挂载
+  if (!document.querySelector('.flow-editor')) {
+    // 如果组件已卸载，重置状态并返回
+    isSelecting.value = false;
+    startPoint.value = null;
+    currentPoint.value = null;
+    return;
+  }
+  
   // 阻止默认的画布拖拽行为
   event.preventDefault();
   event.stopPropagation();
@@ -1653,23 +1895,27 @@ const onPaneMouseMove = (event: MouseEvent) => {
     const width = Math.abs(x - startPoint.value.x);
     const height = Math.abs(y - startPoint.value.y);
     
-
     // 更新选择框的位置和尺寸
     if (selectionBoxRef.value) {
       selectionBoxRef.value.style.left = `${left}px`;
       selectionBoxRef.value.style.top = `${top}px`;
       selectionBoxRef.value.style.width = `${width}px`;
       selectionBoxRef.value.style.height = `${height}px`;
-    } else {
-      console.error('移动时选择框引用不存在');
     }
-  } else {
-    console.error('onPaneMouseMove: 找不到画布元素');
   }
-}
+};
 
 // 处理画布鼠标松开事件
 const onPaneMouseUp = (event: MouseEvent) => {
+  // 检查组件是否仍然存在
+  if (!document.querySelector('.flow-editor')) {
+    // 如果组件已卸载，直接返回
+    isSelecting.value = false;
+    startPoint.value = null;
+    currentPoint.value = null;
+    return;
+  }
+  
   // 只有在选择模式下处理
   if (isSelecting.value && startPoint.value && currentPoint.value) {
     // 阻止默认行为
