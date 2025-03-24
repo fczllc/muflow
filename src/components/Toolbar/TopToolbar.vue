@@ -109,7 +109,7 @@
         <div class="dropdown" :class="{ 'disabled': !hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes) }">
           <button 
             class="dropdown-btn" 
-            title="线条粗细"
+          title="线条粗细"
             :disabled="!hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes)" 
             @click="toggleLineWidthDropdown"
           >
@@ -201,7 +201,7 @@
         <div class="dropdown" :class="{ 'disabled': !hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes) }">
           <button 
             class="dropdown-btn" 
-            title="线条样式"
+          title="线条样式"
             :disabled="!hasSelectedEdges && !hasSelectedLineNodes && (!hasSelectedShapeNodes || hasSelectedTextLabelNodes)" 
             @click="toggleLineStyleDropdown"
           >
@@ -235,7 +235,7 @@
         <div class="dropdown" :class="{ 'disabled': (!hasSelectedEdges && !hasSelectedLineNodes) || hasSelectedShapeNodes }">
           <button 
             class="dropdown-btn" 
-            title="箭头样式"
+          title="箭头样式"
             :disabled="(!hasSelectedEdges && !hasSelectedLineNodes) || hasSelectedShapeNodes" 
             @click="toggleArrowStyleDropdown"
           >
@@ -282,18 +282,18 @@
       <ToolbarIcon type="separator" />
 
       <!-- 对齐分布设置组 -->
-      <div class="tool-group" :class="{ 'disabled': !hasMultipleSelectedNodes }">
+       <div class="tool-group" :class="{ 'disabled': !hasMultipleSelectedNodes }">
         <!-- 合并对齐和分布功能下拉菜单 -->
         <div class="dropdown" :class="{ 'disabled': !hasMultipleSelectedNodes }">
-          <button 
+        <button 
             class="dropdown-btn" 
             title="对齐与分布"
-            :disabled="!hasMultipleSelectedNodes" 
+          :disabled="!hasMultipleSelectedNodes"
             @click="toggleAlignDropdown"
-          >
-            <ToolbarIcon type="alignLeft" />
+        >
+          <ToolbarIcon type="alignLeft" />
             <span class="dropdown-arrow">▼</span>
-          </button>
+        </button>
           <div class="dropdown-menu align-dropdown-menu" v-if="showAlignDropdown">
             <!-- 水平对齐组 -->
             <div 
@@ -306,18 +306,18 @@
             </div>
             <div 
               class="dropdown-item" 
-              @click="handleAlignClick('right')"
-              title="右对齐"
-            >
-              <ToolbarIcon type="alignRight" />
+          @click="handleAlignClick('right')" 
+          title="右对齐"
+        >
+          <ToolbarIcon type="alignRight" />
               <span class="dropdown-item-text">右对齐</span>
             </div>
             <div 
               class="dropdown-item" 
-              @click="handleAlignClick('center')"
-              title="水平居中"
-            >
-              <ToolbarIcon type="alignHCenter" />
+          @click="handleAlignClick('center')" 
+          title="水平居中"
+        >
+          <ToolbarIcon type="alignHCenter" />
               <span class="dropdown-item-text">水平居中</span>
             </div>
             
@@ -335,10 +335,10 @@
             </div>
             <div 
               class="dropdown-item" 
-              @click="handleAlignClick('middle')"
-              title="垂直居中"
-            >
-              <ToolbarIcon type="alignVCenter" />
+          @click="handleAlignClick('middle')" 
+          title="垂直居中"
+        >
+          <ToolbarIcon type="alignVCenter" />
               <span class="dropdown-item-text">垂直居中</span>
             </div>
             <div 
@@ -356,38 +356,38 @@
             <!-- 分布组 -->
             <div 
               class="dropdown-item" 
-              @click="handleDistributeClick('horizontal')"
-              title="水平分布"
+          @click="handleDistributeClick('horizontal')" 
+          title="水平分布"
               :class="{ 'disabled': !hasThreeOrMoreSelectedNodes }"
-            >
-              <ToolbarIcon type="distributeH" />
+        >
+          <ToolbarIcon type="distributeH" />
               <span class="dropdown-item-text">水平分布</span>
             </div>
             <div 
               class="dropdown-item" 
-              @click="handleDistributeClick('vertical')"
-              title="垂直分布"
+          @click="handleDistributeClick('vertical')" 
+          title="垂直分布"
               :class="{ 'disabled': !hasThreeOrMoreSelectedNodes }"
-            >
-              <ToolbarIcon type="distributeV" />
+        >
+          <ToolbarIcon type="distributeV" />
               <span class="dropdown-item-text">垂直分布</span>
             </div>
           </div>
         </div>
       </div>
-
+      
       <!-- 图层排列工具组 -->
-      <div class="tool-group" :class="{ 'disabled': !hasSelectedNodes }">
+        <div class="tool-group" :class="{ 'disabled': !hasSelectedNodes }">
         <div class="dropdown" :class="{ 'disabled': !hasSelectedNodes }">
-          <button 
+        <button 
             class="dropdown-btn" 
             title="图层"
-            :disabled="!hasSelectedNodes" 
+          :disabled="!hasSelectedNodes"
             @click="toggleLayerDropdown"
-          >
-            <ToolbarIcon type="layerTop" />
+        >
+          <ToolbarIcon type="layerTop" />
             <span class="dropdown-arrow">▼</span>
-          </button>
+        </button>
           <div class="dropdown-menu layer-dropdown-menu" v-if="showLayerDropdown">
             <div 
               class="dropdown-item" 
@@ -399,26 +399,26 @@
             </div>
             <div 
               class="dropdown-item" 
-              @click="handleLayerClick('bottom')"
-              title="置于底层"
-            >
-              <ToolbarIcon type="layerBottom" />
+          @click="handleLayerClick('bottom')" 
+          title="置于底层"
+        >
+          <ToolbarIcon type="layerBottom" />
               <span class="dropdown-item-text">置于底层</span>
             </div>
             <div 
               class="dropdown-item" 
-              @click="handleLayerClick('up')"
-              title="上移一层"
-            >
-              <ToolbarIcon type="layerUp" />
+          @click="handleLayerClick('up')" 
+          title="上移一层"
+        >
+          <ToolbarIcon type="layerUp" />
               <span class="dropdown-item-text">上移一层</span>
             </div>
             <div 
               class="dropdown-item" 
-              @click="handleLayerClick('down')"
-              title="下移一层"
-            >
-              <ToolbarIcon type="layerDown" />
+          @click="handleLayerClick('down')" 
+          title="下移一层"
+        >
+          <ToolbarIcon type="layerDown" />
               <span class="dropdown-item-text">下移一层</span>
             </div>
           </div>
@@ -439,12 +439,11 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .tool-title {
-  font-size: 12px;
-  color: #666;
+font-size: 12px;
+color: #666;
   min-width: 40px;     /* 设置最小宽度 */
   flex-shrink: 0;      /* 防止被压缩 */
   white-space: nowrap; /* 防止文字换行 */
@@ -1388,9 +1387,9 @@ const applyTextAlign = (direction: 'left' | 'center' | 'right') => {
         textAlign: direction
       }
       
-      updateNode(node.id, {
-        data: {
-          ...node.data,
+    updateNode(node.id, {
+      data: {
+        ...node.data,
           style: updatedStyle
         }
       })
@@ -1464,21 +1463,21 @@ const applyEdgeStyle = () => {
   
   // 更新边的样式
   selectedEdges.forEach(edge => {
-    // 处理箭头配置
+          // 处理箭头配置
     let markerEnd = undefined
     if (arrowStyle.value === 'target' || arrowStyle.value === 'both') {
       markerEnd = {
-        type: MarkerType.Arrow,
-        color: lineColor.value,
-        width: 15,
-        height: 15,
-        strokeWidth: 2
-      }
+              type: MarkerType.Arrow,
+              color: lineColor.value,
+              width: 15,
+              height: 15,
+              strokeWidth: 2
+            }
     }
     
     let markerStart = undefined
     if (arrowStyle.value === 'source' || arrowStyle.value === 'both') {
-      markerStart = {
+              markerStart = {
         type: MarkerType.Arrow,
         color: lineColor.value,
         width: 15,
@@ -1490,7 +1489,7 @@ const applyEdgeStyle = () => {
     // 更新边 - 使用setEdges方法而不是updateEdge函数
     const updatedEdges = getEdges.value.map(e => {
       if (e.id === edge.id) {
-        return {
+          return {
           ...e,
           style: {
             ...e.style,
@@ -1498,15 +1497,15 @@ const applyEdgeStyle = () => {
             stroke: lineColor.value,
             strokeDasharray
           },
-          markerEnd,
+            markerEnd,
           markerStart,
-          data: {
+            data: {
             ...e.data,
             savedLineWidth: lineWidthNum,
-            savedLineColor: lineColor.value,
-            savedLineStyle: lineStyle.value,
-            savedArrowStyle: arrowStyle.value
-          }
+              savedLineColor: lineColor.value,
+              savedLineStyle: lineStyle.value,
+              savedArrowStyle: arrowStyle.value
+            }
         };
       }
       return e;
@@ -1525,16 +1524,16 @@ const applyEdgeStyle = () => {
         stroke: lineColor.value,
         strokeDasharray
       },
-      data: {
-        ...node.data,
-        style: {
+          data: {
+            ...node.data,
+            style: {
           ...node.data?.style,
           strokeWidth: lineWidthNum,
-          stroke: lineColor.value,
-          strokeDasharray
-        },
-        arrowStyle: arrowStyle.value
-      }
+              stroke: lineColor.value,
+              strokeDasharray
+            },
+            arrowStyle: arrowStyle.value
+          }
     })
   })
   

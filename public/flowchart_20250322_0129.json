@@ -1,0 +1,2580 @@
+{
+  "nodes": [
+    {
+      "id": "roundedRect-1",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 100,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 141,
+        "y": 89,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-1",
+            "type": "source",
+            "x": 95,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-1",
+            "type": "source",
+            "x": 46,
+            "y": 33,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-1",
+            "type": "target",
+            "x": -3,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-1",
+            "type": "target",
+            "x": 46,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 141,
+        "y": 89
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "width": "100px",
+          "height": "38px",
+          "textAlign": "right",
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "textDecoration": "none",
+          "borderWidth": 1,
+          "borderColor": "#555555",
+          "borderStyle": "dashed",
+          "backgroundColor": "#ffffff"
+        },
+        "savedBorderWidth": 1,
+        "savedBorderColor": "#555555",
+        "savedBorderStyle": "dashed",
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "100px",
+        "height": "38px"
+      },
+      "width": 100,
+      "height": 38
+    },
+    {
+      "id": "roundedRect-2",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 100,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 357,
+        "y": 89,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-2",
+            "type": "source",
+            "x": 96,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-2",
+            "type": "source",
+            "x": 46,
+            "y": 34,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-2",
+            "type": "target",
+            "x": -4,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-2",
+            "type": "target",
+            "x": 46,
+            "y": -4,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 357,
+        "y": 89
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "width": "100px",
+          "height": "38px",
+          "textAlign": "center",
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "textDecoration": "none",
+          "backgroundColor": "#d12e2e",
+          "borderWidth": "0px",
+          "borderColor": "#555555",
+          "borderStyle": "solid"
+        },
+        "savedBgColor": "#d12e2e",
+        "fontSize": 12,
+        "color": "#f2f2f2",
+        "savedBorderWidth": 0,
+        "savedBorderColor": "#555555",
+        "savedBorderStyle": "solid"
+      },
+      "events": {},
+      "style": {
+        "width": "100px",
+        "height": "38px"
+      },
+      "width": 100,
+      "height": 38
+    },
+    {
+      "id": "startEnd-3",
+      "type": "startEnd",
+      "dimensions": {
+        "width": 100,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 179,
+        "y": 214,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "startEnd-3",
+            "type": "source",
+            "x": 94,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "startEnd-3",
+            "type": "source",
+            "x": 46,
+            "y": 32,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "startEnd-3",
+            "type": "target",
+            "x": -2,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "startEnd-3",
+            "type": "target",
+            "x": 46,
+            "y": -2,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 179,
+        "y": 214
+      },
+      "data": {
+        "label": "起止节点",
+        "style": {
+          "width": "100px",
+          "height": "38px",
+          "textAlign": "center",
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "textDecoration": "none",
+          "borderWidth": "2px",
+          "borderColor": "#555555",
+          "borderStyle": "solid"
+        },
+        "fontSize": 12,
+        "color": "#5f24cc",
+        "savedBorderWidth": 2,
+        "savedBorderColor": "#555555",
+        "savedBorderStyle": "solid"
+      },
+      "events": {},
+      "style": {
+        "width": "100px",
+        "height": "38px"
+      },
+      "width": 100,
+      "height": 38
+    },
+    {
+      "id": "startEnd-4",
+      "type": "startEnd",
+      "dimensions": {
+        "width": 100,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 489,
+        "y": 171,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "startEnd-4",
+            "type": "source",
+            "x": 95,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "startEnd-4",
+            "type": "source",
+            "x": 46,
+            "y": 33,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "startEnd-4",
+            "type": "target",
+            "x": -3,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "startEnd-4",
+            "type": "target",
+            "x": 46,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 489,
+        "y": 171
+      },
+      "data": {
+        "label": "起止节点",
+        "style": {
+          "width": "100px",
+          "height": "38px",
+          "textAlign": "center",
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "textDecoration": "none",
+          "borderWidth": "1px",
+          "borderColor": "#1039e0",
+          "borderStyle": "solid"
+        },
+        "savedBorderWidth": 1,
+        "savedBorderColor": "#1039e0",
+        "savedBorderStyle": "solid",
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "100px",
+        "height": "38px"
+      },
+      "width": 100,
+      "height": 38
+    },
+    {
+      "id": "textLabel-5",
+      "type": "textLabel",
+      "dimensions": {
+        "width": 100,
+        "height": 30
+      },
+      "computedPosition": {
+        "x": 199,
+        "y": 32,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 199,
+        "y": 32
+      },
+      "data": {
+        "label": "文本",
+        "style": {
+          "width": "100px",
+          "height": "30px",
+          "textAlign": "left",
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "textDecoration": "none"
+        },
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "width": 100,
+      "height": 30
+    },
+    {
+      "id": "condition-6",
+      "type": "condition",
+      "dimensions": {
+        "width": 100,
+        "height": 60
+      },
+      "computedPosition": {
+        "x": 675,
+        "y": 160,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "condition-6",
+            "type": "source",
+            "x": 96,
+            "y": 26,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "condition-6",
+            "type": "source",
+            "x": 46,
+            "y": 56,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "condition-6",
+            "type": "target",
+            "x": -4,
+            "y": 26,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "condition-6",
+            "type": "target",
+            "x": 46,
+            "y": -4,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 675,
+        "y": 160
+      },
+      "data": {
+        "label": "条件节点",
+        "style": {
+          "width": "100px",
+          "height": "60px",
+          "textAlign": "center",
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "textDecoration": "none",
+          "backgroundColor": "#dab9b9",
+          "borderWidth": 1,
+          "borderColor": "#1f1cce",
+          "borderStyle": "solid"
+        },
+        "savedBorderWidth": 1,
+        "savedBorderColor": "#1f1cce",
+        "savedBorderStyle": "solid",
+        "fontSize": 12,
+        "color": "#dd2c2c",
+        "savedBgColor": "#dab9b9"
+      },
+      "events": {},
+      "style": {
+        "width": "100px",
+        "height": "60px"
+      },
+      "width": 100,
+      "height": 60
+    },
+    {
+      "id": "condition-7",
+      "type": "condition",
+      "dimensions": {
+        "width": 100,
+        "height": 60
+      },
+      "computedPosition": {
+        "x": 382,
+        "y": 251,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "condition-7",
+            "type": "source",
+            "x": 96,
+            "y": 26,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "condition-7",
+            "type": "source",
+            "x": 46,
+            "y": 56,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "condition-7",
+            "type": "target",
+            "x": -4,
+            "y": 26,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "condition-7",
+            "type": "target",
+            "x": 46,
+            "y": -4,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 382,
+        "y": 251
+      },
+      "data": {
+        "label": "条件节点",
+        "style": {
+          "width": "100px",
+          "height": "60px",
+          "textAlign": "right",
+          "fontWeight": "bold",
+          "fontStyle": "normal",
+          "textDecoration": "none",
+          "backgroundColor": "#ffffff",
+          "borderWidth": 1.5,
+          "borderColor": "#555",
+          "borderStyle": "solid"
+        },
+        "savedBorderWidth": 1.5,
+        "savedBorderColor": "#555",
+        "savedBorderStyle": "solid",
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "100px",
+        "height": "60px"
+      },
+      "width": 100,
+      "height": 60
+    },
+    {
+      "id": "circle-8",
+      "type": "circle",
+      "dimensions": {
+        "width": 38,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 210,
+        "y": 339,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "circle-8",
+            "type": "source",
+            "x": 34,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "circle-8",
+            "type": "source",
+            "x": 15,
+            "y": 34,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "circle-8",
+            "type": "target",
+            "x": -4,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "circle-8",
+            "type": "target",
+            "x": 15,
+            "y": -4,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 210,
+        "y": 339
+      },
+      "data": {
+        "label": "",
+        "style": {
+          "width": "38px",
+          "height": "38px",
+          "textAlign": "center",
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "textDecoration": "none",
+          "backgroundColor": "#665dea",
+          "borderWidth": 0,
+          "borderColor": "#000000",
+          "borderStyle": "solid"
+        },
+        "savedBgColor": "#665dea",
+        "savedBorderWidth": 0,
+        "savedBorderColor": "#000000",
+        "savedBorderStyle": "solid",
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "width": 38,
+      "height": 38
+    },
+    {
+      "id": "svgIcon-1742578036271",
+      "type": "svgIcon",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "computedPosition": {
+        "x": 217,
+        "y": 346,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "connectable": false,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 217,
+        "y": 346
+      },
+      "data": {
+        "iconType": "refresh-cw",
+        "width": 24,
+        "height": 24,
+        "strokeWidth": 2,
+        "color": "#333333",
+        "label": "",
+        "fontSize": 14,
+        "style": {
+          "width": "24px",
+          "height": "24px"
+        }
+      },
+      "events": {},
+      "width": 24,
+      "height": 24
+    },
+    {
+      "id": "line-10",
+      "type": "line",
+      "dimensions": {
+        "width": 120,
+        "height": 1
+      },
+      "computedPosition": {
+        "x": 344,
+        "y": 348,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 344,
+        "y": 348
+      },
+      "data": {
+        "label": "直线",
+        "style": {
+          "strokeWidth": 1,
+          "stroke": "#000000",
+          "strokeDasharray": "5 5",
+          "width": "120px",
+          "height": "1px"
+        },
+        "width": 120,
+        "angle": 0,
+        "arrowStyle": "source",
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#000000",
+        "strokeDasharray": "5 5",
+        "width": "120px",
+        "height": "1px"
+      },
+      "width": 120,
+      "height": 1
+    },
+    {
+      "id": "roundedRect-11",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 100,
+        "height": 76
+      },
+      "computedPosition": {
+        "x": 856,
+        "y": 152,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-11",
+            "type": "source",
+            "x": 95,
+            "y": 34,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-11",
+            "type": "source",
+            "x": 46,
+            "y": 71,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-11",
+            "type": "target",
+            "x": -3,
+            "y": 34,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-11",
+            "type": "target",
+            "x": 46,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 856,
+        "y": 152
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "width": "100px",
+          "height": "76px",
+          "textAlign": "center",
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "textDecoration": "none",
+          "borderWidth": 1
+        },
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "100px",
+        "height": "76px"
+      },
+      "width": 100,
+      "height": 76
+    },
+    {
+      "id": "startEnd-12",
+      "type": "startEnd",
+      "dimensions": {
+        "width": 154,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 648,
+        "y": 323,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "startEnd-12",
+            "type": "source",
+            "x": 149,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "startEnd-12",
+            "type": "source",
+            "x": 73,
+            "y": 33,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "startEnd-12",
+            "type": "target",
+            "x": -3,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "startEnd-12",
+            "type": "target",
+            "x": 73,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 648,
+        "y": 323
+      },
+      "data": {
+        "label": "起止节点",
+        "style": {
+          "width": "154px",
+          "height": "38px",
+          "textAlign": "center",
+          "fontWeight": "normal",
+          "fontStyle": "normal",
+          "textDecoration": "none"
+        },
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "154px",
+        "height": "38px"
+      },
+      "width": 154,
+      "height": 38
+    },
+    {
+      "id": "textLabel-13",
+      "type": "textLabel",
+      "dimensions": {
+        "width": 100,
+        "height": 30
+      },
+      "computedPosition": {
+        "x": 408,
+        "y": 40,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 408,
+        "y": 40
+      },
+      "data": {
+        "label": "文本",
+        "style": {
+          "width": "100px",
+          "height": "30px",
+          "textAlign": "center",
+          "fontWeight": "bold",
+          "fontStyle": "normal",
+          "textDecoration": "none",
+          "backgroundColor": "#e28888"
+        },
+        "savedBgColor": "#e28888",
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "width": 100,
+      "height": 30
+    }
+  ],
+  "edges": [
+    {
+      "id": "eroundedRect-1-roundedRect-2",
+      "type": "smoothstep",
+      "source": "roundedRect-1",
+      "target": "roundedRect-2",
+      "sourceHandle": "right-handle",
+      "targetHandle": "left-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "roundedRect-1",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 141,
+          "y": 89,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 141,
+          "y": 89
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "100px",
+            "height": "38px",
+            "textAlign": "right",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "borderWidth": 1,
+            "borderColor": "#555555",
+            "borderStyle": "dashed",
+            "backgroundColor": "#ffffff"
+          },
+          "savedBorderWidth": 1,
+          "savedBorderColor": "#555555",
+          "savedBorderStyle": "dashed",
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "roundedRect-2",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 357,
+          "y": 89,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-2",
+              "type": "source",
+              "x": 96,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-2",
+              "type": "source",
+              "x": 46,
+              "y": 34,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-2",
+              "type": "target",
+              "x": -4,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-2",
+              "type": "target",
+              "x": 46,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 357,
+          "y": 89
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "100px",
+            "height": "38px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "backgroundColor": "#d12e2e",
+            "borderWidth": "0px",
+            "borderColor": "#555555",
+            "borderStyle": "solid"
+          },
+          "savedBgColor": "#d12e2e",
+          "fontSize": 12,
+          "color": "#f2f2f2",
+          "savedBorderWidth": 0,
+          "savedBorderColor": "#555555",
+          "savedBorderStyle": "solid"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "sourceX": 244,
+      "sourceY": 108,
+      "targetX": 353,
+      "targetY": 108,
+      "selected": false
+    },
+    {
+      "id": "eroundedRect-2-startEnd-4",
+      "type": "smoothstep",
+      "source": "roundedRect-2",
+      "target": "startEnd-4",
+      "sourceHandle": "right-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "roundedRect-2",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 357,
+          "y": 89,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-2",
+              "type": "source",
+              "x": 96,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-2",
+              "type": "source",
+              "x": 46,
+              "y": 34,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-2",
+              "type": "target",
+              "x": -4,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-2",
+              "type": "target",
+              "x": 46,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 357,
+          "y": 89
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "100px",
+            "height": "38px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "backgroundColor": "#d12e2e",
+            "borderWidth": "0px",
+            "borderColor": "#555555",
+            "borderStyle": "solid"
+          },
+          "savedBgColor": "#d12e2e",
+          "fontSize": 12,
+          "color": "#f2f2f2",
+          "savedBorderWidth": 0,
+          "savedBorderColor": "#555555",
+          "savedBorderStyle": "solid"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "startEnd-4",
+        "type": "startEnd",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 489,
+          "y": 171,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "startEnd-4",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "startEnd-4",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "startEnd-4",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "startEnd-4",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 489,
+          "y": 171
+        },
+        "data": {
+          "label": "起止节点",
+          "style": {
+            "width": "100px",
+            "height": "38px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "borderWidth": "1px",
+            "borderColor": "#1039e0",
+            "borderStyle": "solid"
+          },
+          "savedBorderWidth": 1,
+          "savedBorderColor": "#1039e0",
+          "savedBorderStyle": "solid",
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "sourceX": 461,
+      "sourceY": 108,
+      "targetX": 539,
+      "targetY": 168,
+      "selected": false
+    },
+    {
+      "id": "eroundedRect-1-startEnd-3",
+      "type": "smoothstep",
+      "source": "roundedRect-1",
+      "target": "startEnd-3",
+      "sourceHandle": "bottom-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "roundedRect-1",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 141,
+          "y": 89,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 141,
+          "y": 89
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "100px",
+            "height": "38px",
+            "textAlign": "right",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "borderWidth": 1,
+            "borderColor": "#555555",
+            "borderStyle": "dashed",
+            "backgroundColor": "#ffffff"
+          },
+          "savedBorderWidth": 1,
+          "savedBorderColor": "#555555",
+          "savedBorderStyle": "dashed",
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "startEnd-3",
+        "type": "startEnd",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 179,
+          "y": 214,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "startEnd-3",
+              "type": "source",
+              "x": 94,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "startEnd-3",
+              "type": "source",
+              "x": 46,
+              "y": 32,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "startEnd-3",
+              "type": "target",
+              "x": -2,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "startEnd-3",
+              "type": "target",
+              "x": 46,
+              "y": -2,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 179,
+          "y": 214
+        },
+        "data": {
+          "label": "起止节点",
+          "style": {
+            "width": "100px",
+            "height": "38px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "borderWidth": "2px",
+            "borderColor": "#555555",
+            "borderStyle": "solid"
+          },
+          "fontSize": 12,
+          "color": "#5f24cc",
+          "savedBorderWidth": 2,
+          "savedBorderColor": "#555555",
+          "savedBorderStyle": "solid"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "sourceX": 191,
+      "sourceY": 130,
+      "targetX": 229,
+      "targetY": 212,
+      "selected": false
+    },
+    {
+      "id": "estartEnd-4-condition-6",
+      "type": "smoothstep",
+      "source": "startEnd-4",
+      "target": "condition-6",
+      "sourceHandle": "right-handle",
+      "targetHandle": "left-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "startEnd-4",
+        "type": "startEnd",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 489,
+          "y": 171,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "startEnd-4",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "startEnd-4",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "startEnd-4",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "startEnd-4",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 489,
+          "y": 171
+        },
+        "data": {
+          "label": "起止节点",
+          "style": {
+            "width": "100px",
+            "height": "38px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "borderWidth": "1px",
+            "borderColor": "#1039e0",
+            "borderStyle": "solid"
+          },
+          "savedBorderWidth": 1,
+          "savedBorderColor": "#1039e0",
+          "savedBorderStyle": "solid",
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "condition-6",
+        "type": "condition",
+        "dimensions": {
+          "width": 100,
+          "height": 60
+        },
+        "computedPosition": {
+          "x": 675,
+          "y": 160,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "condition-6",
+              "type": "source",
+              "x": 96,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "condition-6",
+              "type": "source",
+              "x": 46,
+              "y": 56,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "condition-6",
+              "type": "target",
+              "x": -4,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "condition-6",
+              "type": "target",
+              "x": 46,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 675,
+          "y": 160
+        },
+        "data": {
+          "label": "条件节点",
+          "style": {
+            "width": "100px",
+            "height": "60px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "backgroundColor": "#dab9b9",
+            "borderWidth": 1,
+            "borderColor": "#1f1cce",
+            "borderStyle": "solid"
+          },
+          "savedBorderWidth": 1,
+          "savedBorderColor": "#1f1cce",
+          "savedBorderStyle": "solid",
+          "fontSize": 12,
+          "color": "#dd2c2c",
+          "savedBgColor": "#dab9b9"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "60px"
+        },
+        "width": 100,
+        "height": 60
+      },
+      "sourceX": 592,
+      "sourceY": 190,
+      "targetX": 671,
+      "targetY": 190,
+      "selected": false
+    },
+    {
+      "id": "estartEnd-3-circle-8",
+      "type": "smoothstep",
+      "source": "startEnd-3",
+      "target": "circle-8",
+      "sourceHandle": "bottom-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "startEnd-3",
+        "type": "startEnd",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 179,
+          "y": 214,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "startEnd-3",
+              "type": "source",
+              "x": 94,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "startEnd-3",
+              "type": "source",
+              "x": 46,
+              "y": 32,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "startEnd-3",
+              "type": "target",
+              "x": -2,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "startEnd-3",
+              "type": "target",
+              "x": 46,
+              "y": -2,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 179,
+          "y": 214
+        },
+        "data": {
+          "label": "起止节点",
+          "style": {
+            "width": "100px",
+            "height": "38px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "borderWidth": "2px",
+            "borderColor": "#555555",
+            "borderStyle": "solid"
+          },
+          "fontSize": 12,
+          "color": "#5f24cc",
+          "savedBorderWidth": 2,
+          "savedBorderColor": "#555555",
+          "savedBorderStyle": "solid"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "circle-8",
+        "type": "circle",
+        "dimensions": {
+          "width": 38,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 210,
+          "y": 339,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "circle-8",
+              "type": "source",
+              "x": 34,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "circle-8",
+              "type": "source",
+              "x": 15,
+              "y": 34,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "circle-8",
+              "type": "target",
+              "x": -4,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "circle-8",
+              "type": "target",
+              "x": 15,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 210,
+          "y": 339
+        },
+        "data": {
+          "label": "",
+          "style": {
+            "width": "38px",
+            "height": "38px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "backgroundColor": "#665dea",
+            "borderWidth": 0,
+            "borderColor": "#000000",
+            "borderStyle": "solid"
+          },
+          "savedBgColor": "#665dea",
+          "savedBorderWidth": 0,
+          "savedBorderColor": "#000000",
+          "savedBorderStyle": "solid",
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "width": 38,
+        "height": 38
+      },
+      "sourceX": 229,
+      "sourceY": 254,
+      "targetX": 229,
+      "targetY": 335,
+      "selected": false
+    },
+    {
+      "id": "econdition-6-roundedRect-11",
+      "type": "smoothstep",
+      "source": "condition-6",
+      "target": "roundedRect-11",
+      "sourceHandle": "right-handle",
+      "targetHandle": "left-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "condition-6",
+        "type": "condition",
+        "dimensions": {
+          "width": 100,
+          "height": 60
+        },
+        "computedPosition": {
+          "x": 675,
+          "y": 160,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "condition-6",
+              "type": "source",
+              "x": 96,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "condition-6",
+              "type": "source",
+              "x": 46,
+              "y": 56,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "condition-6",
+              "type": "target",
+              "x": -4,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "condition-6",
+              "type": "target",
+              "x": 46,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 675,
+          "y": 160
+        },
+        "data": {
+          "label": "条件节点",
+          "style": {
+            "width": "100px",
+            "height": "60px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "backgroundColor": "#dab9b9",
+            "borderWidth": 1,
+            "borderColor": "#1f1cce",
+            "borderStyle": "solid"
+          },
+          "savedBorderWidth": 1,
+          "savedBorderColor": "#1f1cce",
+          "savedBorderStyle": "solid",
+          "fontSize": 12,
+          "color": "#dd2c2c",
+          "savedBgColor": "#dab9b9"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "60px"
+        },
+        "width": 100,
+        "height": 60
+      },
+      "targetNode": {
+        "id": "roundedRect-11",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 76
+        },
+        "computedPosition": {
+          "x": 856,
+          "y": 152,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-11",
+              "type": "source",
+              "x": 95,
+              "y": 34,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-11",
+              "type": "source",
+              "x": 46,
+              "y": 71,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-11",
+              "type": "target",
+              "x": -3,
+              "y": 34,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-11",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 856,
+          "y": 152
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "100px",
+            "height": "76px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "borderWidth": 1
+          },
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "76px"
+        },
+        "width": 100,
+        "height": 76
+      },
+      "sourceX": 779,
+      "sourceY": 190,
+      "targetX": 853,
+      "targetY": 190,
+      "selected": false
+    },
+    {
+      "id": "econdition-6-startEnd-12",
+      "type": "smoothstep",
+      "source": "condition-6",
+      "target": "startEnd-12",
+      "sourceHandle": "bottom-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "condition-6",
+        "type": "condition",
+        "dimensions": {
+          "width": 100,
+          "height": 60
+        },
+        "computedPosition": {
+          "x": 675,
+          "y": 160,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "condition-6",
+              "type": "source",
+              "x": 96,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "condition-6",
+              "type": "source",
+              "x": 46,
+              "y": 56,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "condition-6",
+              "type": "target",
+              "x": -4,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "condition-6",
+              "type": "target",
+              "x": 46,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 675,
+          "y": 160
+        },
+        "data": {
+          "label": "条件节点",
+          "style": {
+            "width": "100px",
+            "height": "60px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "backgroundColor": "#dab9b9",
+            "borderWidth": 1,
+            "borderColor": "#1f1cce",
+            "borderStyle": "solid"
+          },
+          "savedBorderWidth": 1,
+          "savedBorderColor": "#1f1cce",
+          "savedBorderStyle": "solid",
+          "fontSize": 12,
+          "color": "#dd2c2c",
+          "savedBgColor": "#dab9b9"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "60px"
+        },
+        "width": 100,
+        "height": 60
+      },
+      "targetNode": {
+        "id": "startEnd-12",
+        "type": "startEnd",
+        "dimensions": {
+          "width": 154,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 648,
+          "y": 323,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "startEnd-12",
+              "type": "source",
+              "x": 149,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "startEnd-12",
+              "type": "source",
+              "x": 73,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "startEnd-12",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "startEnd-12",
+              "type": "target",
+              "x": 73,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 648,
+          "y": 323
+        },
+        "data": {
+          "label": "起止节点",
+          "style": {
+            "width": "154px",
+            "height": "38px",
+            "textAlign": "center",
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "textDecoration": "none"
+          },
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "154px",
+          "height": "38px"
+        },
+        "width": 154,
+        "height": 38
+      },
+      "sourceX": 725,
+      "sourceY": 224,
+      "targetX": 725,
+      "targetY": 320,
+      "selected": false
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "timestamp": "2025-03-21T17:29:04.766Z",
+    "title": "流程图_20250322_0129"
+  }
+}

@@ -136,6 +136,10 @@ export default defineComponent({
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, markRaw, computed, nextTick, provide } from 'vue'
+
+// 自定义NodeComponent类型以解决类型兼容性问题
+type NodeComponent = any
+
 import { 
   VueFlow, 
   useVueFlow, 
@@ -147,8 +151,7 @@ import type {
   NodeDragEvent, 
   NodeMouseEvent, 
   EdgeMouseEvent, 
-  Node,
-  NodeComponent
+  Node
 } from '@vue-flow/core'
 import TopToolbar from './Toolbar/TopToolbar.vue'
 import LeftSidebar from './Sidebar/LeftSidebar.vue'
@@ -244,7 +247,7 @@ const history = ref<HistoryState[]>([])
 const currentHistoryIndex = ref(-1)
 
 // 注册自定义节点类型
-const nodeTypes: Record<string, NodeComponent> = {
+const nodeTypes: Record<string, any> = {
   roundedRect: markRaw(RoundedRectNode),
   textLabel: markRaw(TextLabelNode),
   line: markRaw(LineNode),
@@ -571,6 +574,16 @@ const saveToHistory = () => {
 // 提供addNodes和saveToHistory函数给子组件使用
 provide('addNodes', addNodes)
 provide('saveToHistory', saveToHistory)
+
+// 添加清空画布的方法
+const clearCanvas = () => {
+  setNodes([])
+  setEdges([])
+  saveToHistory()
+}
+
+// 提供clearCanvas方法给子组件使用
+provide('clearCanvas', clearCanvas)
 
 // 在script setup部分添加模态对话框相关的变量
 const showEdgeLabelDialog = ref(false)
@@ -1790,7 +1803,7 @@ const arrangeLayers = (action: 'top' | 'bottom' | 'up' | 'down') => {
   }
   
   // 更新节点
-  setNodes(updatedNodes)
+  setNodes(updatedNodes as any)
   
   // 保存历史记录
   saveToHistory()
