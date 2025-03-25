@@ -1,6 +1,16 @@
+<!--
+ * MuFlow - Vue Flow based flow chart editor
+ * Copyright (c) 2024 tianyi
+ * 
+ * This project is based on Vue Flow (https://github.com/bcakmakoglu/vue-flow)
+ * Vue Flow Copyright (c) bcakmakoglu - Released under MIT License
+ * 
+ * @license MIT
+ -->
+
 <template>
   <div 
-    class="rounded-rect-node" 
+    class="circle-node" 
     :class="{ selected, editing: isEditing, 'align-left': textAlign === 'left', 'align-center': textAlign === 'center', 'align-right': textAlign === 'right' }"
     ref="nodeRef"
     @mouseenter="showHandles = true" 
@@ -44,11 +54,29 @@
       class="handle-point"
     />
     
+    <!-- 添加圆形背景 -->
+    <svg 
+      class="circle-background" 
+      :width="nodeWidth" 
+      :height="nodeHeight"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+    >
+      <circle 
+        cx="50" cy="50" r="48" 
+        :fill="props.data.savedBgColor || props.data.style?.backgroundColor || 'white'"
+        :stroke="props.selected ? '#1a192b' : (props.data.style?.borderColor || '#000000')"
+        :stroke-width="props.selected ? 1 : (props.data.style?.borderWidth ? parseFloat(props.data.style.borderWidth) : 1)"
+        :stroke-dasharray="!props.selected && props.data.style?.borderStyle === 'dashed' ? '5,5' : 
+                          !props.selected && props.data.style?.borderStyle === 'dotted' ? '2,2' : 'none'"
+      />
+    </svg>
+    
     <div class="node-content" @dblclick="handleDoubleClick">
-      <span v-if="!isEditing" :style="{ 
+      <span v-if="!isEditing" :style="{
         textDecoration: props.data.style?.textDecoration || 'none',
         fontWeight: props.data.style?.fontWeight || 'normal',
-        fontStyle: props.data.style?.fontStyle || 'normal'
+        fontStyle: props.data.style?.fontStyle || 'normal' 
       }">{{ data.label }}</span>
       <input 
         v-else
@@ -61,7 +89,7 @@
       />
     </div>
     
-    <!-- 修改后 -->
+    <!-- 修改 -->
     <template v-if="selected && !isEditing">
       <div 
         v-for="position in resizeHandlePositions" 
@@ -88,53 +116,56 @@ const nodeRef = ref<HTMLElement | null>(null)
 const showHandles = ref(false)
 const selected = computed(() => props.selected)
 
-// 计算当前文本对齐方式
-const textAlign = computed(() => props.data.style?.textAlign || 'center')
+// 计算节点尺寸
+const nodeWidth = computed(() => {
+  const width = props.data.style?.width || '38px'
+  return parseInt(width)
+})
+
+const nodeHeight = computed(() => {
+  const height = props.data.style?.height || '38px'
+  return parseInt(height)
+})
 
 // 计算节点样式，包括字体样式
 const nodeStyle = computed(() => {
-  // 处理边框宽度 - 确保有单位
-  let borderWidth = props.data.style?.borderWidth;
-  let numericBorderWidth = 1; // 默认值
-  
-  // 处理不同类型的borderWidth值
-  if (borderWidth === undefined || borderWidth === null) {
-    borderWidth = '1px'; // 默认值
-    numericBorderWidth = 1;
-  } else if (typeof borderWidth === 'number') {
-    // 如果是数字，保存数字值，同时为CSS准备带单位的字符串
-    numericBorderWidth = borderWidth;
-    borderWidth = `${borderWidth}px`;
-  } else if (typeof borderWidth === 'string') {
-    // 如果是字符串，先移除所有非数字字符，再解析数字部分
-    const cleanBorderWidth = borderWidth.replace(/[^\d.-]/g, '');
-    numericBorderWidth = parseFloat(cleanBorderWidth) || 1;
+  // 获取正确的边框宽度
+  const getBorderWidth = () => {
+    // 如果没有设置边框宽度，返回默认值
+    if (!props.data.style?.borderWidth) return '1px';
     
-    // 确保字符串包含单位
-    if (!borderWidth.includes('px')) {
-      borderWidth = `${numericBorderWidth}px`;
+    // 如果已经包含单位，直接返回
+    if (typeof props.data.style.borderWidth === 'string' && 
+        (props.data.style.borderWidth.endsWith('px') || 
+         props.data.style.borderWidth.endsWith('em') || 
+         props.data.style.borderWidth.endsWith('%'))) {
+      return props.data.style.borderWidth;
     }
-  }
+    
+    // 否则添加像素单位
+    return `${props.data.style.borderWidth}px`;
+  };
 
   return {
     fontSize: `${props.data.fontSize || 12}px`,
     color: props.data.color || '#000000',
-    width: props.data.style?.width || '100px',
-    height: props.data.style?.height || '38px',
+    width: `${nodeWidth.value}px`,
+    height: `${nodeHeight.value}px`,
     textAlign: props.data.style?.textAlign || 'center',
     fontWeight: props.data.style?.fontWeight,
     fontStyle: props.data.style?.fontStyle,
     textDecoration: props.data.style?.textDecoration,
-    // 添加背景色支持 - 正确访问节点背景色
-    backgroundColor: props.data?.savedBgColor || props.data?.style?.backgroundColor || '#ffffff',
-    // 添加边框样式支持 - 确保使用带单位的值
-    borderWidth: borderWidth,
-    borderColor: props.data.style?.borderColor || '#555',
-    borderStyle: props.data.style?.borderStyle || 'solid',
-    // 保存纯数字值，以便在需要时使用
-    '--numeric-border-width': numericBorderWidth
+    // 添加背景色支持 - 圆形节点使用SVG背景
+    backgroundColor: 'transparent',
+    // 添加边框样式支持
+    borderWidth: '0px', // 圆形节点使用SVG边框，这里设为0
+    borderColor: 'transparent',
+    borderStyle: 'none'
   }
 })
+
+// 计算当前文本对齐方式
+const textAlign = computed(() => props.data.style?.textAlign || 'center')
 
 const handleStyle = {
   width: '8px',
@@ -155,49 +186,27 @@ const resizeHandlePositions = [
   { class: 'bottomRight', type: 'bottomRight', style: { bottom: '-5px', right: '-5px', cursor: 'se-resize' } }
 ]
 
-// 将 nodePositionDelta 移到函数外部，确保在函数调用之间保持状态
-const nodePositionDelta = ref({ x: 0, y: 0 })
 
 // 监听选中状态变化
 watch(() => props.selected, (newSelected) => {
   if (newSelected) {
     // 节点被选中时，确保节点内部结构更新
     nextTick(() => {
-      // 确保节点的 DOM 尺寸与数据一致
+      // 确保节点DOM 尺寸与数据一致
       if (nodeRef.value) {
-        const width = props.data.style?.width || '100px'
-        const height = props.data.style?.height || '38px'
+        const width = props.data.style?.width || '60px'
+        const height = props.data.style?.height || '60px'
+        const diameter = Math.max(parseInt(width), parseInt(height))
         
-        // 检查节点的实际尺寸
-        const actualWidth = nodeRef.value.offsetWidth
-        const actualHeight = nodeRef.value.offsetHeight
-        
-        // 强制设置节点的样式尺寸为实际尺寸
-        nodeRef.value.style.width = `${actualWidth}px`
-        nodeRef.value.style.height = `${actualHeight}px`
+        nodeRef.value.style.width = `${diameter}px`
+        nodeRef.value.style.height = `${diameter}px`
         
         // 强制重新计算布局
         nodeRef.value.offsetHeight // 触发重排
-        
-        // 更新节点数据，确保数据与 DOM 一致
-        updateNode(props.id, {
-          data: {
-            ...props.data,
-            style: {
-              ...props.data.style,
-              width: `${actualWidth}px`,
-              height: `${actualHeight}px`
-            }
-          },
-          style: {
-            width: `${actualWidth}px`,
-            height: `${actualHeight}px`
-          }
-        })
-        
-        // 更新节点内部结构
-        updateNodeInternals([props.id])
       }
+      
+      // 更新节点内部结构
+      updateNodeInternals([props.id])
     })
   }
 })
@@ -290,12 +299,6 @@ const finishEditing = () => {
       }
     } 
   })
-  
-  // 确保节点尺寸不变
-  if (nodeRef.value) {
-    nodeRef.value.style.width = `${currentWidth}px`
-    nodeRef.value.style.height = `${currentHeight}px`
-  }
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -333,7 +336,7 @@ const startResize = (event: MouseEvent, type: string) => {
   // 记录初始位置和大小
   const startX = event.clientX
   const startY = event.clientY
-  const currentWidth = nodeRef.value ? nodeRef.value.offsetWidth : 100
+  const currentWidth = nodeRef.value ? nodeRef.value.offsetWidth : 38
   const currentHeight = nodeRef.value ? nodeRef.value.offsetHeight : 38
   const startWidth = currentWidth
   const startHeight = currentHeight
@@ -358,53 +361,84 @@ const startResize = (event: MouseEvent, type: string) => {
     let newHeight = startHeight
     let newPosition = { ...startPosition }
     
+    // 为了保持圆形，我们使宽高保持一致
+    const getMaxDelta = () => {
+      // 计算鼠标移动的绝对距离
+      const absDeltaX = Math.abs(deltaX)
+      const absDeltaY = Math.abs(deltaY)
+      // 返回较大的距离
+      return Math.max(absDeltaX, absDeltaY)
+    }
+    
     switch (type) {
       case 'top':
         newHeight = Math.max(38, startHeight - deltaY)
+        newWidth = newHeight
         newPosition.y = startPosition.y + (startHeight - newHeight)
+        newPosition.x = startPosition.x + (startWidth - newWidth) / 2
         break
       case 'right':
-        newWidth = Math.max(100, startWidth + deltaX)
+        newWidth = Math.max(38, startWidth + deltaX)
+        newHeight = newWidth
         break
       case 'bottom':
         newHeight = Math.max(38, startHeight + deltaY)
+        newWidth = newHeight
         break
       case 'left':
-        newWidth = Math.max(100, startWidth - deltaX)
+        newWidth = Math.max(38, startWidth - deltaX)
+        newHeight = newWidth
         newPosition.x = startPosition.x + (startWidth - newWidth)
         break
       case 'topLeft':
-        newWidth = Math.max(80, startWidth - deltaX)
-        newHeight = Math.max(14, startHeight - deltaY)
+        const maxDelta1 = getMaxDelta()
+        // 根据方向确定是放大还是缩小
+        const sign1 = deltaX < 0 || deltaY < 0 ? 1 : -1
+        newWidth = Math.max(38, startWidth - sign1 * maxDelta1)
+        newHeight = newWidth
         newPosition.x = startPosition.x + (startWidth - newWidth)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'topRight':
-        newWidth = Math.max(80, startWidth + deltaX)
-        newHeight = Math.max(14, startHeight - deltaY)
+        const maxDelta2 = getMaxDelta()
+        // 右上角拖动，X正向增加，Y负向增加
+        const sign2 = deltaX > 0 || deltaY < 0 ? 1 : -1
+        newWidth = Math.max(38, startWidth + sign2 * maxDelta2)
+        newHeight = newWidth
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'bottomLeft':
-        newWidth = Math.max(80, startWidth - deltaX)
-        newHeight = Math.max(14, startHeight + deltaY)
+        const maxDelta3 = getMaxDelta()
+        // 左下角拖动，X负向增加，Y正向增加
+        const sign3 = deltaX < 0 || deltaY > 0 ? 1 : -1
+        newWidth = Math.max(38, startWidth - sign3 * maxDelta3)
+        newHeight = newWidth
         newPosition.x = startPosition.x + (startWidth - newWidth)
         break
       case 'bottomRight':
-        newWidth = Math.max(80, startWidth + deltaX)
-        newHeight = Math.max(14, startHeight + deltaY)
+        const maxDelta4 = getMaxDelta()
+        // 右下角拖动，X和Y都是正向增加
+        const sign4 = deltaX > 0 || deltaY > 0 ? 1 : -1
+        newWidth = Math.max(38, startWidth + sign4 * maxDelta4)
+        newHeight = newWidth
         break
     }
     
-    // 确保尺寸是2的倍数，有助于网格对齐
+    // 确保尺寸的倍数，有助于网格对齐
     newWidth = Math.round(newWidth / 2) * 2
-    newHeight = Math.round(newHeight / 2) * 2
+    newHeight = newWidth  // 对于圆形节点，保持宽高完全一致
     
     // 重新计算位置偏移以适应调整后的尺寸
-    if (type.includes('Left')) {
+    if (type.includes('left') || type === 'Left') {
       newPosition.x = startPosition.x + (startWidth - newWidth)
     }
     if (type.includes('top') || type === 'Top') {
       newPosition.y = startPosition.y + (startHeight - newHeight)
+    }
+    
+    // 居中调整，确保圆形节点在调整大小时保持居中
+    if (type === 'top' || type === 'bottom' || type === 'topRight' || type === 'bottomRight') {
+      newPosition.x = startPosition.x + (startWidth - newWidth) / 2
     }
     
     // 更新节点位置和大小
@@ -412,18 +446,7 @@ const startResize = (event: MouseEvent, type: string) => {
       nodeRef.value.style.width = `${newWidth}px`
       nodeRef.value.style.height = `${newHeight}px`
       
-      // 获取当前边框宽度，确保存储为纯数字
-      const currentStyle = node.data?.style || {};
-      let borderWidth = currentStyle.borderWidth || 1;
-      
-      // 确保borderWidth是纯数字
-      if (typeof borderWidth === 'string') {
-        // 移除所有非数字字符(如'px')
-        const cleanBorderWidth = borderWidth.replace(/[^\d.-]/g, '');
-        borderWidth = parseFloat(cleanBorderWidth) || 1;
-      }
-      
-      // 更新节点位置，确保borderWidth是纯数字
+      // 更新节点位置
       updateNode(props.id, {
         position: newPosition,
         style: {
@@ -435,8 +458,7 @@ const startResize = (event: MouseEvent, type: string) => {
           style: {
             ...node.data.style,
             width: `${newWidth}px`,
-            height: `${newHeight}px`,
-            borderWidth: borderWidth // 存储为纯数字
+            height: `${newHeight}px`
           }
         }
       })
@@ -463,7 +485,7 @@ const startResize = (event: MouseEvent, type: string) => {
     }, 50)
   }
   
-  // 添加事件监听器
+  // 添加事件监听
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
 }
@@ -481,35 +503,25 @@ onMounted(() => {
           fontWeight: 'normal',
           fontStyle: 'normal',
           textDecoration: 'none',
-          width: '100px',
-          height: '38px',
-          borderWidth: 1,  // 存储为纯数字
-          borderColor: '#555',
-          borderStyle: 'solid',
-          backgroundColor: props.data.savedBgColor || '#ffffff'
+          width: '60px',
+          height: '60px',
+          backgroundColor: props.data.savedBgColor || '#ffffff',
+          borderWidth: 1, // 使用纯数字
+          borderColor: '#000000',
+          borderStyle: 'solid'
         }
       }
     })
   } else {
     // 确保样式对象包含所有需要的属性
     const currentStyle = props.data.style
-    
-    // 处理borderWidth，确保存储为纯数字
-    let borderWidth = currentStyle.borderWidth;
-    let numericBorderWidth = 1; // 默认值
-    
-    if (borderWidth !== undefined && borderWidth !== null) {
-      if (typeof borderWidth === 'number') {
-        numericBorderWidth = borderWidth;
-      } else if (typeof borderWidth === 'string') {
-        // 移除所有非数字字符(如'px')
-        const cleanBorderWidth = borderWidth.replace(/[^\d.-]/g, '');
-        numericBorderWidth = parseFloat(cleanBorderWidth) || 1;
+    if (!currentStyle.fontWeight || !currentStyle.fontStyle || !currentStyle.textDecoration || !currentStyle.textAlign || !currentStyle.borderWidth || !currentStyle.borderColor) {
+      // 确保borderWidth是数字类型
+      let borderWidth = currentStyle.borderWidth || 1;
+      if (typeof borderWidth === 'string') {
+        borderWidth = parseFloat(borderWidth) || 1;
       }
-    }
-    
-    // 更新样式，确保borderWidth是纯数字
-    if (!currentStyle.fontWeight || !currentStyle.fontStyle || !currentStyle.textDecoration || !currentStyle.textAlign || typeof currentStyle.borderWidth === 'string') {
+      
       updateNode(props.id, {
         data: {
           ...props.data,
@@ -519,10 +531,10 @@ onMounted(() => {
             fontStyle: currentStyle.fontStyle || 'normal',
             textDecoration: currentStyle.textDecoration || 'none',
             textAlign: currentStyle.textAlign || 'center',
-            borderWidth: numericBorderWidth, // 存储为纯数字
-            borderColor: currentStyle.borderColor || '#555',
-            borderStyle: currentStyle.borderStyle || 'solid',
-            backgroundColor: props.data.savedBgColor || currentStyle.backgroundColor || '#ffffff'
+            backgroundColor: props.data.savedBgColor || currentStyle.backgroundColor || '#ffffff',
+            borderWidth: borderWidth, // 使用纯数字
+            borderColor: currentStyle.borderColor || '#000000',
+            borderStyle: currentStyle.borderStyle || 'solid'
           }
         }
       })
@@ -542,13 +554,14 @@ onMounted(() => {
     })
   }
 
-  // 确保节点的 DOM 尺寸与数据一致
+  // 确保节点DOM尺寸与数据一致
   if (nodeRef.value) {
-    const width = props.data.style?.width || '100px'
-    const height = props.data.style?.height || '38px'
+    const width = props.data.style?.width || '60px'
+    const height = props.data.style?.height || '60px'
+    const diameter = Math.max(parseInt(width), parseInt(height))
     
-    nodeRef.value.style.width = width
-    nodeRef.value.style.height = height
+    nodeRef.value.style.width = `${diameter}px`
+    nodeRef.value.style.height = `${diameter}px`
     
     // 强制重新计算布局
     nodeRef.value.offsetHeight // 触发重排
@@ -560,9 +573,9 @@ onMounted(() => {
   // 添加一个小延时，确保节点完全初始化
   const initTimer = setTimeout(() => {
     if (nodeRef.value) {
-      // 再次确保节点的 DOM 尺寸与数据一致
-      const width = props.data.style?.width || '100px'
-      const height = props.data.style?.height || '38px'
+      // 再次确保节点DOM 尺寸与数据一致
+      const width = props.data.style?.width || '60px'
+      const height = props.data.style?.height || '60px'
       
       nodeRef.value.style.width = width
       nodeRef.value.style.height = height
@@ -627,13 +640,13 @@ const handleNodeClick = (event: MouseEvent) => {
 <script lang="ts">
 // 添加默认导出
 export default {
-  name: 'RoundedRectNode'
+  name: 'CircleNode'
 }
 </script>
 
 <style>
 /* 移除 Vue Flow 生成的外层节点的边框和背景 */
-.vue-flow__node.vue-flow__node-roundedRect {
+.vue-flow__node.vue-flow__node-circle {
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
@@ -642,17 +655,16 @@ export default {
   outline: none !important;
 }
 
-/* 圆角矩形节点基本样式 */
-.rounded-rect-node {
-  padding: 10px;
-  border-radius: 3px;
-  border: 1px solid #555;
-  background: white;
-  width: 100px;      /* 设置默认宽度 */
+/* 圆形节点基本样式 */
+.circle-node {
+  padding: 8px;
+  background: transparent;
+  width: 38px;       /* 设置默认宽度 */
   height: 38px;      /* 设置默认高度 */
-  min-width: 100px;  /* 设置最小宽度 */
+  min-width: 38px;   /* 设置最小宽度 */
   min-height: 38px;  /* 设置最小高度 */
   display: flex;
+  border: none;
   align-items: center;
   justify-content: center;
   position: relative;
@@ -661,8 +673,8 @@ export default {
 }
 
 /* 选中状态样式 - 不改变边框宽度 */
-.rounded-rect-node.selected {
-  border: 1px dotted #1a192b;  /* 保持 1px 边框 */
+.circle-node.selected {
+  border: 1px dotted #555;
 }
 
 /* 连接点样式 */
@@ -672,6 +684,7 @@ export default {
   background: #555;
   border-radius: 50%;
   border: 2px solid white;
+  z-index: 10;  /* 确保连接点在最上层 */
   transform: translate(0, 0); /* 重置默认的transform避免冲突 */
 }
 
@@ -704,45 +717,47 @@ export default {
   display: flex;
   align-items: center;
   box-sizing: border-box;
-}
-
-/* 确保文本样式正确显示 */
-.rounded-rect-node .node-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* 根据对齐方式设置内容对齐 */
-.rounded-rect-node.align-left .node-content {
+.circle-node.align-left .node-content {
   justify-content: flex-start;
   text-align: left;
+  padding-left: 15%;
 }
 
-.rounded-rect-node.align-center .node-content {
+.circle-node.align-center .node-content {
   justify-content: center;
   text-align: center;
 }
 
-.rounded-rect-node.align-right .node-content {
+.circle-node.align-right .node-content {
   justify-content: flex-end;
   text-align: right;
+  padding-right: 15%;
 }
 
-/* 确保加粗、倾斜和下划线样式正确显示 */
-.rounded-rect-node .node-content span {
-  white-space: pre-wrap;
-  word-break: break-word;
-  max-width: 100%;
-  display: inline-block;
-  width: 100%;
-  /* 使用继承样式以确保正确显示下划线等文本装饰 */
-  text-decoration: inherit;
-  font-weight: inherit;
-  font-style: inherit;
+/* 圆形背景样式 */
+.circle-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  margin: 1px;
+  pointer-events: none;
+  z-index: 0;  /* 确保背景在最底层 */
+}
+
+.circle-background circle {
+  transition: stroke-width 0.2s ease;
+}
+
+.circle-node:hover .circle-background circle {
+  stroke-width: 1.5;
 }
 
 /* 调整大小的控制点样式 */
@@ -771,20 +786,22 @@ export default {
 /* 连接点悬停和连接状态 */
 .vue-flow__handle.connecting {
   background: #1a192b;
+  z-index: 10;
 }
 
 .vue-flow__handle.valid {
   background: #55dd99;
+  z-index: 10;
 }
 
 /* 编辑状态下的节点样式 */
-.rounded-rect-node.editing {
+.circle-node.editing {
   user-select: text;
   box-sizing: border-box;
 }
 
 /* 确保编辑状态下内容不会溢出 */
-.rounded-rect-node.editing .node-content {
+.circle-node.editing .node-content {
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -802,18 +819,18 @@ export default {
   padding: 0;
   margin: 0;
   font-family: inherit;
-  box-sizing: border-box; /* 确保padding和border不会增加元素总宽高 */
+  box-sizing: border-box; /* 确保padding和border不会增加元素总宽度 */
 }
 
-.rounded-rect-node.align-left .edit-input {
+.circle-node.align-left .edit-input {
   text-align: left !important;
 }
 
-.rounded-rect-node.align-center .edit-input {
+.circle-node.align-center .edit-input {
   text-align: center !important;
 }
 
-.rounded-rect-node.align-right .edit-input {
+.circle-node.align-right .edit-input {
   text-align: right !important;
 }
 
@@ -868,5 +885,46 @@ export default {
   bottom: -5px;
   right: -5px;
   cursor: se-resize;
+}
+
+/* 确保文本样式正确显示 */
+.circle-node .node-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* 确保文本对齐方式正确应用 */
+.circle-node.align-left .node-content {
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.circle-node.align-center .node-content {
+  text-align: center;
+  justify-content: center;
+}
+
+.circle-node.align-right .node-content {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+/* 确保加粗、倾斜和下划线样式正确显示 */
+.circle-node .node-content span {
+  white-space: pre-wrap; /* 保持空格和换行 */
+  word-break: break-word; /* 允许单词内换行 */
+  max-width: 100%;
+  max-height: 100%;
+  display: inline-block;
+  width: 100%;
+  /* 使用继承样式以确保正确显示下划线等文本装饰 */
+  text-decoration: inherit;
+  font-weight: inherit;
+  font-style: inherit;
 }
 </style> 

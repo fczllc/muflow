@@ -1,13 +1,18 @@
 <template>
   <div 
     class="text-label-node" 
-    :class="{ selected, editing: isEditing }"
+    :class="{ selected, editing: isEditing, 'align-left': textAlign === 'left', 'align-center': textAlign === 'center', 'align-right': textAlign === 'right' }"
     ref="nodeRef"
     @dblclick="handleDoubleClick"
+    @click="handleNodeClick"
     :style="nodeStyle"
   >
     <div class="node-content">
-      <span v-if="!isEditing">{{ data.label }}</span>
+      <span v-if="!isEditing" :style="{ 
+        textDecoration: props.data.style?.textDecoration || 'none',
+        fontWeight: props.data.style?.fontWeight || 'normal',
+        fontStyle: props.data.style?.fontStyle || 'normal'
+      }">{{ data.label }}</span>
       <div v-else class="edit-container">
         <textarea 
           ref="editInputRef"
@@ -39,7 +44,7 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch, onMounted } from 'vue'
 import { useVueFlow } from '@vue-flow/core'
 import type { NodeProps } from '@vue-flow/core'
 
@@ -55,10 +60,77 @@ const isEditing = ref(false)
 const editLabel = ref('')
 const editInputRef = ref<HTMLTextAreaElement | null>(null)
 
+// 计算当前文本对齐方式
+const textAlign = computed(() => props.data?.style?.textAlign || 'center')
+
+// 在组件挂载时确保样式对象存在
+onMounted(() => {
+  // 确保节点数据中有样式对象
+  if (!props.data.style) {
+    // 创建默认样式
+    updateNode(props.id, {
+      data: {
+        ...props.data,
+        style: {
+          textAlign: 'center',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          textDecoration: 'none',
+          backgroundColor: props.data.savedBgColor || 'transparent'
+        }
+      }
+    })
+  } else {
+    // 确保样式对象包含所有需要的属性，包括背景色
+    const currentStyle = props.data.style;
+    if (!currentStyle.fontWeight || !currentStyle.fontStyle || !currentStyle.textDecoration || !currentStyle.textAlign) {
+      updateNode(props.id, {
+        data: {
+          ...props.data,
+          style: {
+            ...currentStyle,
+            fontWeight: currentStyle.fontWeight || 'normal',
+            fontStyle: currentStyle.fontStyle || 'normal',
+            textDecoration: currentStyle.textDecoration || 'none',
+            textAlign: currentStyle.textAlign || 'center',
+            backgroundColor: props.data.savedBgColor || currentStyle.backgroundColor || 'transparent'
+          }
+        }
+      })
+    }
+  }
+
+  // 如果节点有保存的背景色，确保应用到style中
+  if (props.data.savedBgColor) {
+    updateNode(props.id, {
+      data: {
+        ...props.data,
+        style: {
+          ...props.data.style,
+          backgroundColor: props.data.savedBgColor
+        }
+      }
+    })
+  }
+})
+
+// 监听节点编辑状态变化
+watch(() => props.data.isEditing, (newIsEditing) => {
+  // 如果外部将编辑状态设为false，同步更新本地状态
+  if (newIsEditing === false && isEditing.value === true) {
+    isEditing.value = false
+  }
+})
+
 // 计算节点样式，包括字体样式
 const nodeStyle = computed(() => ({
-  fontSize: `${props.data.fontSize || 14}px`,
-  color: props.data.color || '#000000'
+  fontSize: `${props.data.fontSize || 12}px`,
+  color: props.data.color || '#000000',
+  textAlign: props.data.style?.textAlign || 'center',
+  fontWeight: props.data.style?.fontWeight,
+  fontStyle: props.data.style?.fontStyle,
+  textDecoration: props.data.style?.textDecoration,
+  backgroundColor: props.data?.savedBgColor || props.data?.style?.backgroundColor || 'transparent'
 }))
 
 // 调整大小相关
@@ -76,7 +148,21 @@ const startResize = (event: MouseEvent, type: string) => {
   event.stopPropagation()
   
   // 触发调整大小开始事件
-  window.dispatchEvent(new CustomEvent('resize-start'))
+  console.log('[TextLabelNode] 触发 resize-start 事件', { 
+    nodeId: props.id,
+    nodeType: 'textLabel',
+    type: type
+  })
+  const startEvent = new CustomEvent('resize-start', {
+    bubbles: true,
+    composed: true,
+    detail: { 
+      nodeId: props.id,
+      nodeType: 'textLabel',
+      resizeType: type
+    }
+  })
+  window.dispatchEvent(startEvent)
   
   // 记录初始位置和大小
   const startX = event.clientX
@@ -153,7 +239,19 @@ const startResize = (event: MouseEvent, type: string) => {
     document.removeEventListener('mouseup', handleMouseUp)
     
     // 触发调整大小结束事件
-    window.dispatchEvent(new CustomEvent('resize-end'))
+    console.log('[TextLabelNode] 触发 resize-end 事件', {
+      nodeId: props.id,
+      nodeType: 'textLabel'
+    })
+    const endEvent = new CustomEvent('resize-end', {
+      bubbles: true,
+      composed: true,
+      detail: { 
+        nodeId: props.id,
+        nodeType: 'textLabel'
+      }
+    })
+    window.dispatchEvent(endEvent)
     
     // 确保节点保持选中状态
     setTimeout(() => {
@@ -179,6 +277,14 @@ const handleDoubleClick = () => {
   isEditing.value = true
   editLabel.value = props.data.label || ''
   
+  // 更新节点数据，标记为编辑状态
+  updateNode(props.id, { 
+    data: { 
+      ...props.data, 
+      isEditing: true
+    } 
+  })
+  
   // 等待DOM更新后设置输入框焦点
   nextTick(() => {
     if (editInputRef.value) {
@@ -198,9 +304,15 @@ const handleDoubleClick = () => {
 const finishEditing = () => {
   if (!isEditing.value) return
   
+  // 清除所有文本选择
+  window.getSelection()?.removeAllRanges()
+  
   // 获取当前节点尺寸
   const currentWidth = nodeRef.value?.offsetWidth || 100
   const currentHeight = nodeRef.value?.offsetHeight || 30
+  
+  // 获取当前节点的样式，确保样式对象存在
+  const currentStyle = props.data?.style || {}
   
   // 更新节点数据
   updateNode(props.id, {
@@ -209,9 +321,14 @@ const finishEditing = () => {
       label: editLabel.value,
       isEditing: false,
       style: {
-        ...props.data.style,
+        ...currentStyle,
         width: `${currentWidth}px`,
-        height: `${currentHeight}px`
+        height: `${currentHeight}px`,
+        // 确保保留字体样式属性
+        fontWeight: currentStyle.fontWeight,
+        fontStyle: currentStyle.fontStyle,
+        textDecoration: currentStyle.textDecoration,
+        textAlign: currentStyle.textAlign || 'center'
       }
     } 
   })
@@ -227,8 +344,61 @@ const handleKeydown = (e: KeyboardEvent) => {
     finishEditing()
   } else if (e.key === 'Escape') {
     isEditing.value = false
+    // 清除所有文本选择
+    window.getSelection()?.removeAllRanges()
+    // 更新节点数据，标记为非编辑状态
+    updateNode(props.id, { 
+      data: { 
+        ...props.data, 
+        isEditing: false
+      } 
+    })
   }
   // 不处理Delete键，让浏览器默认行为删除选中文本
+}
+
+// 处理节点点击事件
+const handleNodeClick = (event: MouseEvent) => {
+  // 阻止事件冒泡
+  event.stopPropagation()
+  
+  // 如果正在编辑，不处理选中逻辑
+  if (isEditing.value) return
+  
+  // 获取当前所有节点
+  const nodes = getNodes.value
+  
+  if (event.ctrlKey) {
+    // Ctrl键按下时的多选逻辑
+    if (props.selected) {
+      // 如果当前节点已选中，则仅取消当前节点的选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id ? false : node.selected
+      })))
+    } else {
+      // 如果当前节点未选中，则添加到选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id ? true : node.selected
+      })))
+    }
+  } else {
+    // 没有按Ctrl键时的单选逻辑（保持原有逻辑）
+    if (props.selected) {
+      // 如果当前节点已选中，则取消所有节点的选中状态
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: false
+      })))
+    } else {
+      // 如果当前节点未选中，则只选中当前节点
+      setNodes(nodes.map(node => ({
+        ...node,
+        selected: node.id === props.id
+      })))
+    }
+  }
 }
 </script>
 
@@ -256,21 +426,46 @@ const handleKeydown = (e: KeyboardEvent) => {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  box-sizing: border-box;
 }
 
 /* 节点内容样式 */
 .node-content {
-  text-align: center;
-  white-space: pre-wrap;  /* 保留空格和换行 */
-  word-break: break-word; /* 允许在单词内换行 */
-  word-wrap: break-word; /* 长单词换行 */
-  overflow-wrap: break-word; /* 现代浏览器的长单词换行 */
-  user-select: none;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+/* 根据对齐方式设置内容对齐 */
+.text-label-node.align-left .node-content {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.text-label-node.align-center .node-content {
+  justify-content: center;
+  text-align: center;
+}
+
+.text-label-node.align-right .node-content {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* 确保加粗、倾斜和下划线样式正确显示 */
+.text-label-node .node-content span {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+  display: inline-block;
+  width: 100%;
+  /* 使用继承样式以确保正确显示下划线等文本装饰 */
+  text-decoration: inherit;
+  font-weight: inherit;
+  font-style: inherit;
 }
 
 /* 选中状态样式 - 只显示虚线轮廓 */
@@ -287,7 +482,18 @@ const handleKeydown = (e: KeyboardEvent) => {
   height: 100%;
   display: flex;
   align-items: center;
+}
+
+.text-label-node.align-left .edit-container {
+  justify-content: flex-start;
+}
+
+.text-label-node.align-center .edit-container {
   justify-content: center;
+}
+
+.text-label-node.align-right .edit-container {
+  justify-content: flex-end;
 }
 
 /* 编辑输入框样式 */
@@ -296,7 +502,6 @@ const handleKeydown = (e: KeyboardEvent) => {
   height: 100% !important;
   border: none !important;
   background: transparent !important;
-  text-align: center !important;
   outline: none !important;
   font-size: inherit !important;
   color: inherit !important;
@@ -310,6 +515,18 @@ const handleKeydown = (e: KeyboardEvent) => {
   overflow-wrap: break-word !important;
   box-sizing: border-box !important;
   overflow: hidden !important; /* 隐藏滚动条 */
+}
+
+.text-label-node.align-left .edit-input {
+  text-align: left !important;
+}
+
+.text-label-node.align-center .edit-input {
+  text-align: center !important;
+}
+
+.text-label-node.align-right .edit-input {
+  text-align: right !important;
 }
 
 /* 修复文本区域的垂直对齐问题 */

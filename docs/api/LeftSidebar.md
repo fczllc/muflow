@@ -49,6 +49,7 @@ const defaultButtons = {
 |------|------|------|
 | 文本标签 | textLabel | 纯文本节点，支持多行文本编辑 |
 | 圆角矩形 | roundedRect | 带边框的矩形节点，支持连线 |
+| 直线 | line | 可调整长度和角度的直线节点 |
 
 ### 画布工具
 
@@ -69,7 +70,7 @@ const defaultButtons = {
 1. 拖拽数据格式：
    ```typescript
    interface DragData {
-     type: 'textLabel' | 'roundedRect'
+     type: 'textLabel' | 'roundedRect' | 'line'
      dataTransfer: 'application/vueflow'
    }
    ```

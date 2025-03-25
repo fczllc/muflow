@@ -1,6 +1,16 @@
+<!--
+ * MuFlow - Vue Flow based flow chart editor
+ * Copyright (c) 2024 tianyi
+ * 
+ * This project is based on Vue Flow (https://github.com/bcakmakoglu/vue-flow)
+ * Vue Flow Copyright (c) bcakmakoglu - Released under MIT License
+ * 
+ * @license MIT
+ -->
+
 <template>
   <div 
-    class="rounded-rect-node" 
+    class="start-end-node" 
     :class="{ selected, editing: isEditing, 'align-left': textAlign === 'left', 'align-center': textAlign === 'center', 'align-right': textAlign === 'right' }"
     ref="nodeRef"
     @mouseenter="showHandles = true" 
@@ -94,26 +104,10 @@ const textAlign = computed(() => props.data.style?.textAlign || 'center')
 // 计算节点样式，包括字体样式
 const nodeStyle = computed(() => {
   // 处理边框宽度 - 确保有单位
-  let borderWidth = props.data.style?.borderWidth;
-  let numericBorderWidth = 1; // 默认值
-  
-  // 处理不同类型的borderWidth值
-  if (borderWidth === undefined || borderWidth === null) {
-    borderWidth = '1px'; // 默认值
-    numericBorderWidth = 1;
-  } else if (typeof borderWidth === 'number') {
-    // 如果是数字，保存数字值，同时为CSS准备带单位的字符串
-    numericBorderWidth = borderWidth;
+  let borderWidth = props.data.style?.borderWidth || '1px';
+  // 如果边框宽度只是数字，添加px单位
+  if (borderWidth && !isNaN(parseFloat(borderWidth)) && !borderWidth.toString().includes('px')) {
     borderWidth = `${borderWidth}px`;
-  } else if (typeof borderWidth === 'string') {
-    // 如果是字符串，先移除所有非数字字符，再解析数字部分
-    const cleanBorderWidth = borderWidth.replace(/[^\d.-]/g, '');
-    numericBorderWidth = parseFloat(cleanBorderWidth) || 1;
-    
-    // 确保字符串包含单位
-    if (!borderWidth.includes('px')) {
-      borderWidth = `${numericBorderWidth}px`;
-    }
   }
 
   return {
@@ -127,12 +121,10 @@ const nodeStyle = computed(() => {
     textDecoration: props.data.style?.textDecoration,
     // 添加背景色支持 - 正确访问节点背景色
     backgroundColor: props.data?.savedBgColor || props.data?.style?.backgroundColor || '#ffffff',
-    // 添加边框样式支持 - 确保使用带单位的值
+    // 添加边框样式支持
     borderWidth: borderWidth,
     borderColor: props.data.style?.borderColor || '#555',
-    borderStyle: props.data.style?.borderStyle || 'solid',
-    // 保存纯数字值，以便在需要时使用
-    '--numeric-border-width': numericBorderWidth
+    borderStyle: props.data.style?.borderStyle || 'solid'
   }
 })
 
@@ -395,35 +387,12 @@ const startResize = (event: MouseEvent, type: string) => {
         break
     }
     
-    // 确保尺寸是2的倍数，有助于网格对齐
-    newWidth = Math.round(newWidth / 2) * 2
-    newHeight = Math.round(newHeight / 2) * 2
-    
-    // 重新计算位置偏移以适应调整后的尺寸
-    if (type.includes('Left')) {
-      newPosition.x = startPosition.x + (startWidth - newWidth)
-    }
-    if (type.includes('top') || type === 'Top') {
-      newPosition.y = startPosition.y + (startHeight - newHeight)
-    }
-    
     // 更新节点位置和大小
     if (nodeRef.value) {
       nodeRef.value.style.width = `${newWidth}px`
       nodeRef.value.style.height = `${newHeight}px`
       
-      // 获取当前边框宽度，确保存储为纯数字
-      const currentStyle = node.data?.style || {};
-      let borderWidth = currentStyle.borderWidth || 1;
-      
-      // 确保borderWidth是纯数字
-      if (typeof borderWidth === 'string') {
-        // 移除所有非数字字符(如'px')
-        const cleanBorderWidth = borderWidth.replace(/[^\d.-]/g, '');
-        borderWidth = parseFloat(cleanBorderWidth) || 1;
-      }
-      
-      // 更新节点位置，确保borderWidth是纯数字
+      // 更新节点位置
       updateNode(props.id, {
         position: newPosition,
         style: {
@@ -435,8 +404,7 @@ const startResize = (event: MouseEvent, type: string) => {
           style: {
             ...node.data.style,
             width: `${newWidth}px`,
-            height: `${newHeight}px`,
-            borderWidth: borderWidth // 存储为纯数字
+            height: `${newHeight}px`
           }
         }
       })
@@ -483,7 +451,7 @@ onMounted(() => {
           textDecoration: 'none',
           width: '100px',
           height: '38px',
-          borderWidth: 1,  // 存储为纯数字
+          borderWidth: '1px',  // 确保有单位
           borderColor: '#555',
           borderStyle: 'solid',
           backgroundColor: props.data.savedBgColor || '#ffffff'
@@ -494,22 +462,13 @@ onMounted(() => {
     // 确保样式对象包含所有需要的属性
     const currentStyle = props.data.style
     
-    // 处理borderWidth，确保存储为纯数字
-    let borderWidth = currentStyle.borderWidth;
-    let numericBorderWidth = 1; // 默认值
-    
-    if (borderWidth !== undefined && borderWidth !== null) {
-      if (typeof borderWidth === 'number') {
-        numericBorderWidth = borderWidth;
-      } else if (typeof borderWidth === 'string') {
-        // 移除所有非数字字符(如'px')
-        const cleanBorderWidth = borderWidth.replace(/[^\d.-]/g, '');
-        numericBorderWidth = parseFloat(cleanBorderWidth) || 1;
-      }
+    // 处理borderWidth，确保它有单位
+    let borderWidth = currentStyle.borderWidth || '1px';
+    if (borderWidth && !isNaN(parseFloat(borderWidth)) && !borderWidth.toString().includes('px')) {
+      borderWidth = `${borderWidth}px`;
     }
     
-    // 更新样式，确保borderWidth是纯数字
-    if (!currentStyle.fontWeight || !currentStyle.fontStyle || !currentStyle.textDecoration || !currentStyle.textAlign || typeof currentStyle.borderWidth === 'string') {
+    if (!currentStyle.fontWeight || !currentStyle.fontStyle || !currentStyle.textDecoration || !currentStyle.textAlign) {
       updateNode(props.id, {
         data: {
           ...props.data,
@@ -519,7 +478,7 @@ onMounted(() => {
             fontStyle: currentStyle.fontStyle || 'normal',
             textDecoration: currentStyle.textDecoration || 'none',
             textAlign: currentStyle.textAlign || 'center',
-            borderWidth: numericBorderWidth, // 存储为纯数字
+            borderWidth: borderWidth,
             borderColor: currentStyle.borderColor || '#555',
             borderStyle: currentStyle.borderStyle || 'solid',
             backgroundColor: props.data.savedBgColor || currentStyle.backgroundColor || '#ffffff'
@@ -627,13 +586,13 @@ const handleNodeClick = (event: MouseEvent) => {
 <script lang="ts">
 // 添加默认导出
 export default {
-  name: 'RoundedRectNode'
+  name: 'StartEndNode'
 }
 </script>
 
 <style>
 /* 移除 Vue Flow 生成的外层节点的边框和背景 */
-.vue-flow__node.vue-flow__node-roundedRect {
+.vue-flow__node.vue-flow__node-startEnd {
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
@@ -642,10 +601,10 @@ export default {
   outline: none !important;
 }
 
-/* 圆角矩形节点基本样式 */
-.rounded-rect-node {
-  padding: 10px;
-  border-radius: 3px;
+/* 起止节点基本样式 */
+.start-end-node {
+  padding: 8px;
+  border-radius: 20px; /* 关键区别：将圆角设置为50% */
   border: 1px solid #555;
   background: white;
   width: 100px;      /* 设置默认宽度 */
@@ -661,7 +620,7 @@ export default {
 }
 
 /* 选中状态样式 - 不改变边框宽度 */
-.rounded-rect-node.selected {
+.start-end-node.selected {
   border: 1px dotted #1a192b;  /* 保持 1px 边框 */
 }
 
@@ -707,42 +666,31 @@ export default {
 }
 
 /* 确保文本样式正确显示 */
-.rounded-rect-node .node-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-/* 根据对齐方式设置内容对齐 */
-.rounded-rect-node.align-left .node-content {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.rounded-rect-node.align-center .node-content {
-  justify-content: center;
-  text-align: center;
-}
-
-.rounded-rect-node.align-right .node-content {
-  justify-content: flex-end;
-  text-align: right;
-}
-
-/* 确保加粗、倾斜和下划线样式正确显示 */
-.rounded-rect-node .node-content span {
-  white-space: pre-wrap;
-  word-break: break-word;
-  max-width: 100%;
+.node-content span {
   display: inline-block;
   width: 100%;
   /* 使用继承样式以确保正确显示下划线等文本装饰 */
   text-decoration: inherit;
   font-weight: inherit;
   font-style: inherit;
+}
+
+/* 根据对齐方式设置内容对齐 */
+.start-end-node.align-left .node-content {
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 12px;
+}
+
+.start-end-node.align-center .node-content {
+  justify-content: center;
+  text-align: center;
+}
+
+.start-end-node.align-right .node-content {
+  justify-content: flex-end;
+  text-align: right;
+  padding-right: 12px;
 }
 
 /* 调整大小的控制点样式 */
@@ -778,13 +726,13 @@ export default {
 }
 
 /* 编辑状态下的节点样式 */
-.rounded-rect-node.editing {
+.start-end-node.editing {
   user-select: text;
   box-sizing: border-box;
 }
 
 /* 确保编辑状态下内容不会溢出 */
-.rounded-rect-node.editing .node-content {
+.start-end-node.editing .node-content {
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -805,15 +753,15 @@ export default {
   box-sizing: border-box; /* 确保padding和border不会增加元素总宽高 */
 }
 
-.rounded-rect-node.align-left .edit-input {
+.start-end-node.align-left .edit-input {
   text-align: left !important;
 }
 
-.rounded-rect-node.align-center .edit-input {
+.start-end-node.align-center .edit-input {
   text-align: center !important;
 }
 
-.rounded-rect-node.align-right .edit-input {
+.start-end-node.align-right .edit-input {
   text-align: right !important;
 }
 

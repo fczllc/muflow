@@ -41,13 +41,15 @@ import FlowEditor from './components/FlowEditor.vue'
 
 2. 创建节点：
    - 从左侧工具栏拖拽节点到画布
-   - 支持文本标签和圆角矩形两种节点
+   - 支持文本标签、圆角矩形和直线三种节点
    - 节点自动生成唯一 ID
 
 3. 编辑节点：
-   - 双击节点编辑文本
+   - 双击节点编辑文本（文本标签和圆角矩形节点）
    - 拖拽节点调整位置
-   - 拖拽边角调整大小
+   - 拖拽边角调整大小（文本标签和圆角矩形节点）
+   - 拖拽端点调整直线长度和角度（直线节点）
+   - 按住 Shift 拖拽直线端点可启用角度对齐（每45度）
 
 4. 连接节点：
    - 从节点锚点拖出连线
@@ -75,8 +77,12 @@ import FlowEditor from './components/FlowEditor.vue'
 ### 样式设置
 
 1. 节点样式：
-   - 设置字体大小
-   - 设置字体颜色
+   - 设置字体大小（文本标签和圆角矩形节点）
+   - 设置字体颜色（文本标签和圆角矩形节点）
+   - 设置直线粗细（直线节点）
+   - 设置直线颜色（直线节点）
+   - 设置直线类型（直线节点）
+   - 设置箭头样式（直线节点）
 
 2. 连线样式：
    - 设置线条粗细
@@ -169,15 +175,118 @@ const buttons = {
 }
 ```
 
+## 最新优化功能
+
+### 节点编辑状态同步
+
+所有节点组件（RoundedRectNode、TextLabelNode、StartEndNode、ConditionNode、CircleNode）都实现了编辑状态同步机制：
+
+```typescript
+// 监听节点编辑状态变化
+watch(() => props.data.isEditing, (newIsEditing) => {
+  // 如果外部将编辑状态设为false，同步更新本地状态
+  if (newIsEditing === false && isEditing.value === true) {
+    isEditing.value = false
+  }
+})
+```
+
+这确保了从FlowEditor组件设置的编辑状态变更能够正确同步到各个节点组件。
+
+### 文本选择状态清除
+
+退出编辑模式时自动清除文本选择：
+
+```typescript
+// 在finishEditing函数中
+const finishEditing = () => {
+  isEditing.value = false
+  
+  // 清除所有文本选择
+  window.getSelection()?.removeAllRanges()
+  
+  // 更新节点数据...
+}
+
+// 在handleKeydown函数中处理ESC键
+const handleKeydown = (e: KeyboardEvent) => {
+  // ...
+  if (e.key === 'Escape') {
+    isEditing.value = false
+    // 清除所有文本选择
+    window.getSelection()?.removeAllRanges()
+    // 更新节点数据...
+  }
+  // ...
+}
+```
+
+### 统一处理选择和编辑状态
+
+FlowEditor组件中添加了统一处理函数：
+
+```typescript
+// 清除选择和编辑状态的通用函数
+const clearSelectionAndEditingState = () => {
+  // 清除文本选择
+  window.getSelection()?.removeAllRanges()
+  
+  // 查找处于编辑状态的节点并重置
+  const editingNodes = getNodes.value.filter(node => node.data?.isEditing)
+  if (editingNodes.length > 0) {
+    editingNodes.forEach(node => {
+      updateNode(node.id, {
+        data: {
+          ...node.data,
+          isEditing: false
+        }
+      })
+    })
+  }
+  
+  // 取消所有节点和边的选择
+  if (getNodes.value.some(node => node.selected) || getEdges.value.some(edge => edge.selected)) {
+    setNodes(getNodes.value.map(node => ({ ...node, selected: false })))
+    setEdges(getEdges.value.map(edge => ({ ...edge, selected: false })))
+  }
+}
+```
+
+这个函数在以下情况下被调用：
+- 点击画布空白区域时
+- 按下ESC键时
+- 双击画布空白区域时
+
+### 禁用双击缩放和自动平移
+
+为了提供更好的编辑体验，VueFlow组件配置进行了以下优化：
+
+```vue
+<VueFlow
+  :zoom-on-double-click="false"  <!-- 禁用双击缩放，避免与节点编辑冲突 -->
+  :autoPanOnNodeDrag="false"     <!-- 禁用节点拖拽时的自动平移 -->
+  :node-extent-pad="0"           <!-- 优化节点拖拽边界行为 -->
+  <!-- 其他配置 -->
+>
+  <!-- 内容 -->
+</VueFlow>
+```
+
+这些配置改进了以下用户体验：
+1. 双击节点时不再触发画布缩放，只进入编辑模式
+2. 拖拽节点到画布边缘时不再自动移动画布
+3. 提供更精确和可控的节点定位体验
+
 ## 快捷键
 
 | 快捷键 | 功能 |
 |--------|------|
 | Ctrl + A | 全选画布上的所有对象 |
-| ESC | 取消选中状态 |
+| ESC | 取消选中状态和退出编辑模式 |
 | Delete | 删除选中的节点或连线 |
 | 双击 | 编辑节点文本 |
 | Ctrl + 点击 | 多选对象 |
+| Shift + 拖拽 | 直线角度对齐（每45度） |
 
 ## API 集成
 

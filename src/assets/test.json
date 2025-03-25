@@ -1,0 +1,2520 @@
+{
+  "nodes": [
+    {
+      "id": "roundedRect-1",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 100,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 282,
+        "y": 186,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-1",
+            "type": "source",
+            "x": 95,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-1",
+            "type": "source",
+            "x": 46,
+            "y": 33,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-1",
+            "type": "target",
+            "x": -3,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-1",
+            "type": "target",
+            "x": 46,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 282,
+        "y": 186
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "100px",
+        "height": "38px"
+      },
+      "width": 100,
+      "height": 38
+    },
+    {
+      "id": "startEnd-2",
+      "type": "startEnd",
+      "dimensions": {
+        "width": 100,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 106,
+        "y": 186,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "startEnd-2",
+            "type": "source",
+            "x": 95,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "startEnd-2",
+            "type": "source",
+            "x": 46,
+            "y": 33,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "startEnd-2",
+            "type": "target",
+            "x": -3,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "startEnd-2",
+            "type": "target",
+            "x": 46,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 106,
+        "y": 186
+      },
+      "data": {
+        "label": "起止节点",
+        "fontSize": 14,
+        "color": "#000000",
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        }
+      },
+      "events": {},
+      "width": 100,
+      "height": 38
+    },
+    {
+      "id": "roundedRect-3",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 100,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 498,
+        "y": 186,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-3",
+            "type": "source",
+            "x": 95,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-3",
+            "type": "source",
+            "x": 46,
+            "y": 33,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-3",
+            "type": "target",
+            "x": -3,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-3",
+            "type": "target",
+            "x": 46,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 498,
+        "y": 186
+      },
+      "data": {
+        "label": "节点",
+        "fontSize": 14,
+        "color": "#000000",
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        }
+      },
+      "events": {},
+      "width": 100,
+      "height": 38
+    },
+    {
+      "id": "startEnd-4",
+      "type": "startEnd",
+      "dimensions": {
+        "width": 100,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 498,
+        "y": 318,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "startEnd-4",
+            "type": "source",
+            "x": 95,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "startEnd-4",
+            "type": "source",
+            "x": 46,
+            "y": 33,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "startEnd-4",
+            "type": "target",
+            "x": -3,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "startEnd-4",
+            "type": "target",
+            "x": 46,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 498,
+        "y": 318
+      },
+      "data": {
+        "label": "起止节点",
+        "fontSize": 14,
+        "color": "#000000",
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        }
+      },
+      "events": {},
+      "width": 100,
+      "height": 38
+    },
+    {
+      "id": "condition-5",
+      "type": "condition",
+      "dimensions": {
+        "width": 100,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 282,
+        "y": 308,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "condition-5",
+            "type": "source",
+            "x": 96,
+            "y": 26,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "condition-5",
+            "type": "source",
+            "x": 46,
+            "y": 56,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "condition-5",
+            "type": "target",
+            "x": -4,
+            "y": 26,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "condition-5",
+            "type": "target",
+            "x": 46,
+            "y": -4,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 282,
+        "y": 308
+      },
+      "data": {
+        "label": "条件节点",
+        "fontSize": 14,
+        "color": "#000000",
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        }
+      },
+      "events": {},
+      "width": 100,
+      "height": 38
+    },
+    {
+      "id": "condition-6",
+      "type": "condition",
+      "dimensions": {
+        "width": 100,
+        "height": 60
+      },
+      "computedPosition": {
+        "x": 684,
+        "y": 176,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "condition-6",
+            "type": "source",
+            "x": 96,
+            "y": 26,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "condition-6",
+            "type": "source",
+            "x": 46,
+            "y": 56,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "condition-6",
+            "type": "target",
+            "x": -4,
+            "y": 26,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "condition-6",
+            "type": "target",
+            "x": 46,
+            "y": -4,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 684,
+        "y": 176
+      },
+      "data": {
+        "label": "条件节点",
+        "fontSize": 14,
+        "color": "#000000",
+        "style": {
+          "width": "100px",
+          "height": "60px"
+        }
+      },
+      "events": {},
+      "style": {
+        "width": "100px",
+        "height": "60px"
+      },
+      "width": 100,
+      "height": 60
+    },
+    {
+      "id": "circle-7",
+      "type": "circle",
+      "dimensions": {
+        "width": 38,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 138,
+        "y": 420,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "circle-7",
+            "type": "source",
+            "x": 34,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "circle-7",
+            "type": "source",
+            "x": 15,
+            "y": 34,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "circle-7",
+            "type": "target",
+            "x": -4,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "circle-7",
+            "type": "target",
+            "x": 15,
+            "y": -4,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 138,
+        "y": 420
+      },
+      "data": {
+        "label": "",
+        "style": {
+          "width": "38px",
+          "height": "38px"
+        },
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "style": {
+        "width": "38px",
+        "height": "38px"
+      },
+      "width": 38,
+      "height": 38
+    },
+    {
+      "id": "roundedRect-8",
+      "type": "roundedRect",
+      "dimensions": {
+        "width": 158,
+        "height": 64
+      },
+      "computedPosition": {
+        "x": 438,
+        "y": 30,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "roundedRect-8",
+            "type": "source",
+            "x": 153,
+            "y": 28,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "roundedRect-8",
+            "type": "source",
+            "x": 75,
+            "y": 59,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "roundedRect-8",
+            "type": "target",
+            "x": -3,
+            "y": 28,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "roundedRect-8",
+            "type": "target",
+            "x": 75,
+            "y": -3,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 438,
+        "y": 30
+      },
+      "data": {
+        "label": "节点",
+        "style": {
+          "width": "158px",
+          "height": "64px"
+        },
+        "fontSize": 18,
+        "color": "#eb1414"
+      },
+      "events": {},
+      "style": {
+        "width": "158px",
+        "height": "64px"
+      },
+      "width": 158,
+      "height": 64
+    },
+    {
+      "id": "svgIcon-1742443441835",
+      "type": "svgIcon",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "computedPosition": {
+        "x": 144,
+        "y": 426,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "connectable": false,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 144,
+        "y": 426
+      },
+      "data": {
+        "iconType": "rotate-ccw",
+        "width": 24,
+        "height": 24,
+        "strokeWidth": 2,
+        "color": "#333333",
+        "label": "",
+        "fontSize": 14,
+        "style": {
+          "width": "24px",
+          "height": "24px"
+        }
+      },
+      "events": {},
+      "width": 24,
+      "height": 24
+    },
+    {
+      "id": "circle-10",
+      "type": "circle",
+      "dimensions": {
+        "width": 38,
+        "height": 38
+      },
+      "computedPosition": {
+        "x": 690,
+        "y": 318,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "right-handle",
+            "position": "right",
+            "nodeId": "circle-10",
+            "type": "source",
+            "x": 34,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "bottom-handle",
+            "position": "bottom",
+            "nodeId": "circle-10",
+            "type": "source",
+            "x": 15,
+            "y": 34,
+            "width": 8,
+            "height": 8
+          }
+        ],
+        "target": [
+          {
+            "id": "left-handle",
+            "position": "left",
+            "nodeId": "circle-10",
+            "type": "target",
+            "x": -4,
+            "y": 15,
+            "width": 8,
+            "height": 8
+          },
+          {
+            "id": "top-handle",
+            "position": "top",
+            "nodeId": "circle-10",
+            "type": "target",
+            "x": 15,
+            "y": -4,
+            "width": 8,
+            "height": 8
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 690,
+        "y": 318
+      },
+      "data": {
+        "label": "",
+        "fontSize": 14,
+        "color": "#000000",
+        "style": {
+          "width": "38px",
+          "height": "38px"
+        }
+      },
+      "events": {},
+      "width": 38,
+      "height": 38
+    },
+    {
+      "id": "svgIcon-1742443784139",
+      "type": "svgIcon",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "computedPosition": {
+        "x": 698,
+        "y": 326,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "connectable": false,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 698,
+        "y": 326
+      },
+      "data": {
+        "iconType": "arrow-left",
+        "width": 24,
+        "height": 24,
+        "strokeWidth": 2,
+        "color": "#333333",
+        "label": "",
+        "fontSize": 14,
+        "style": {
+          "width": "24px",
+          "height": "24px"
+        }
+      },
+      "events": {},
+      "width": 24,
+      "height": 24
+    },
+    {
+      "id": "line-12",
+      "type": "line",
+      "dimensions": {
+        "width": 216,
+        "height": 1
+      },
+      "computedPosition": {
+        "x": 644,
+        "y": 244,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 644,
+        "y": 244
+      },
+      "data": {
+        "label": "直线",
+        "style": {
+          "strokeWidth": 2,
+          "stroke": "#000000",
+          "strokeDasharray": "5 5",
+          "width": "216px",
+          "height": "1px"
+        },
+        "width": 216.11339616044165,
+        "angle": 90,
+        "arrowStyle": "none",
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "width": 216,
+      "height": 1
+    },
+    {
+      "id": "line-13",
+      "type": "line",
+      "dimensions": {
+        "width": 180,
+        "height": 1
+      },
+      "computedPosition": {
+        "x": 248,
+        "y": 404,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [],
+        "target": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 248,
+        "y": 404
+      },
+      "data": {
+        "label": "直线",
+        "style": {
+          "strokeWidth": 1,
+          "stroke": "#c85b5b",
+          "width": "180px",
+          "height": "1px"
+        },
+        "width": 180.34688796871433,
+        "angle": 45,
+        "arrowStyle": "target",
+        "fontSize": 14,
+        "color": "#000000"
+      },
+      "events": {},
+      "width": 180,
+      "height": 1
+    }
+  ],
+  "edges": [
+    {
+      "id": "estartEnd-2-roundedRect-1",
+      "type": "straight",
+      "source": "startEnd-2",
+      "target": "roundedRect-1",
+      "sourceHandle": "right-handle",
+      "targetHandle": "left-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "startEnd-2",
+        "type": "startEnd",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 106,
+          "y": 186,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "startEnd-2",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "startEnd-2",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "startEnd-2",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "startEnd-2",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 106,
+          "y": 186
+        },
+        "data": {
+          "label": "起止节点",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          }
+        },
+        "events": {},
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "roundedRect-1",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 282,
+          "y": 186,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 282,
+          "y": 186
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          },
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "sourceX": 209,
+      "sourceY": 205,
+      "targetX": 279,
+      "targetY": 205,
+      "selected": false,
+      "zIndex": 1000,
+      "animated": false
+    },
+    {
+      "id": "eroundedRect-1-roundedRect-3",
+      "type": "straight",
+      "source": "roundedRect-1",
+      "target": "roundedRect-3",
+      "sourceHandle": "right-handle",
+      "targetHandle": "left-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "roundedRect-1",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 282,
+          "y": 186,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 282,
+          "y": 186
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          },
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "roundedRect-3",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 498,
+          "y": 186,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-3",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-3",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-3",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-3",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 498,
+          "y": 186
+        },
+        "data": {
+          "label": "节点",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          }
+        },
+        "events": {},
+        "width": 100,
+        "height": 38
+      },
+      "sourceX": 385,
+      "sourceY": 205,
+      "targetX": 495,
+      "targetY": 205,
+      "selected": false,
+      "zIndex": 1000,
+      "animated": false
+    },
+    {
+      "id": "eroundedRect-3-startEnd-4",
+      "type": "straight",
+      "source": "roundedRect-3",
+      "target": "startEnd-4",
+      "sourceHandle": "bottom-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 3,
+        "savedLineColor": "#f60909",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 3,
+        "stroke": "#f60909"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#f60909",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "roundedRect-3",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 498,
+          "y": 186,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-3",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-3",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-3",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-3",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 498,
+          "y": 186
+        },
+        "data": {
+          "label": "节点",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          }
+        },
+        "events": {},
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "startEnd-4",
+        "type": "startEnd",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 498,
+          "y": 318,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "startEnd-4",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "startEnd-4",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "startEnd-4",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "startEnd-4",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 498,
+          "y": 318
+        },
+        "data": {
+          "label": "起止节点",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          }
+        },
+        "events": {},
+        "width": 100,
+        "height": 38
+      },
+      "sourceX": 548,
+      "sourceY": 227,
+      "targetX": 548,
+      "targetY": 315,
+      "selected": false,
+      "zIndex": 1000,
+      "animated": false
+    },
+    {
+      "id": "eroundedRect-1-condition-5",
+      "type": "straight",
+      "source": "roundedRect-1",
+      "target": "condition-5",
+      "sourceHandle": "bottom-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "both",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "roundedRect-1",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 282,
+          "y": 186,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 282,
+          "y": 186
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          },
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "condition-5",
+        "type": "condition",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 282,
+          "y": 308,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "condition-5",
+              "type": "source",
+              "x": 96,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "condition-5",
+              "type": "source",
+              "x": 46,
+              "y": 56,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "condition-5",
+              "type": "target",
+              "x": -4,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "condition-5",
+              "type": "target",
+              "x": 46,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 282,
+          "y": 308
+        },
+        "data": {
+          "label": "条件节点",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          }
+        },
+        "events": {},
+        "width": 100,
+        "height": 38
+      },
+      "sourceX": 332,
+      "sourceY": 227,
+      "targetX": 332,
+      "targetY": 304,
+      "selected": false,
+      "zIndex": 1000,
+      "animated": false,
+      "markerStart": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      }
+    },
+    {
+      "id": "eroundedRect-3-condition-6",
+      "type": "straight",
+      "source": "roundedRect-3",
+      "target": "condition-6",
+      "sourceHandle": "right-handle",
+      "targetHandle": "left-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "roundedRect-3",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 498,
+          "y": 186,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-3",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-3",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-3",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-3",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 498,
+          "y": 186
+        },
+        "data": {
+          "label": "节点",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          }
+        },
+        "events": {},
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "condition-6",
+        "type": "condition",
+        "dimensions": {
+          "width": 100,
+          "height": 60
+        },
+        "computedPosition": {
+          "x": 684,
+          "y": 176,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "condition-6",
+              "type": "source",
+              "x": 96,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "condition-6",
+              "type": "source",
+              "x": 46,
+              "y": 56,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "condition-6",
+              "type": "target",
+              "x": -4,
+              "y": 26,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "condition-6",
+              "type": "target",
+              "x": 46,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 684,
+          "y": 176
+        },
+        "data": {
+          "label": "条件节点",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "100px",
+            "height": "60px"
+          }
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "60px"
+        },
+        "width": 100,
+        "height": 60
+      },
+      "sourceX": 601,
+      "sourceY": 205,
+      "targetX": 680,
+      "targetY": 206,
+      "selected": false,
+      "zIndex": 1000,
+      "animated": false
+    },
+    {
+      "id": "estartEnd-2-circle-7",
+      "type": "straight",
+      "source": "startEnd-2",
+      "target": "circle-7",
+      "sourceHandle": "bottom-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "startEnd-2",
+        "type": "startEnd",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 106,
+          "y": 186,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "startEnd-2",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "startEnd-2",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "startEnd-2",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "startEnd-2",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 106,
+          "y": 186
+        },
+        "data": {
+          "label": "起止节点",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          }
+        },
+        "events": {},
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "circle-7",
+        "type": "circle",
+        "dimensions": {
+          "width": 38,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 138,
+          "y": 420,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "circle-7",
+              "type": "source",
+              "x": 34,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "circle-7",
+              "type": "source",
+              "x": 15,
+              "y": 34,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "circle-7",
+              "type": "target",
+              "x": -4,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "circle-7",
+              "type": "target",
+              "x": 15,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 138,
+          "y": 420
+        },
+        "data": {
+          "label": "",
+          "style": {
+            "width": "38px",
+            "height": "38px"
+          },
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "38px",
+          "height": "38px"
+        },
+        "width": 38,
+        "height": 38
+      },
+      "sourceX": 156,
+      "sourceY": 227,
+      "targetX": 157,
+      "targetY": 416,
+      "selected": false,
+      "zIndex": 1000,
+      "animated": false
+    },
+    {
+      "id": "eroundedRect-8-roundedRect-1",
+      "type": "smoothstep",
+      "source": "roundedRect-8",
+      "target": "roundedRect-1",
+      "sourceHandle": "left-handle",
+      "targetHandle": "top-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#2315e5",
+        "savedLineStyle": "dotted",
+        "savedArrowStyle": "source",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#2315e5",
+        "strokeDasharray": "2 2"
+      },
+      "sourceNode": {
+        "id": "roundedRect-8",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 158,
+          "height": 64
+        },
+        "computedPosition": {
+          "x": 438,
+          "y": 30,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-8",
+              "type": "source",
+              "x": 153,
+              "y": 28,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-8",
+              "type": "source",
+              "x": 75,
+              "y": 59,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-8",
+              "type": "target",
+              "x": -3,
+              "y": 28,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-8",
+              "type": "target",
+              "x": 75,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 438,
+          "y": 30
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "158px",
+            "height": "64px"
+          },
+          "fontSize": 18,
+          "color": "#eb1414"
+        },
+        "events": {},
+        "style": {
+          "width": "158px",
+          "height": "64px"
+        },
+        "width": 158,
+        "height": 64
+      },
+      "targetNode": {
+        "id": "roundedRect-1",
+        "type": "roundedRect",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 282,
+          "y": 186,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "roundedRect-1",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "roundedRect-1",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 282,
+          "y": 186
+        },
+        "data": {
+          "label": "节点",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          },
+          "fontSize": 14,
+          "color": "#000000"
+        },
+        "events": {},
+        "style": {
+          "width": "100px",
+          "height": "38px"
+        },
+        "width": 100,
+        "height": 38
+      },
+      "sourceX": 435,
+      "sourceY": 62,
+      "targetX": 332,
+      "targetY": 183,
+      "selected": false,
+      "markerStart": {
+        "type": "arrow",
+        "color": "#2315e5",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      }
+    },
+    {
+      "id": "estartEnd-4-circle-10",
+      "type": "smoothstep",
+      "source": "startEnd-4",
+      "target": "circle-10",
+      "sourceHandle": "right-handle",
+      "targetHandle": "left-handle",
+      "data": {
+        "savedLineWidth": 1,
+        "savedLineColor": "#555555",
+        "savedLineStyle": "solid",
+        "savedArrowStyle": "target",
+        "label": ""
+      },
+      "events": {},
+      "label": "",
+      "style": {
+        "strokeWidth": 1,
+        "stroke": "#555555"
+      },
+      "markerEnd": {
+        "type": "arrow",
+        "color": "#555555",
+        "width": 15,
+        "height": 15,
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "startEnd-4",
+        "type": "startEnd",
+        "dimensions": {
+          "width": 100,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 498,
+          "y": 318,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "startEnd-4",
+              "type": "source",
+              "x": 95,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "startEnd-4",
+              "type": "source",
+              "x": 46,
+              "y": 33,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "startEnd-4",
+              "type": "target",
+              "x": -3,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "startEnd-4",
+              "type": "target",
+              "x": 46,
+              "y": -3,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 498,
+          "y": 318
+        },
+        "data": {
+          "label": "起止节点",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "100px",
+            "height": "38px"
+          }
+        },
+        "events": {},
+        "width": 100,
+        "height": 38
+      },
+      "targetNode": {
+        "id": "circle-10",
+        "type": "circle",
+        "dimensions": {
+          "width": 38,
+          "height": 38
+        },
+        "computedPosition": {
+          "x": 690,
+          "y": 318,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "right-handle",
+              "position": "right",
+              "nodeId": "circle-10",
+              "type": "source",
+              "x": 34,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "bottom-handle",
+              "position": "bottom",
+              "nodeId": "circle-10",
+              "type": "source",
+              "x": 15,
+              "y": 34,
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "target": [
+            {
+              "id": "left-handle",
+              "position": "left",
+              "nodeId": "circle-10",
+              "type": "target",
+              "x": -4,
+              "y": 15,
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "top-handle",
+              "position": "top",
+              "nodeId": "circle-10",
+              "type": "target",
+              "x": 15,
+              "y": -4,
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 690,
+          "y": 318
+        },
+        "data": {
+          "label": "",
+          "fontSize": 14,
+          "color": "#000000",
+          "style": {
+            "width": "38px",
+            "height": "38px"
+          }
+        },
+        "events": {},
+        "width": 38,
+        "height": 38
+      },
+      "sourceX": 601,
+      "sourceY": 337,
+      "targetX": 686,
+      "targetY": 337,
+      "selected": false
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "timestamp": "2025-03-20T04:15:02.626Z",
+    "title": "流程图_20250320_1215"
+  }
+}
