@@ -16,7 +16,7 @@
       @layer="arrangeLayers"
     />
     <div class="main-content">
-      <LeftSidebar />
+      <LeftSidebar :canvasTools="props.canvasTools" />
       <div class="canvas-container">
         <VueFlow
           :nodes="getNodes"
@@ -136,10 +136,6 @@ export default defineComponent({
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, markRaw, computed, nextTick, provide } from 'vue'
-
-// 自定义NodeComponent类型以解决类型兼容性问题
-type NodeComponent = any
-
 import { 
   VueFlow, 
   useVueFlow, 
@@ -166,9 +162,45 @@ import AlignmentLines from './AlignmentLines.vue'
 import type { FlowNode, AlignDirection, DistributeDirection, NodeDimensions } from '../types/flow'
 import { debounce } from 'lodash-es'
 
+// 定义画布工具属性接口
+export interface CanvasToolsConfig {
+  clear?: boolean
+  export?: boolean
+  import?: boolean
+  saveLocal?: boolean
+  saveAPI?: boolean
+  help?: boolean
+}
+
+// 定义组件属性
+interface Props {
+  canvasTools?: CanvasToolsConfig
+}
+
+// 设置默认属性值
+const props = withDefaults(defineProps<Props>(), {
+  canvasTools: () => ({
+    clear: true,
+    export: true,
+    import: true,
+    saveLocal: true,
+    saveAPI: true,
+    help: true
+  })
+})
+
+// 提供canvasTools配置给子组件
+provide('canvasTools', props.canvasTools)
+
 // 引入必要的样式
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
+
+// 导入html-to-image库
+import { toJpeg, toPng } from 'html-to-image'
+
+// 自定义NodeComponent类型以解决类型兼容性问题
+type NodeComponent = any
 
 // 获取 Vue Flow 实例和方法
 const { 
@@ -247,15 +279,15 @@ const history = ref<HistoryState[]>([])
 const currentHistoryIndex = ref(-1)
 
 // 注册自定义节点类型
-const nodeTypes: Record<string, any> = {
-  roundedRect: markRaw(RoundedRectNode),
-  textLabel: markRaw(TextLabelNode),
-  line: markRaw(LineNode),
-  startEnd: markRaw(StartEndNode),
-  condition: markRaw(ConditionNode),
-  circle: markRaw(CircleNode),
-  svgIcon: markRaw(SvgIconNode)
-}
+const nodeTypes = markRaw({
+  roundedRect: RoundedRectNode,
+  textLabel: TextLabelNode,
+  line: LineNode,
+  startEnd: StartEndNode,
+  condition: ConditionNode,
+  circle: CircleNode,
+  svgIcon: SvgIconNode
+})
 
 // 计算属性
 const selectedNodesList = computed(() => 
@@ -1918,169 +1950,792 @@ const onPaneMouseMove = (event: MouseEvent) => {
   }
 };
 
-// 处理画布鼠标松开事件
+// 处理画布鼠标释放事件
 const onPaneMouseUp = (event: MouseEvent) => {
-  // 检查组件是否仍然存在
-  if (!document.querySelector('.flow-editor')) {
-    // 如果组件已卸载，直接返回
+  // 如果没有进入选择状态，不处理
+  if (!isSelecting.value || !startPoint.value || !currentPoint.value) {
+    return;
+  }
+  
+  // 阻止默认行为
+  event.preventDefault();
+  event.stopPropagation();
+  
+  // 计算选择框的位置和尺寸
+  const left = Math.min(startPoint.value.x, currentPoint.value.x);
+  const top = Math.min(startPoint.value.y, currentPoint.value.y);
+  const width = Math.abs(currentPoint.value.x - startPoint.value.x);
+  const height = Math.abs(currentPoint.value.y - startPoint.value.y);
+  
+  // 选择框的大小
+  const selectionRect = {
+    left,
+    top,
+    right: left + width,
+    bottom: top + height
+  };
+  
+  // 重置DOM选择框状态
+  if (selectionBoxRef.value) {
+    selectionBoxRef.value.style.display = 'none';
+  }
+  
+  // 如果选择框太小，视为点击事件，不执行选择操作
+  if (width < 5 && height < 5) {
+    // 重置状态
     isSelecting.value = false;
     startPoint.value = null;
     currentPoint.value = null;
     return;
   }
   
-  // 只有在选择模式下处理
-  if (isSelecting.value && startPoint.value && currentPoint.value) {
-    // 阻止默认行为
-    event.preventDefault();
-    event.stopPropagation();
-    
-    // 只有当选择区域足够大时才执行选择（避免意外点击）
-    const minSelectionSize = 5; // 最小选择区域大小
-    const width = Math.abs(currentPoint.value.x - startPoint.value.x);
-    const height = Math.abs(currentPoint.value.y - startPoint.value.y);
-    
-    if (width > minSelectionSize || height > minSelectionSize) {
-      const left = Math.min(startPoint.value.x, currentPoint.value.x);
-      const top = Math.min(startPoint.value.y, currentPoint.value.y);
-      const right = Math.max(startPoint.value.x, currentPoint.value.x);
-      const bottom = Math.max(startPoint.value.y, currentPoint.value.y);
+  // 获取在选择框内的节点
+  const selectedNodeIds = getNodes.value
+    .filter(node => {
+      // 获取节点的位置和尺寸
+      const nodeLeft = node.position.x;
+      const nodeTop = node.position.y;
       
-      // 获取画布缩放和平移信息
-      const transform = getTransform();
-      const zoom = transform.zoom || 1;
-      const xOffset = transform.x || 0;
-      const yOffset = transform.y || 0;
+      // 获取节点宽高
+      let nodeWidth = 100; // 默认宽度
+      let nodeHeight = 50; // 默认高度
       
-      // 转换选择区域坐标到流图坐标系统
-      const selectionArea = {
-        left: (left - xOffset) / zoom,
-        top: (top - yOffset) / zoom,
-        right: (right - xOffset) / zoom,
-        bottom: (bottom - yOffset) / zoom
-      };
-      
-      // 存储要选中的节点ID列表
-      const nodesInSelectionArea: string[] = [];
-      
-      // 检查每个节点是否在选择区域内
-      getNodes.value.forEach(node => {
-        // 获取节点尺寸
-        const nodeDimensions = getNodeDimensions(node);
-        const nodeWidth = nodeDimensions?.width || 100;  // 默认尺寸
-        const nodeHeight = nodeDimensions?.height || 40; // 默认尺寸
-        
-        // 计算节点的四个角
-        const nodeLeft = node.position.x;
-        const nodeTop = node.position.y;
-        const nodeRight = nodeLeft + nodeWidth;
-        const nodeBottom = nodeTop + nodeHeight;
-        
-        // 检查节点是否在选择区域内 (完全包含或部分包含)
-        const isInArea = 
-          nodeLeft < selectionArea.right &&
-          nodeRight > selectionArea.left &&
-          nodeTop < selectionArea.bottom &&
-          nodeBottom > selectionArea.top;
-        
-        if (isInArea) {
-          nodesInSelectionArea.push(node.id);
-        }
-      });
-      
-      // 如果找到了要选中的节点
-      if (nodesInSelectionArea.length > 0) {
-        // 获取当前所有节点
-        const nodes = getNodes.value;
-        
-        if (event.ctrlKey) {
-          // Ctrl键按下时的多选逻辑
-          // 将框选中的节点添加到已选中的节点中，不影响其他已选中的节点
-          setNodes(nodes.map(node => {
-            if (nodesInSelectionArea.includes(node.id)) {
-              // 如果节点在框选区域内，则添加到选中状态（如果已选中则保持选中）
-              return {
-                ...node,
-                selected: true
-              };
-            }
-            // 不在框选区域内的节点保持原状态
-            return node;
-          }));
-        } else {
-          // 没有按Ctrl键时的框选逻辑（单选逻辑）
-          // 只选中框选区域内的节点，取消其他节点的选中状态
-          setNodes(nodes.map(node => ({
-            ...node,
-            selected: nodesInSelectionArea.includes(node.id)
-          })));
-        }
-        
-        // 使用一个延时确保DOM更新和Vue Flow内部状态同步
-        setTimeout(() => {
-          // 直接使用框选的节点IDs更新selectedNodes
-          selectedNodes.value = nodesInSelectionArea;
-          
-          // 验证选中状态是否正确应用
-          const allNodesSelected = nodesInSelectionArea.every(id => {
-            const node = getNodes.value.find(n => n.id === id);
-            return node && node.selected === true;
-          });
-          
-          if (!allNodesSelected) {
-            // 再次尝试应用选中状态
-            const updatedNodes = getNodes.value.map(node => ({
-              ...node,
-              selected: nodesInSelectionArea.includes(node.id) || 
-                       (event.ctrlKey && node.selected)
-            }));
-            setNodes(updatedNodes);
-            
-            // 强制更新节点内部结构
-            nodesInSelectionArea.forEach(nodeId => {
-              updateNodeInternals([nodeId]);
-            });
-          }
-          
-          // 确保selectedNodes数组与实际选中的节点同步
-          const actualSelectedNodes = getNodes.value
-            .filter(node => node.selected)
-            .map(node => node.id);
-          
-          if (JSON.stringify([...actualSelectedNodes].sort()) !== 
-              JSON.stringify([...selectedNodes.value].sort())) {
-            selectedNodes.value = actualSelectedNodes;
-          }
-        }, 100);
-        
-        // 保存历史记录
-        saveToHistory();
+      // 尝试获取节点的实际尺寸
+      if (node.dimensions) {
+        nodeWidth = node.dimensions.width;
+        nodeHeight = node.dimensions.height;
+      } else if (node.width && node.height) {
+        nodeWidth = node.width;
+        nodeHeight = node.height;
       } else {
-        // 如果没有找到节点并且没有按下Ctrl键，则清除所有选择
-        if (!event.ctrlKey) {
-          const updatedNodes = getNodes.value.map(node => ({
-            ...node,
-            selected: false
-          }));
-          setNodes(updatedNodes);
-          
-          // 清空selectedNodes数组
-          selectedNodes.value = [];
+        // 尝试从DOM获取节点尺寸
+        const nodeElement = document.querySelector(`[data-id="${node.id}"]`);
+        if (nodeElement) {
+          const rect = nodeElement.getBoundingClientRect();
+          nodeWidth = rect.width / getTransform().zoom;
+          nodeHeight = rect.height / getTransform().zoom;
         }
       }
-    }
-  }
+      
+      // 计算节点的右边和底部坐标
+      const nodeRight = nodeLeft + nodeWidth;
+      const nodeBottom = nodeTop + nodeHeight;
+      
+      // 检查节点是否在选择框内
+      // 我们认为节点的任意部分在选择框内则选中它
+      return (
+        // 检查是否有重叠
+        !(
+          nodeRight < selectionRect.left || // 节点在选择框左侧
+          nodeLeft > selectionRect.right || // 节点在选择框右侧
+          nodeBottom < selectionRect.top || // 节点在选择框上方
+          nodeTop > selectionRect.bottom    // 节点在选择框下方
+        )
+      );
+    })
+    .map(node => node.id);
   
-  // 隐藏选择框
-  if (selectionBoxRef.value) {
-    selectionBoxRef.value.style.display = 'none';
-  }
+  // 更新节点选择状态
+  const updatedNodes = getNodes.value.map(node => ({
+    ...node,
+    selected: selectedNodeIds.includes(node.id)
+  }));
   
-  // 重置选择状态
+  // 更新节点
+  setNodes(updatedNodes as any);
+  
+  // 重置框选状态
   isSelecting.value = false;
   startPoint.value = null;
   currentPoint.value = null;
+  
+  // 保存历史记录
+  saveToHistory();
 }
+
+// 获取时间戳
+const getTimestamp = () => {
+  const now = new Date()
+  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`
+}
+
+/**
+ * 处理节点数据，标准化属性和值
+ * @param nodes 原始节点数据数组
+ * @returns 处理后的节点数据数组
+ */
+const processNodeData = (nodes: any[]): any[] => {
+  return nodes.map((node: any) => {
+    // 直接使用原始位置，不进行任何修改
+    const position = {
+      x: node.position.x,
+      y: node.position.y
+    }
+
+    // 提取节点宽度和高度并确保是数字
+    let width: number = 100; // 默认宽度
+    let height: number = 38; // 默认高度
+    
+    // 从node.width获取宽度
+    if (typeof node.width === 'number') {
+      width = node.width;
+    }
+    // 从样式获取宽度
+    else if (node.data?.style?.width && typeof node.data.style.width === 'string') {
+      const parsedWidth = parseInt(node.data.style.width);
+      if (!isNaN(parsedWidth)) {
+        width = parsedWidth;
+      }
+    }
+    
+    // 从node.height获取高度
+    if (typeof node.height === 'number') {
+      height = node.height;
+    }
+    // 从样式获取高度
+    else if (node.data?.style?.height && typeof node.data.style.height === 'string') {
+      const parsedHeight = parseInt(node.data.style.height);
+      if (!isNaN(parsedHeight)) {
+        height = parsedHeight;
+      }
+    }
+
+    return {
+      ...node,
+      // 使用原始位置
+      position,
+      // 保存宽度和高度属性
+      width,
+      height,
+      data: {
+        ...node.data,
+        label: node.data?.label || '',
+        fontSize: Number(node.data?.fontSize) || 14,
+        color: node.data?.color || '#000000',
+        style: {
+          ...(node.data?.style || {}),
+          width: `${width}px`,
+          height: `${height}px`
+        }
+      },
+      selected: false
+    }
+  });
+}
+
+/**
+ * 处理边数据，标准化属性和值
+ * @param edges 原始边数据数组
+ * @returns 处理后的边数据数组
+ */
+const processEdgeData = (edges: any[]): any[] => {
+  return edges.map((edge: any) => ({
+    ...edge,  // 保留所有原始属性
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    sourceHandle: edge.sourceHandle,  // 确保使用原始源锚点
+    targetHandle: edge.targetHandle,  // 确保使用原始目标锚点
+    type: edge.type || 'smoothstep',  // 使用原始边类型，默认为smoothstep
+    style: {
+      ...(typeof edge.style === 'object' ? edge.style : {}),
+      strokeWidth: typeof edge.style === 'object' ? edge.style.strokeWidth || 1 : 1,
+      stroke: typeof edge.style === 'object' ? edge.style.stroke || '#555555' : '#555555'
+    },
+    markerEnd: edge.markerEnd,
+    markerStart: edge.markerStart,
+    data: edge.data,
+    selected: false
+  }));
+}
+
+/**
+ * 导出流程图数据为JSON对象
+ * @returns 当前流程图的数据对象
+ */
+const getFlowData = () => {
+  // 获取节点和边的数据
+  const nodes = getNodes.value.map((node) => {
+    // 直接使用原始位置，不修改坐标
+    const position = {
+      x: node.position.x,
+      y: node.position.y
+    }
+
+    // 提取节点的宽度和高度
+    let width: number = 100; // 默认宽度
+    let height: number = 38; // 默认高度
+    
+    // 尝试从DOM获取节点尺寸
+    const nodeElement = document.querySelector(`[data-id="${node.id}"]`);
+    if (nodeElement) {
+      const rect = nodeElement.getBoundingClientRect();
+      width = Math.round(rect.width);
+      height = Math.round(rect.height);
+    } else {
+      // 从样式获取宽度和高度
+      if (node.data?.style?.width && typeof node.data.style.width === 'string') {
+        const parsedWidth = parseInt(node.data.style.width);
+        if (!isNaN(parsedWidth)) {
+          width = parsedWidth;
+        }
+      }
+      
+      if (node.data?.style?.height && typeof node.data.style.height === 'string') {
+        const parsedHeight = parseInt(node.data.style.height);
+        if (!isNaN(parsedHeight)) {
+          height = parsedHeight;
+        }
+      }
+    }
+
+    return {
+      ...node,
+      position,
+      // 保存节点尺寸信息
+      width,
+      height,
+      data: {
+        ...node.data,
+        label: node.data?.label || '',
+        fontSize: node.data?.fontSize || 14,
+        color: node.data?.color || '#000000',
+        style: {
+          ...(node.data?.style || {}),
+          width: `${width}px`,
+          height: `${height}px`
+        }
+      },
+      selected: false // 重置选中状态
+    }
+  })
+
+  // 完整保存边的所有属性，特别是锚点信息
+  const edges = getEdges.value.map((edge) => ({
+    ...edge,  // 保留所有原始属性
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    sourceHandle: edge.sourceHandle,  // 明确保存源锚点
+    targetHandle: edge.targetHandle,  // 明确保存目标锚点
+    type: edge.type,  // 保留原始边类型，不设置默认值
+    style: {
+      ...(typeof edge.style === 'object' ? edge.style : {}),
+      strokeWidth: typeof edge.style === 'object' ? edge.style.strokeWidth || 1 : 1,
+      stroke: typeof edge.style === 'object' ? edge.style.stroke || '#555555' : '#555555'
+    },
+    markerEnd: edge.markerEnd,
+    markerStart: edge.markerStart,
+    data: edge.data,
+    selected: false
+  }))
+
+  return {
+    nodes,
+    edges,
+    metadata: {
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      title: `流程图_${getTimestamp()}`
+    }
+  }
+}
+
+/**
+ * 将流程图数据导出为JSON文件并下载
+ */
+const exportFlowData = () => {
+  try {
+    const flowData = getFlowData()
+    
+    const jsonStr = JSON.stringify(flowData, null, 2)
+    const blob = new Blob([jsonStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `flowchart_${getTimestamp()}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('导出数据失败:', error)
+    alert('导出数据失败：' + (error instanceof Error ? error.message : String(error)))
+  }
+}
+
+/**
+ * 获取流程图的数据URL（用于生成图片）
+ * @param format 输出格式：'jpg'或'png'
+ * @param download 是否自动下载图片
+ * @returns Promise<string | null> 返回生成的dataUrl
+ */
+const getDataUrl = async (format: 'jpg' | 'png' = 'jpg', download: boolean = false): Promise<string | null> => {
+  try {
+    const vueFlowElement = document.querySelector('.vue-flow') as HTMLElement
+    if (!vueFlowElement) {
+      console.error('找不到流程图元素')
+      return null
+    }
+
+    // 保存原始状态
+    const originalTransform = { ...getTransform() }
+    const originalNodes = getNodes.value.map(node => ({ ...node }))
+    const originalEdges = getEdges.value.map(edge => ({ ...edge }))
+
+    // 将节点和边都设为非选中状态
+    setNodes(getNodes.value.map(node => ({ ...node, selected: false })) as any)
+    setEdges(getEdges.value.map(edge => ({ ...edge, selected: false })))
+
+    // 计算流程图实际内容的边界
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    
+    // 查找所有节点以确定内容边界
+    getNodes.value.forEach(node => {
+      // 获取节点元素以确定实际尺寸
+      const nodeElement = document.querySelector(`[data-id="${node.id}"]`)
+      if (nodeElement) {
+        const rect = nodeElement.getBoundingClientRect()
+        
+        // 流程图的实际坐标空间是不同于屏幕坐标的，需要转换
+        // 获取节点的实际位置
+        const nodeX = node.position.x
+        const nodeY = node.position.y
+        
+        // 获取节点的实际尺寸
+        const nodeWidth = rect.width / (getTransform().zoom || 1)
+        const nodeHeight = rect.height / (getTransform().zoom || 1)
+        
+        // 更新边界值
+        minX = Math.min(minX, nodeX)
+        minY = Math.min(minY, nodeY)
+        maxX = Math.max(maxX, nodeX + nodeWidth)
+        maxY = Math.max(maxY, nodeY + nodeHeight)
+      }
+    })
+    
+    // 为边界添加20px的padding
+    const padding = 20
+    minX -= padding
+    minY -= padding
+    maxX += padding
+    maxY += padding
+    
+    // 计算流程图内容区域的宽度和高度
+    const contentWidth = maxX - minX
+    const contentHeight = maxY - minY
+    
+    // 如果没有节点，或计算出的边界无效，则使用整个画布
+    if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY) || 
+        contentWidth <= 0 || contentHeight <= 0) {
+      console.warn('无法计算有效内容区域，将使用整个画布')
+      minX = 0
+      minY = 0
+      maxX = vueFlowElement.clientWidth
+      maxY = vueFlowElement.clientHeight
+    }
+    
+    // 创建临时的viewBox配置，用于捕获指定区域
+    const originalViewportTransform = vueFlowElement.style.transform
+    const originalViewportPosition = vueFlowElement.style.position
+    const originalViewportOverflow = vueFlowElement.style.overflow
+    const originalWidth = vueFlowElement.style.width
+    const originalHeight = vueFlowElement.style.height
+    
+    // 缓存当前的视图参数
+    const currentPan = getTransform().x || 0
+    const currentZoom = getTransform().zoom || 1
+    
+    // 提前获取需要临时隐藏的控件元素
+    const controlsToHide = document.querySelectorAll('.vue-flow__controls, .vue-flow__minimap, .top-toolbar, .node-toolbar, .left-sidebar')
+    const originalVisibility: Array<[Element, string]> = []
+
+    // 临时隐藏控件
+    controlsToHide.forEach(el => {
+      // 保存所有相关的原始样式
+      originalVisibility.push([el, (el as HTMLElement).style.visibility])
+      // 使用visibility: hidden替代display: none，这样不会改变布局
+      ;(el as HTMLElement).style.visibility = 'hidden'
+    })
+
+    try {
+      // 使用vueFlow提供的视图API来平移和缩放到内容区域
+      // 保存当前状态
+      const flowWrapper = document.querySelector('.vue-flow__transformationpane') as HTMLElement
+      if (flowWrapper) {
+        // 设置transform以适应内容区域
+        const transformX = -minX
+        const transformY = -minY
+        
+        // 重置transform
+        flowWrapper.style.transform = `translate(${transformX}px, ${transformY}px) scale(1)`
+      }
+      
+      // 设置元素宽高为内容区域宽高
+      vueFlowElement.style.width = `${contentWidth}px`
+      vueFlowElement.style.height = `${contentHeight}px`
+      vueFlowElement.style.overflow = 'hidden'
+      
+      // 等待DOM更新
+      await new Promise<void>((resolve) => setTimeout(resolve, 100))
+
+      // 直接获取所有边元素
+      const edgeElements = vueFlowElement.querySelectorAll('.vue-flow__edge')
+      
+      // 预先处理所有边的样式 - 记录原始样式信息
+      const edgeOriginalStyles: Map<string, {stroke: string, strokeWidth: string}> = new Map()
+      
+      edgeElements.forEach(edgeEl => {
+        const edgeId = edgeEl.getAttribute('data-id')
+        if (edgeId) {
+          // 获取当前边的计算样式
+          const computedStyle = window.getComputedStyle(edgeEl)
+          
+          // 获取边的原始边缘元素
+          const edgePath = edgeEl.querySelector('.vue-flow__edge-path')
+          if (edgePath) {
+            // 尝试多种方式获取颜色：直接从边元素、从路径元素、从数据模型
+            let strokeColor = ''
+            let strokeWidth = ''
+            
+            // 1. 从数据模型中查找
+            const edgeData = getEdges.value.find(e => e.id === edgeId)
+            if (edgeData && edgeData.style) {
+              if (typeof edgeData.style === 'object') {
+                strokeColor = edgeData.style.stroke as string || ''
+                strokeWidth = typeof edgeData.style.strokeWidth === 'number' 
+                  ? `${edgeData.style.strokeWidth}px` 
+                  : String(edgeData.style.strokeWidth || '')
+              }
+            }
+            
+            // 2. 从计算样式中获取
+            if (!strokeColor) {
+              strokeColor = computedStyle.stroke || 
+                            computedStyle.getPropertyValue('stroke') || 
+                            computedStyle.color
+            }
+            
+            if (!strokeWidth) {
+              strokeWidth = computedStyle.strokeWidth || 
+                            computedStyle.getPropertyValue('stroke-width') || 
+                            '2px'
+            }
+            
+            // 存储原始样式
+            edgeOriginalStyles.set(edgeId, {
+              stroke: strokeColor !== 'none' && strokeColor !== '' ? strokeColor : '#555',
+              strokeWidth: strokeWidth !== 'none' && strokeWidth !== '' ? strokeWidth : '2px'
+            })
+          }
+        }
+      })
+
+      // 应用SVG处理直接在原始DOM上
+      const svgElements = vueFlowElement.querySelectorAll('svg')
+      svgElements.forEach(svg => {
+        // 确保SVG元素可见
+        svg.style.visibility = 'visible'
+        svg.style.display = 'block'
+        svg.style.overflow = 'visible'
+        
+        // 处理所有path元素
+        const paths = svg.querySelectorAll('path')
+        paths.forEach(path => {
+          // 设置基本属性
+          path.style.fill = 'none'
+          
+          // 如果是边线路径，应用存储的原始颜色和粗细
+          if (path.classList.contains('vue-flow__edge-path')) {
+            // 查找边ID
+            const edgeEl = path.closest('.vue-flow__edge')
+            if (edgeEl) {
+              const edgeId = edgeEl.getAttribute('data-id')
+              if (edgeId && edgeOriginalStyles.has(edgeId)) {
+                const originalStyle = edgeOriginalStyles.get(edgeId)
+                if (originalStyle) {
+                  // 应用原始颜色和粗细
+                  path.style.stroke = originalStyle.stroke
+                  path.style.strokeWidth = originalStyle.strokeWidth
+                }
+              } else {
+                // 如果没有找到原始样式，使用计算样式
+                const computedStyle = window.getComputedStyle(path)
+                path.style.stroke = computedStyle.stroke || '#555'
+                path.style.strokeWidth = computedStyle.strokeWidth || '2px'
+              }
+            }
+          } else {
+            // 非边线路径保持原样
+            const originalStroke = path.getAttribute('stroke') || 
+                                  path.style.stroke || 
+                                  window.getComputedStyle(path).stroke || 
+                                  'currentColor'
+            path.style.stroke = originalStroke
+          }
+          
+          // 确保虚线显示正确
+          if (path.getAttribute('stroke-dasharray')) {
+            const dashArray = path.getAttribute('stroke-dasharray')
+            path.setAttribute('stroke-dasharray', dashArray || '5,5')
+          }
+        })
+        
+        // 确保marker (箭头) 正确显示
+        const markers = svg.querySelectorAll('marker')
+        markers.forEach(marker => {
+          marker.setAttribute('markerWidth', '15')
+          marker.setAttribute('markerHeight', '15')
+          
+          // 查找marker内的path并设置颜色
+          const markerPaths = marker.querySelectorAll('path')
+          markerPaths.forEach(markerPath => {
+            // 获取引用此marker的边的颜色
+            const markerId = marker.id
+            if (markerId) {
+              // 查找使用此marker的边
+              const edgesWithMarker = document.querySelectorAll(`.vue-flow__edge[marker-end*="${markerId}"], .vue-flow__edge[marker-start*="${markerId}"]`)
+              if (edgesWithMarker && edgesWithMarker.length > 0) {
+                const edgeWithMarker = edgesWithMarker[0] as HTMLElement
+                const edgeId = edgeWithMarker.getAttribute('data-id')
+                
+                if (edgeId && edgeOriginalStyles.has(edgeId)) {
+                  const originalStyle = edgeOriginalStyles.get(edgeId)
+                  if (originalStyle) {
+                    // 为marker path应用相同的颜色
+                    markerPath.style.fill = originalStyle.stroke
+                    markerPath.style.stroke = originalStyle.stroke
+                  }
+                }
+              }
+            }
+          })
+        })
+      })
+
+      // 确保圆形节点完整显示
+      const circleNodes = vueFlowElement.querySelectorAll('.vue-flow__node-circle')
+      circleNodes.forEach(node => {
+        ;(node as HTMLElement).style.padding = '5px'
+      })
+
+      // 导出图片的配置选项
+      const exportImageOptions = {
+        quality: 0.95,
+        backgroundColor: 'white', 
+        pixelRatio: 1, // 设置为1确保1:1比例
+        skipAutoScale: true,
+        // 包含所有相关样式
+        fontEmbedCSS: document.querySelector('link[rel="stylesheet"]')?.getAttribute('href') || undefined,
+        // 过滤掉不需要的元素
+        filter: (node: HTMLElement) => {
+          if (!node || !node.classList) return true;
+          
+          // 检查元素是否应该被过滤（基于类名）
+          const shouldBeFiltered = ['vue-flow__controls', 'vue-flow__minimap', 'top-toolbar', 'node-toolbar', 'left-sidebar'].some(
+            className => node.classList.contains(className)
+          );
+          
+          // 检查元素是否被隐藏（通过visibility属性）
+          const isHidden = window.getComputedStyle(node).visibility === 'hidden';
+          
+          // 仅保留不应被过滤且未隐藏的元素
+          return !shouldBeFiltered && !isHidden;
+        }
+      };
+
+      // 根据格式选择导出方法
+      const exportFn = format === 'png' ? toPng : toJpeg
+      const extension = format === 'png' ? 'png' : 'jpg'
+      
+      const dataUrl = await exportFn(vueFlowElement, exportImageOptions)
+      
+      // 如果需要下载，创建下载链接
+      if (download) {
+        const fileName = `flowchart_${getTimestamp()}`
+        const link = document.createElement('a')
+        link.download = `${fileName}.${extension}`
+        link.href = dataUrl
+        link.click()
+      }
+      
+      return dataUrl
+    } finally {
+      // 恢复原始画布大小和位置
+      if (vueFlowElement) {
+        vueFlowElement.style.width = originalWidth
+        vueFlowElement.style.height = originalHeight
+        vueFlowElement.style.overflow = originalViewportOverflow || ''
+      }
+      
+      // 恢复原始transform
+      const flowWrapper = document.querySelector('.vue-flow__transformationpane') as HTMLElement
+      if (flowWrapper) {
+        flowWrapper.style.transform = `translate(${originalTransform.x || 0}px, ${originalTransform.y || 0}px) scale(${originalTransform.zoom || 1})`
+      }
+      
+      // 恢复原始状态
+      setNodes(originalNodes as any)
+      setEdges(originalEdges)
+      
+      // 恢复控件可见性
+      controlsToHide.forEach((el, index) => {
+        if (index < originalVisibility.length) {
+          // 恢复原始的visibility属性
+          ;(el as HTMLElement).style.visibility = originalVisibility[index][1] || 'visible'
+        }
+      })
+    }
+  } catch (error) {
+    console.error('生成图片数据URL失败:', error)
+    return null
+  }
+}
+
+/**
+ * 导出流程图为图片
+ * @param format 输出格式：'jpg'或'png'
+ * @returns Promise<string | null> 返回生成的dataUrl
+ */
+const exportImage = async (format: 'jpg' | 'png' = 'jpg'): Promise<string | null> => {
+  // 利用getDataUrl方法并自动下载图片
+  return getDataUrl(format, true);
+}
+
+/**
+ * 从JSON文件导入流程图数据
+ * @param file JSON文件对象
+ */
+const importFlowData = async (file: File): Promise<boolean> => {
+  try {
+    const fileContent = await file.text();
+    const data = JSON.parse(fileContent);
+    
+    // 验证数据格式
+    if (!data || typeof data !== 'object' || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+      alert('无效的流程图数据格式');
+      return false;
+    }
+    
+    // 处理节点和边的数据
+    const nodes = data.nodes.map((node: any) => {
+      // 确保位置信息正确
+      const position = {
+        x: node.position?.x || 0,
+        y: node.position?.y || 0
+      };
+      
+      return {
+        ...node,
+        position,
+        selected: false
+      };
+    });
+    
+    const edges = data.edges.map((edge: any) => ({
+      ...edge,
+      selected: false
+    }));
+    
+    // 应用数据到画布
+    setNodes([]);
+    setEdges([]);
+    
+    // 使用setTimeout确保清空操作完成
+    await new Promise<void>(resolve => setTimeout(resolve, 50));
+    
+    setNodes(nodes);
+    setEdges(edges);
+    
+    return true;
+  } catch (error) {
+    console.error('导入数据失败:', error);
+    alert('导入数据失败：' + (error instanceof Error ? error.message : String(error)));
+    return false;
+  }
+};
+
+/**
+ * 保存流程图数据到API
+ * @param apiEndpoint API端点URL
+ * @param options 可选的请求配置
+ */
+const saveToAPI = async (apiEndpoint: string, options?: RequestInit): Promise<boolean> => {
+  try {
+    const flowData = getFlowData();
+    
+    // 调用API保存数据
+    const response = await fetch(apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+      },
+      body: JSON.stringify(flowData),
+      ...options
+    });
+    
+    if (!response.ok) {
+      throw new Error('保存失败: ' + response.statusText);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('保存到API失败:', error);
+    alert('保存到API失败：' + (error instanceof Error ? error.message : String(error)));
+    return false;
+  }
+};
+
+/**
+ * 从API加载流程图数据
+ * @param apiEndpoint API端点URL
+ * @param options 可选的请求配置
+ */
+const loadFromAPI = async (apiEndpoint: string, options?: RequestInit): Promise<boolean> => {
+  try {
+    const response = await fetch(apiEndpoint, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+      },
+      ...options
+    });
+    
+    if (!response.ok) {
+      throw new Error('从API加载失败: ' + response.statusText);
+    }
+    
+    const data = await response.json();
+    return await importFlowData(new Blob([JSON.stringify(data)], { type: 'application/json' }) as any);
+  } catch (error) {
+    console.error('从API加载失败:', error);
+    alert('从API加载失败：' + (error instanceof Error ? error.message : String(error)));
+    return false;
+  }
+};
+
+// 暴露方法给外部使用
+const flowEditorMethods = {
+  getFlowData,
+  exportFlowData,
+  exportImage,
+  importFlowData,
+  saveToAPI,
+  loadFromAPI,
+  processNodeData,
+  processEdgeData,
+  getDataUrl
+}
+
+// 提供FlowEditor的方法给子组件
+provide('flowEditor', flowEditorMethods)
+
+defineExpose(flowEditorMethods)
+
+// 自定义NodeComponent类型以解决类型兼容性问题
+// ... existing code ...
 </script>
 
 <style>

@@ -100,7 +100,7 @@
               <div class="shortcut-key">Del/Backspace</div>
               <div class="shortcut-desc">删除选中的对象</div>
             </div>
-            <div class="shortcut-item">
+                       <div class="shortcut-item">
               <div class="shortcut-key">Ctrl+C/Ctrl+V</div>
               <div class="shortcut-desc">复制/粘贴选中对象</div>
             </div>
@@ -150,13 +150,28 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, inject } from 'vue'
 import { useVueFlow } from '@vue-flow/core'
 import type { Node as VueFlowNode, Edge as VueFlowEdge } from '@vue-flow/core'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
 import ConfirmModal from '../Modal/ConfirmModal.vue'
 import { toJpeg, toPng } from 'html-to-image'
 import type { FlowNode, FlowEdge, FlowData, APIResponse } from '../../types/flow'
+
+// 获取FlowEditor暴露的方法
+interface FlowEditorMethods {
+  getFlowData: () => any;
+  exportFlowData: () => void;
+  exportImage: (format?: 'jpg' | 'png') => Promise<string | null>;
+  importFlowData: (file: File) => Promise<boolean>;
+  saveToAPI: (apiEndpoint: string, options?: RequestInit) => Promise<boolean>;
+  loadFromAPI: (apiEndpoint: string, options?: RequestInit) => Promise<boolean>;
+  processNodeData: (nodes: any[]) => any[];
+  processEdgeData: (edges: any[]) => any[];
+  getDataUrl: (format?: 'jpg' | 'png', download?: boolean) => Promise<string | null>;
+}
+
+const flowEditor = inject<FlowEditorMethods | null>('flowEditor', null)
 
 // 获取Vue Flow实例和方法
 const { 
@@ -227,7 +242,23 @@ const handleExportClick = () => {
     showExportAlert.value = true
     return
   }
-  exportImage()
+  
+  // 如果有注入flowEditor，则使用其暴露的方法
+  if (flowEditor) {
+    if (typeof flowEditor.getDataUrl === 'function') {
+      // 使用新的getDataUrl方法，自动下载
+      flowEditor.getDataUrl('jpg', true);
+    } else if (typeof flowEditor.exportImage === 'function') {
+      // 向后兼容，尝试使用exportImage
+      flowEditor.exportImage();
+    } else {
+      // 降级处理：使用本地方法
+      exportImage();
+    }
+  } else {
+    // 降级处理：使用本地方法
+    exportImage();
+  }
 }
 
 // 处理导出提示确认
@@ -236,6 +267,7 @@ const handleExportAlert = () => {
 }
 
 // 使用简化的导出图片实现，模仿官方示例
+// 只有在没有注入flowEditor的情况下才会使用这个方法
 const exportImage = async () => {
   try {
     if (!vueFlowRef.value) {
@@ -417,14 +449,15 @@ const exportImage = async () => {
       })
 
       // 使用html-to-image直接对处理过的DOM进行截图
-      const dataUrl = await toJpeg(vueFlowRef.value, {
+      // 导出图片的配置选项
+      const exportImageOptions = {
         quality: 0.95,
-        backgroundColor: 'white',
+        backgroundColor: 'white', 
         pixelRatio: 2,
         skipAutoScale: true,
         // 包含所有相关样式
         fontEmbedCSS: document.querySelector('link[rel="stylesheet"]')?.getAttribute('href') || undefined,
-        // 只保留图形相关元素，过滤掉控件
+        // 只保留图形相关元素,过滤掉控件
         filter: (node: HTMLElement) => {
           if (!node || !node.classList) return true;
           
@@ -441,7 +474,9 @@ const exportImage = async () => {
           
           return shouldKeep;
         }
-      }).catch(error => {
+      };
+
+      const dataUrl = await toJpeg(vueFlowRef.value, exportImageOptions).catch(error => {
         throw error;
       });
 
@@ -488,30 +523,44 @@ const handleFileImport = async (event: Event) => {
   if (!file) return
 
   try {
+    // 如果有注入flowEditor，则使用其暴露的方法
+    if (flowEditor && typeof flowEditor.importFlowData === 'function') {
+      await flowEditor.importFlowData(file)
+    } else {
+      // 降级处理：使用本地方法
     const reader = new FileReader()
     reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target?.result as string)
         
         // 验证数据格式
-        if (!validateFlowData(data)) {
+          if (!validateFlowData(data)) {
           throw new Error('无效的流程图数据格式')
         }
 
-        // 处理节点和边数据
-        const nodes = processNodeData(data.nodes)
-        const edges = processEdgeData(data.edges)
-        
-        // 应用数据到画布
-        await applyFlowData(nodes, edges)
+          // 处理节点和边数据
+          // 优先使用flowEditor中的方法，如果没有就用本地缓存的方法
+          let nodes, edges;
+          if (flowEditor && typeof flowEditor.processNodeData === 'function' && 
+              typeof flowEditor.processEdgeData === 'function') {
+            nodes = flowEditor.processNodeData(data.nodes);
+            edges = flowEditor.processEdgeData(data.edges);
+          } else {
+            console.warn('未找到flowEditor中的处理方法，使用本地方法');
+            // 这里不再定义本地方法，使用更简单的直接使用数据的方式
+            nodes = data.nodes;
+            edges = data.edges;
+          }
+          
+          // 应用数据到画布
+          await applyFlowData(nodes, edges)
 
-      } catch (error) {
-        showError(error, '导入失败', true)
+        } catch (error) {
+          showError(error, '导入失败', true)
+        }
       }
+      reader.readAsText(file)
     }
-    
-    // 读取文件内容
-    reader.readAsText(file)
   } catch (error) {
     showError(error, '导入失败', true)
   } finally {
@@ -519,96 +568,6 @@ const handleFileImport = async (event: Event) => {
     const input = event.target as HTMLInputElement
     input.value = ''
   }
-}
-
-/**
- * 处理节点数据，标准化属性和值
- * @param nodes 原始节点数据数组
- * @returns 处理后的节点数据数组
- */
-const processNodeData = (nodes: any[]): FlowNode[] => {
-  return nodes.map((node: any) => {
-    // 直接使用原始位置，不进行任何修改
-    const position = {
-      x: node.position.x,
-      y: node.position.y
-    }
-
-    // 提取节点宽度和高度并确保是数字
-    let width: number = 100; // 默认宽度
-    let height: number = 38; // 默认高度
-    
-    // 从node.width获取宽度
-    if (typeof node.width === 'number') {
-      width = node.width;
-    }
-    // 从样式获取宽度
-    else if (node.data?.style?.width && typeof node.data.style.width === 'string') {
-      const parsedWidth = parseInt(node.data.style.width);
-      if (!isNaN(parsedWidth)) {
-        width = parsedWidth;
-      }
-    }
-    
-    // 从node.height获取高度
-    if (typeof node.height === 'number') {
-      height = node.height;
-    }
-    // 从样式获取高度
-    else if (node.data?.style?.height && typeof node.data.style.height === 'string') {
-      const parsedHeight = parseInt(node.data.style.height);
-      if (!isNaN(parsedHeight)) {
-        height = parsedHeight;
-      }
-    }
-
-    return {
-          ...node,
-      // 使用原始位置
-      position,
-      // 保存宽度和高度属性
-      width,
-      height,
-          data: {
-            ...node.data,
-            label: node.data?.label || '',
-            fontSize: Number(node.data?.fontSize) || 14,
-            color: node.data?.color || '#000000',
-        style: {
-          ...(node.data?.style || {}),
-          width: `${width}px`,
-          height: `${height}px`
-        }
-          },
-          selected: false
-    }
-  });
-}
-
-/**
- * 处理边数据，标准化属性和值
- * @param edges 原始边数据数组
- * @returns 处理后的边数据数组
- */
-const processEdgeData = (edges: any[]): FlowEdge[] => {
-  return edges.map((edge: any) => ({
-    ...edge,  // 保留所有原始属性
-          id: edge.id,
-          source: edge.source,
-          target: edge.target,
-    sourceHandle: edge.sourceHandle,  // 确保使用原始源锚点
-    targetHandle: edge.targetHandle,  // 确保使用原始目标锚点
-    type: edge.type || 'smoothstep',  // 使用原始边类型，默认为smoothstep
-          style: {
-            ...(typeof edge.style === 'object' ? edge.style : {}),
-            strokeWidth: typeof edge.style === 'object' ? edge.style.strokeWidth || 1 : 1,
-            stroke: typeof edge.style === 'object' ? edge.style.stroke || '#555555' : '#555555'
-          },
-          markerEnd: edge.markerEnd,
-          markerStart: edge.markerStart,
-    data: edge.data,
-          selected: false
-  }));
 }
 
 /**
@@ -701,72 +660,77 @@ const showError = (error: unknown, title: string = '错误', useAlert: boolean =
 }
 
 const saveJSON = () => {
+  // 如果有注入flowEditor，则使用其暴露的方法
+  if (flowEditor && typeof flowEditor.exportFlowData === 'function') {
+    flowEditor.exportFlowData()
+  } else {
+    // 降级处理：使用本地方法
   try {
     // 获取节点和边的数据
     const nodes = getNodes.value.map((node: VueFlowNode) => {
-      // 直接使用原始位置，不修改坐标
-      const position = {
-        x: node.position.x,
-        y: node.position.y
-      }
-
-      // 提取节点的宽度和高度
-      let width: number = 100; // 默认宽度
-      let height: number = 38; // 默认高度
-      
-      // 尝试从DOM获取节点尺寸
-      const nodeElement = document.querySelector(`[data-id="${node.id}"]`);
-      if (nodeElement) {
-        const rect = nodeElement.getBoundingClientRect();
-        width = Math.round(rect.width);
-        height = Math.round(rect.height);
-      } else {
-        // 从样式获取宽度和高度
-        if (node.data?.style?.width && typeof node.data.style.width === 'string') {
-          const parsedWidth = parseInt(node.data.style.width);
-          if (!isNaN(parsedWidth)) {
-            width = parsedWidth;
-          }
+        // 直接使用原始位置，不修改坐标
+        const position = {
+          x: node.position.x,
+          y: node.position.y
         }
+
+        // 提取节点的宽度和高度
+        let width: number = 100; // 默认宽度
+        let height: number = 38; // 默认高度
         
-        if (node.data?.style?.height && typeof node.data.style.height === 'string') {
-          const parsedHeight = parseInt(node.data.style.height);
-          if (!isNaN(parsedHeight)) {
-            height = parsedHeight;
+        // 尝试从DOM获取节点尺寸
+        const nodeElement = document.querySelector(`[data-id="${node.id}"]`);
+        if (nodeElement) {
+          const rect = nodeElement.getBoundingClientRect();
+          width = Math.round(rect.width);
+          height = Math.round(rect.height);
+        } else {
+          // 从样式获取宽度和高度
+          if (node.data?.style?.width && typeof node.data.style.width === 'string') {
+            const parsedWidth = parseInt(node.data.style.width);
+            if (!isNaN(parsedWidth)) {
+              width = parsedWidth;
+            }
           }
+          
+          if (node.data?.style?.height && typeof node.data.style.height === 'string') {
+            const parsedHeight = parseInt(node.data.style.height);
+            if (!isNaN(parsedHeight)) {
+              height = parsedHeight;
+            }
         }
       }
 
       return {
         ...node,
         position,
-        // 保存节点尺寸信息
-        width,
-        height,
+          // 保存节点尺寸信息
+          width,
+          height,
         data: {
           ...node.data,
           label: node.data?.label || '',
           fontSize: node.data?.fontSize || 14,
           color: node.data?.color || '#000000',
-          style: {
-            ...(node.data?.style || {}),
-            width: `${width}px`,
-            height: `${height}px`
-          }
+            style: {
+              ...(node.data?.style || {}),
+              width: `${width}px`,
+              height: `${height}px`
+            }
         },
         selected: false // 重置选中状态
       }
     })
 
-    // 完整保存边的所有属性，特别是锚点信息
+      // 完整保存边的所有属性，特别是锚点信息
     const edges = getEdges.value.map((edge: VueFlowEdge) => ({
-      ...edge,  // 保留所有原始属性
+        ...edge,  // 保留所有原始属性
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      sourceHandle: edge.sourceHandle,  // 明确保存源锚点
-      targetHandle: edge.targetHandle,  // 明确保存目标锚点
-      type: edge.type,  // 保留原始边类型，不设置默认值
+        sourceHandle: edge.sourceHandle,  // 明确保存源锚点
+        targetHandle: edge.targetHandle,  // 明确保存目标锚点
+        type: edge.type,  // 保留原始边类型，不设置默认值
       style: {
         ...(typeof edge.style === 'object' ? edge.style : {}),
         strokeWidth: typeof edge.style === 'object' ? edge.style.strokeWidth || 1 : 1,
@@ -774,19 +738,24 @@ const saveJSON = () => {
       },
       markerEnd: edge.markerEnd,
       markerStart: edge.markerStart,
-      data: edge.data,
+        data: edge.data,
       selected: false
     }))
 
-    const flowData = {
+      // 导出流程图数据
+      const getFlowData = () => {
+        return {
       nodes,
       edges,
       metadata: {
         version: '1.0.0',
         timestamp: new Date().toISOString(),
         title: `流程图_${getTimestamp()}`
+          }
       }
     }
+
+      const flowData = getFlowData()
     
     const jsonStr = JSON.stringify(flowData, null, 2)
     const blob = new Blob([jsonStr], { type: 'application/json' })
@@ -799,7 +768,8 @@ const saveJSON = () => {
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
   } catch (error) {
-    showError(error, '保存失败', true)
+      showError(error, '保存失败', true)
+    }
   }
 }
 
@@ -922,9 +892,18 @@ const loadFromAPI = async (apiEndpoint: string, options?: RequestInit): Promise<
       return { success: false, error: '数据验证失败' }
     }
 
-    // 处理节点和边数据（使用提取的公共函数）
-    const nodes = processNodeData(data.nodes)
-    const edges = processEdgeData(data.edges)
+    // 处理节点和边数据
+    // 优先使用flowEditor中的方法，如果没有就用更简单的直接使用数据
+    let nodes, edges;
+    if (flowEditor && typeof flowEditor.processNodeData === 'function' && 
+        typeof flowEditor.processEdgeData === 'function') {
+      nodes = flowEditor.processNodeData(data.nodes);
+      edges = flowEditor.processEdgeData(data.edges);
+    } else {
+      console.warn('未找到flowEditor中的处理方法，使用简单处理');
+      nodes = data.nodes;
+      edges = data.edges;
+    }
     
     // 应用数据到画布（使用统一的异步处理）
     await applyFlowData(nodes, edges)
@@ -976,7 +955,13 @@ const saveToAPI = async (apiEndpoint: string = 'YOUR_API_ENDPOINT') => {
 
 // 添加用于处理保存到API点击事件的函数
 const handleSaveToAPI = () => {
-  saveToAPI();
+  // 如果有注入flowEditor，则使用其暴露的方法
+  if (flowEditor && typeof flowEditor.saveToAPI === 'function') {
+    flowEditor.saveToAPI('YOUR_API_ENDPOINT')
+  } else {
+    // 降级处理：使用本地方法
+    saveToAPI();
+  }
 }
 
 // 处理API错误

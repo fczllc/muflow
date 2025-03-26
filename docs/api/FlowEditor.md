@@ -4,15 +4,62 @@
 
 ## 属性 (Props)
 
-该组件没有可配置的属性。
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| canvasTools | CanvasToolsConfig | 见下方 | 配置画布工具按钮的可见性 |
+
+```typescript
+// 画布工具配置接口
+interface CanvasToolsConfig {
+  clear?: boolean;    // 清除按钮
+  export?: boolean;   // 导出图片按钮
+  import?: boolean;   // 导入数据按钮
+  saveLocal?: boolean; // 本地保存按钮
+  saveAPI?: boolean;  // API保存按钮
+  help?: boolean;     // 帮助按钮
+}
+
+// 默认值
+{
+  clear: true,
+  export: true,
+  import: true,
+  saveLocal: true,
+  saveAPI: true,
+  help: true
+}
+```
 
 ## 事件 (Events)
 
 该组件内部处理所有事件，不向外部发出事件。
 
-## 方法 (Methods)
+## 暴露的方法 (Methods)
 
-该组件不对外暴露方法。
+组件通过 `defineExpose` 暴露以下方法，可以通过 ref 引用调用：
+
+| 方法名 | 参数 | 返回值 | 说明 |
+|--------|------|--------|------|
+| getFlowData | 无 | Object | 获取当前流程图的完整数据 |
+| exportFlowData | 无 | void | 导出流程图数据为JSON文件 |
+| exportImage | format?: 'jpg'\|'png' | Promise<string\|null> | 导出流程图为图片并自动下载 |
+| importFlowData | file: File | Promise<boolean> | 从JSON文件导入流程图数据 |
+| saveToAPI | apiEndpoint: string, options?: RequestInit | Promise<boolean> | 保存流程图数据到API |
+| loadFromAPI | apiEndpoint: string, options?: RequestInit | Promise<boolean> | 从API加载流程图数据 |
+| getDataUrl | format?: 'jpg'\|'png', download?: boolean | Promise<string\|null> | 获取流程图的数据URL，可选是否下载 |
+
+```typescript
+// 可以在TypeScript中这样定义FlowEditor暴露的方法类型
+interface FlowEditorMethods {
+  getFlowData: () => Object;
+  exportFlowData: () => void;
+  exportImage: (format?: 'jpg' | 'png') => Promise<string | null>;
+  importFlowData: (file: File) => Promise<boolean>;
+  saveToAPI: (apiEndpoint: string, options?: RequestInit) => Promise<boolean>;
+  loadFromAPI: (apiEndpoint: string, options?: RequestInit) => Promise<boolean>;
+  getDataUrl: (format?: 'jpg' | 'png', download?: boolean) => Promise<string | null>;
+}
+```
 
 ## VueFlow 配置
 
@@ -216,7 +263,7 @@ FlowEditor 组件内部对 VueFlow 进行了以下关键配置：
    - 保留其他缩放和导航方式，如顶部工具栏的缩放按钮
 
 3. **自动平移禁用**
-   - 通过`autoPanOnNodeDrag="false"`禁用拖拽节点时的自动平移功能
+   - 通过`autoPanOnNodeDrag="false"`禁用拖拽节点时的自动平移功能，防止拖拽到边缘时画布自动移动
    - 添加`node-extent-pad="0"`优化节点拖拽边界行为
    - 提供更精确和可控的节点定位体验
 
@@ -224,6 +271,23 @@ FlowEditor 组件内部对 VueFlow 进行了以下关键配置：
    - 移除仅用于调试目的的代码
    - 减少不必要的DOM监听和事件处理
    - 优化渲染性能
+
+5. **组件配置能力增强**
+   - 支持通过`props`传递配置参数
+   - 集成依赖注入机制实现子组件配置
+   - 提供`canvasTools`参数配置画布工具按钮的可见性
+
+6. **API方法暴露**
+   - 暴露关键方法供外部调用，如`getFlowData`、`exportFlowData`、`getDataUrl`等
+   - 提供类型定义支持TypeScript类型检查
+   - 支持通过ref引用调用组件方法
+
+7. **导出图像能力增强**
+   - 支持导出为JPG/PNG格式
+   - 优化导出图像质量和精度
+   - 实现基于有效内容区域的智能裁剪，自动计算流程图实际内容的边界
+   - 添加20px边距，确保导出图像美观
+   - 设置1:1像素比例，避免图像失真
 
 ## 快捷键
 
@@ -237,6 +301,8 @@ FlowEditor 组件内部对 VueFlow 进行了以下关键配置：
 | Shift + 拖拽 | 直线角度对齐（0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°）|
 
 ## 使用示例
+
+### 基本使用
 
 ```vue
 <template>
@@ -254,4 +320,71 @@ import FlowEditor from './components/FlowEditor.vue'
   width: 100vw;
   height: 100vh;
 }
-</style> 
+</style>
+```
+
+### 配置画布工具按钮
+
+```vue
+<template>
+  <div class="app">
+    <FlowEditor 
+      :canvasTools="{
+        clear: true,
+        export: true,
+        import: true,
+        saveLocal: true,
+        saveAPI: false, // 禁用API保存按钮
+        help: true
+      }" 
+    />
+  </div>
+</template>
+```
+
+### 使用暴露的方法
+
+```vue
+<template>
+  <div class="app">
+    <FlowEditor ref="flowEditorRef" />
+    <div class="custom-controls">
+      <button @click="exportFlowData">导出流程图</button>
+      <button @click="getImageData">获取图片</button>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import FlowEditor from './components/FlowEditor.vue';
+
+// 定义FlowEditor暴露的方法类型
+interface FlowEditorMethods {
+  exportFlowData: () => void;
+  getDataUrl: (format?: 'jpg' | 'png', download?: boolean) => Promise<string | null>;
+}
+
+// 获取FlowEditor实例的引用
+const flowEditorRef = ref<InstanceType<typeof FlowEditor> | null>(null);
+
+// 自定义导出方法
+const exportFlowData = () => {
+  if (flowEditorRef.value) {
+    // 使用类型断言
+    const flowEditor = flowEditorRef.value as unknown as FlowEditorMethods;
+    flowEditor.exportFlowData();
+  }
+};
+
+// 获取图片数据URL
+const getImageData = async () => {
+  if (flowEditorRef.value) {
+    const flowEditor = flowEditorRef.value as unknown as FlowEditorMethods;
+    const dataUrl = await flowEditor.getDataUrl('png', false);
+    console.log('图片数据URL:', dataUrl);
+    // 可以进一步处理图片数据...
+  }
+};
+</script>
+```
