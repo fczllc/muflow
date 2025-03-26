@@ -17,7 +17,7 @@
         export: true,
         import: true,
         saveLocal: true,
-        saveAPI: false,
+        saveAPI: true,
         help: true
       }" 
     />
