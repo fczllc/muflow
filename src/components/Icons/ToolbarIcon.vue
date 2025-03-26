@@ -164,6 +164,14 @@
 <g fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 .932 0 1.398.152 1.765a2 2 0 0 0 1.083 1.083C4.602 14 5.068 14 6 14h.675c.581 0 .872 0 1.104.134a1 1 0 0 1 .164.118c.2.178.292.453.476 1.005l.125.376c.22.66.33.99.592 1.178c.262.189.61.189 1.306.189h3.117c.695 0 1.043 0 1.305-.189s.372-.518.592-1.178l.125-.376c.184-.552.276-.827.476-1.005a1 1 0 0 1 .164-.118c.232-.134.523-.134 1.104-.134H18c.932 0 1.398 0 1.765-.152a2 2 0 0 0 1.083-1.083C21 12.398 21 11.932 21 11"/><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2ZM8.5 9.5L12 7m0 0l3.5 2.5M12 7v6"/></g>
     </svg>
     
+    <!-- Mermaid导入图标 -->
+    <svg v-else-if="type === 'mermaid'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 5v14h18V5H3z" fill="none" stroke="currentColor" stroke-width="2" />
+      <path d="M7 10l2 2 2-2M7 14l2-2 2 2" stroke="currentColor" stroke-width="1.5" />
+      <path d="M14 10h3M14 14h3" stroke="currentColor" stroke-width="1.5" />
+      <path d="M5 3v2M19 3v2M5 19v2M19 19v2" stroke="currentColor" stroke-width="1" />
+    </svg>
+    
     <!-- 帮助图标 -->
     <svg v-else-if="type === 'help'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"></circle>
@@ -263,6 +271,7 @@ type IconType =
   | 'saveToAPI' // 添加保存到API的图标类型
   | 'startEnd' | 'condition' | 'circle' // 添加新的图标类型
   | 'layerTop' | 'layerBottom' | 'layerUp' | 'layerDown' // 添加图层排列图标类型
+  | 'mermaid' // 添加Mermaid导入图标类型
 
 interface Props {
   type: IconType

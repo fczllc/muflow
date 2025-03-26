@@ -28,6 +28,13 @@
       >
     </div>
 
+    <div v-if="buttons.mermaid" class="tool-btn-wrapper">
+      <button class="icon-btn" @click="importMermaid" @mouseleave="hideTooltip" title="导入Mermaid">
+        <ToolbarIcon type="mermaid" />
+      </button>
+      <div class="tooltip" v-show="activeTooltip === 'mermaid'">导入Mermaid流程图</div>
+    </div>
+
     <div v-if="buttons.saveLocal" class="tool-btn-wrapper">
       <button class="icon-btn" @click="saveJSON" @mouseleave="hideTooltip" title="保存为Json文件">
         <ToolbarIcon type="save" />
@@ -138,6 +145,13 @@
       @confirm="handleAPIError"
       @cancel="handleAPIError"
     />
+
+    <!-- Mermaid导入模态框 -->
+    <MermaidImportModal
+      :show="showMermaidModal"
+      @confirm="handleMermaidImport"
+      @cancel="hideMermaid"
+    />
   </div>
 </template>
 
@@ -155,6 +169,7 @@ import { useVueFlow } from '@vue-flow/core'
 import type { Node as VueFlowNode, Edge as VueFlowEdge } from '@vue-flow/core'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
 import ConfirmModal from '../Modal/ConfirmModal.vue'
+import MermaidImportModal from '../Modal/MermaidImportModal.vue'
 import { toJpeg, toPng } from 'html-to-image'
 import type { FlowNode, FlowEdge, FlowData, APIResponse } from '../../types/flow'
 
@@ -188,7 +203,7 @@ const {
 const getScale = () => getTransform().zoom || 1
 
 // 提示框状态
-const activeTooltip = ref<'clear' | 'export' | 'save' | 'import' | 'help' | 'saveToAPI' | null>(null)
+const activeTooltip = ref<'clear' | 'export' | 'save' | 'import' | 'help' | 'saveToAPI' | 'mermaid' | null>(null)
 
 // 帮助模态框状态
 const showHelpModal = ref(false)
@@ -202,7 +217,10 @@ const hideTooltip = () => {
 const showClearConfirm = ref(false)
 
 const clearCanvas = () => {
+  // 检查是否有节点或边
+  if (getNodes.value.length > 0 || getEdges.value.length > 0) {
   showClearConfirm.value = true
+  }
 }
 
 const handleClearConfirm = () => {
@@ -275,185 +293,48 @@ const exportImage = async () => {
       return
     }
 
-    // 保存原始状态
-    const originalTransform = { ...getTransform() }
+    // 添加一个类来防止UI抖动
+    document.body.classList.add('exporting-image')
+
+    // 保存原始状态 - 只保存节点和边的状态，不修改画布位置
     const originalNodes = getNodes.value.map(node => ({ ...node }))
     const originalEdges = getEdges.value.map(edge => ({ ...edge }))
 
-    // 先将节点和边都设为非选中状态
+    // 先将节点和边都设为非选中状态 - 复制一份，避免引用原始对象
     setNodes(getNodes.value.map(node => ({ ...node, selected: false })))
     setEdges(getEdges.value.map(edge => ({ ...edge, selected: false })))
 
-    // 提前获取需要临时隐藏的控件元素
-    const controlsToHide = document.querySelectorAll('.vue-flow__controls, .vue-flow__minimap, .top-toolbar, .node-toolbar')
-    const originalVisibility: Array<[Element, string]> = []
-
-    // 临时隐藏控件
-    controlsToHide.forEach(el => {
-      // 保存所有相关的原始样式
-      originalVisibility.push([el, (el as HTMLElement).style.visibility])
-      // 使用visibility: hidden替代display: none，这样不会改变布局
-      ;(el as HTMLElement).style.visibility = 'hidden'
-    })
-
+    // 获取画布内容区域
+    const canvasParent = vueFlowRef.value.parentElement;
+    
     try {
       // 等待DOM更新
-      await new Promise<void>((resolve, reject) => {
-        try {
-          setTimeout(() => {
-            resolve()
-          }, 100)
-        } catch (err) {
-          reject(err)
+      await new Promise<void>(resolve => setTimeout(resolve, 100))
+
+      // 专门为导出创建的样式处理，只处理文本和视觉元素
+      const edgeTextBgs = vueFlowRef.value.querySelectorAll('.vue-flow__edge-textbg, .vue-flow__edge-textwrapper rect');
+      edgeTextBgs.forEach(rect => {
+        if (rect instanceof SVGRectElement) {
+          rect.style.fill = '#ffffff';
+          rect.style.fillOpacity = '0.8';
+          rect.style.stroke = 'none';
+          rect.style.strokeWidth = '0';
         }
-      })
+      });
 
-      // 直接获取所有边元素
-      const edgeElements = vueFlowRef.value.querySelectorAll('.vue-flow__edge')
-      
-      // 预先处理所有边的样式 - 记录原始样式信息
-      const edgeOriginalStyles: Map<string, {stroke: string, strokeWidth: string}> = new Map()
-      
-      edgeElements.forEach(edgeEl => {
-        const edgeId = edgeEl.getAttribute('data-id')
-        if (edgeId) {
-          // 获取当前边的计算样式
-          const computedStyle = window.getComputedStyle(edgeEl)
-          
-          // 获取边的原始边缘元素
-          const edgePath = edgeEl.querySelector('.vue-flow__edge-path')
-          if (edgePath) {
-            // 尝试多种方式获取颜色：直接从边元素、从路径元素、从数据模型
-            let strokeColor = ''
-            let strokeWidth = ''
-            
-            // 1. 从数据模型中查找
-            const edgeData = getEdges.value.find(e => e.id === edgeId)
-            if (edgeData && edgeData.style) {
-              if (typeof edgeData.style === 'object') {
-                strokeColor = edgeData.style.stroke as string || ''
-                strokeWidth = typeof edgeData.style.strokeWidth === 'number' 
-                  ? `${edgeData.style.strokeWidth}px` 
-                  : String(edgeData.style.strokeWidth || '')
-              }
-            }
-            
-            // 2. 从计算样式中获取
-            if (!strokeColor) {
-              strokeColor = computedStyle.stroke || 
-                            computedStyle.getPropertyValue('stroke') || 
-                            computedStyle.color
-            }
-            
-            if (!strokeWidth) {
-              strokeWidth = computedStyle.strokeWidth || 
-                            computedStyle.getPropertyValue('stroke-width') || 
-                            '2px'
-            }
-            
-            // 存储原始样式
-            edgeOriginalStyles.set(edgeId, {
-              stroke: strokeColor !== 'none' && strokeColor !== '' ? strokeColor : '#555',
-              strokeWidth: strokeWidth !== 'none' && strokeWidth !== '' ? strokeWidth : '2px'
-            })
-          }
+      const edgeTexts = vueFlowRef.value.querySelectorAll('.vue-flow__edge-text, .vue-flow__edge-textwrapper text');
+      edgeTexts.forEach(text => {
+        if (text instanceof SVGTextElement) {
+          text.style.fontSize = '12px';
+          text.style.fontFamily = 'Arial, sans-serif';
         }
-      })
+      });
 
-      // 应用SVG处理直接在原始DOM上
-      const svgElements = vueFlowRef.value.querySelectorAll('svg')
-      svgElements.forEach(svg => {
-        // 确保SVG元素可见
-        svg.style.visibility = 'visible'
-        svg.style.display = 'block'
-        svg.style.overflow = 'visible'
-        
-        // 处理所有path元素
-      const paths = svg.querySelectorAll('path')
-      paths.forEach(path => {
-          // 设置基本属性
-          path.style.fill = 'none'
-          
-          // 如果是边线路径，应用存储的原始颜色和粗细
-          if (path.classList.contains('vue-flow__edge-path')) {
-            // 查找边ID
-            const edgeEl = path.closest('.vue-flow__edge')
-            if (edgeEl) {
-              const edgeId = edgeEl.getAttribute('data-id')
-              if (edgeId && edgeOriginalStyles.has(edgeId)) {
-                const originalStyle = edgeOriginalStyles.get(edgeId)
-                if (originalStyle) {
-                  // 应用原始颜色和粗细
-                  path.style.stroke = originalStyle.stroke
-                  path.style.strokeWidth = originalStyle.strokeWidth
-                                 }
-              } else {
-                // 如果没有找到原始样式，使用计算样式
-                const computedStyle = window.getComputedStyle(path)
-                path.style.stroke = computedStyle.stroke || '#555'
-                path.style.strokeWidth = computedStyle.strokeWidth || '2px'
-              }
-            }
-          } else {
-            // 非边线路径保持原样
-            const originalStroke = path.getAttribute('stroke') || 
-                                  path.style.stroke || 
-                                  window.getComputedStyle(path).stroke || 
-                                  'currentColor'
-            path.style.stroke = originalStroke
-          }
-          
-          // 确保虚线显示正确
-          if (path.getAttribute('stroke-dasharray')) {
-            const dashArray = path.getAttribute('stroke-dasharray')
-            path.setAttribute('stroke-dasharray', dashArray || '5,5')
-          }
-        })
-        
-        // 确保marker (箭头) 正确显示
-        const markers = svg.querySelectorAll('marker')
-        markers.forEach(marker => {
-          marker.setAttribute('markerWidth', '15')
-          marker.setAttribute('markerHeight', '15')
-          
-          // 查找marker内的path并设置颜色
-          const markerPaths = marker.querySelectorAll('path')
-          markerPaths.forEach(markerPath => {
-            // 获取引用此marker的边的颜色
-            const markerId = marker.id
-            if (markerId) {
-              // 查找使用此marker的边
-              const edgesWithMarker = document.querySelectorAll(`.vue-flow__edge[marker-end*="${markerId}"], .vue-flow__edge[marker-start*="${markerId}"]`)
-              if (edgesWithMarker && edgesWithMarker.length > 0) {
-                const edgeWithMarker = edgesWithMarker[0] as HTMLElement
-                const edgeId = edgeWithMarker.getAttribute('data-id')
-                
-                if (edgeId && edgeOriginalStyles.has(edgeId)) {
-                  const originalStyle = edgeOriginalStyles.get(edgeId)
-                  if (originalStyle) {
-                    // 为marker path应用相同的颜色
-                    markerPath.style.fill = originalStyle.stroke
-                    markerPath.style.stroke = originalStyle.stroke
-                  }
-                }
-              }
-            }
-          })
-        })
-      })
-
-      // 确保圆形节点完整显示
-      const circleNodes = vueFlowRef.value.querySelectorAll('.vue-flow__node-circle')
-      circleNodes.forEach(node => {
-        ;(node as HTMLElement).style.padding = '5px'
-      })
-
-      // 使用html-to-image直接对处理过的DOM进行截图
       // 导出图片的配置选项
       const exportImageOptions = {
         quality: 0.95,
         backgroundColor: 'white', 
-        pixelRatio: 2,
+        pixelRatio: 1,
         skipAutoScale: true,
         // 包含所有相关样式
         fontEmbedCSS: document.querySelector('link[rel="stylesheet"]')?.getAttribute('href') || undefined,
@@ -462,20 +343,23 @@ const exportImage = async () => {
           if (!node || !node.classList) return true;
           
           // 检查元素是否应该被过滤（基于类名）
-          const shouldBeFiltered = ['vue-flow__controls', 'vue-flow__minimap', 'top-toolbar', 'node-toolbar'].some(
-            className => node.classList.contains(className)
+          const shouldBeFiltered = [
+            'vue-flow__controls', 
+            'vue-flow__minimap', 
+            'top-toolbar', 
+            'node-toolbar',
+            'left-sidebar'
+          ].some(className => 
+            node.classList.contains(className) || 
+            node.closest(`.${className}`)
           );
           
-          // 检查元素是否被隐藏（通过visibility属性）
-          const isHidden = window.getComputedStyle(node).visibility === 'hidden';
-          
-          // 仅保留不应被过滤且未隐藏的元素
-          const shouldKeep = !shouldBeFiltered && !isHidden;
-          
-          return shouldKeep;
+          // 仅保留不应被过滤的元素
+          return !shouldBeFiltered;
         }
       };
 
+      // 使用toJpeg导出图片
       const dataUrl = await toJpeg(vueFlowRef.value, exportImageOptions).catch(error => {
         throw error;
       });
@@ -485,21 +369,19 @@ const exportImage = async () => {
       const link = document.createElement('a')
       link.download = `${fileName}.jpg`
       link.href = dataUrl
+      // 创建并点击链接以触发下载而不附加到DOM
       link.click()
     } finally {
-      // 恢复原始状态 - 重要！
+      // 恢复原始节点和边的状态
       setNodes(originalNodes)
       setEdges(originalEdges)
       
-      // 恢复控件可见性
-      controlsToHide.forEach((el, index) => {
-        if (index < originalVisibility.length) {
-          // 恢复原始的visibility属性
-          ;(el as HTMLElement).style.visibility = originalVisibility[index][1] || 'visible'
-        }
-      })
+      // 移除导出类
+      document.body.classList.remove('exporting-image')
     }
   } catch (error) {
+    // 确保无论如何都移除导出类
+    document.body.classList.remove('exporting-image')
     console.error('导出图片失败:', error)
     alert('导出图片失败：' + (error instanceof Error ? error.message : String(error)))
   }
@@ -970,6 +852,32 @@ const handleAPIError = () => {
   apiErrorMessage.value = ''
 }
 
+// Mermaid导入状态
+const showMermaidModal = ref(false)
+
+// 导入Mermaid流程图
+const importMermaid = () => {
+  showMermaidModal.value = true
+  // 实际功能在后续阶段实现
+}
+
+// 隐藏Mermaid导入模态框
+const hideMermaid = () => {
+  showMermaidModal.value = false
+}
+
+// 处理Mermaid脚本导入
+const handleMermaidImport = (script: string) => {
+  // 目前只记录日志，实际功能将在后续阶段实现
+  console.log('导入Mermaid脚本:', script)
+  
+  // 显示临时提示
+  alert('Mermaid导入功能正在开发中，敬请期待！')
+  
+  // 隐藏模态框
+  hideMermaid()
+}
+
 // 定义按钮配置接口
 interface ButtonsConfig {
   clear?: boolean
@@ -978,6 +886,7 @@ interface ButtonsConfig {
   saveLocal?: boolean
   saveAPI?: boolean
   help?: boolean
+  mermaid?: boolean
 }
 
 // 定义组件属性
@@ -993,7 +902,8 @@ const props = withDefaults(defineProps<Props>(), {
     import: true,
     saveLocal: true,
     saveAPI: true,
-    help: true
+    help: true,
+    mermaid: true
   })
 })
 </script>

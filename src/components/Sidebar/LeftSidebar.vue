@@ -46,7 +46,11 @@ const canvasToolsConfig = inject('canvasTools', {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 40px;
+  grid-column: 1;
+  position: relative;
+  will-change: transform;
+  transform: translateZ(0); /* 启用GPU加速 */
+  z-index: 10;
 }
 
 .top-tools {

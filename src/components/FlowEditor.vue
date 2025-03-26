@@ -59,7 +59,6 @@
           @nodeDragStop="handleNodeDragStop"
           @selectionChange="onSelectionChange"
           @edge-double-click="onEdgeDoubleClick"
-          :pan-on-scroll="false"
           :prevent-scrolling="true"
           :auto-connect="false"
           :elevate-edges-on-select="true"
@@ -161,6 +160,14 @@ import SvgIconNode from './Nodes/SvgIconNode.vue'
 import AlignmentLines from './AlignmentLines.vue'
 import type { FlowNode, AlignDirection, DistributeDirection, NodeDimensions } from '../types/flow'
 import { debounce } from 'lodash-es'
+// 引入必要的样式
+import '@vue-flow/core/dist/style.css'
+import '@vue-flow/core/dist/theme-default.css'
+// 导入html-to-image库
+import { toJpeg, toPng } from 'html-to-image'
+
+// 自定义NodeComponent类型以解决类型兼容性问题
+type NodeComponent = any
 
 // 定义画布工具属性接口
 export interface CanvasToolsConfig {
@@ -170,6 +177,7 @@ export interface CanvasToolsConfig {
   saveLocal?: boolean
   saveAPI?: boolean
   help?: boolean
+  mermaid?: boolean // 添加Mermaid导入选项
 }
 
 // 定义组件属性
@@ -185,22 +193,13 @@ const props = withDefaults(defineProps<Props>(), {
     import: true,
     saveLocal: true,
     saveAPI: true,
-    help: true
+    help: true,
+    mermaid: true // 默认启用Mermaid导入
   })
 })
 
 // 提供canvasTools配置给子组件
 provide('canvasTools', props.canvasTools)
-
-// 引入必要的样式
-import '@vue-flow/core/dist/style.css'
-import '@vue-flow/core/dist/theme-default.css'
-
-// 导入html-to-image库
-import { toJpeg, toPng } from 'html-to-image'
-
-// 自定义NodeComponent类型以解决类型兼容性问题
-type NodeComponent = any
 
 // 获取 Vue Flow 实例和方法
 const { 
@@ -1470,8 +1469,6 @@ const cancelEdgeLabel = () => {
 
 // 生命周期钩子
 onMounted(() => {
-  console.log('[FlowEditor] 组件挂载');
-  
   // 注册事件监听器
   registerEventListeners();
   
@@ -1592,14 +1589,12 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 // 处理调整大小开始事件
 const handleResizeStart = (event: Event) => {
-  console.log('[FlowEditor] 接收到 resize-start 事件', (event as CustomEvent).detail);
   isResizing.value = true;
   // 在调整大小期间不需要特殊处理键盘事件
 };
 
 // 处理调整大小结束事件
 const handleResizeEnd = (event: Event) => {
-  console.log('[FlowEditor] 接收到 resize-end 事件', (event as CustomEvent).detail);
   isResizing.value = false;
   resizeJustEnded.value = true;
   
@@ -1611,10 +1606,8 @@ const handleResizeEnd = (event: Event) => {
   
   // 在结束后略微延迟重新生成节点中心点，确保调整尺寸操作已经完全应用
   resizeEndTimeoutRef.value = setTimeout(() => {
-    console.log('[FlowEditor] resize-end 延迟处理开始');
     // 再次检查组件是否仍挂载
     if (!componentMountedRef.value) {
-      console.log('[FlowEditor] 组件已卸载，取消延迟处理');
       return;
     }
     
@@ -1623,18 +1616,12 @@ const handleResizeEnd = (event: Event) => {
       const nodeId = (event as CustomEvent).detail?.nodeId;
       if (nodeId) {
         const node = findNode(nodeId);
-        console.log('[FlowEditor] 节点大小调整完成:', { 
-          nodeId, 
-          dimensions: node?.dimensions || '未知'
-        });
       }
     } catch (error) {
       console.error('[FlowEditor] 处理resize-end事件时出错:', error);
     }
     
-    console.log('[FlowEditor] 重置 resizeJustEnded 标志');
     resizeJustEnded.value = false;
-    console.log('[FlowEditor] resize-end 延迟处理完成');
     
     // 重置引用
     resizeEndTimeoutRef.value = null;
@@ -1646,7 +1633,6 @@ const handleResizeEnd = (event: Event) => {
 
 // 清除事件监听器
 const unregisterEventListeners = () => {
-  console.log('[FlowEditor] 清除事件监听器');
   window.removeEventListener('keydown', handleKeyDown);
   window.removeEventListener('resize-start', handleResizeStart);
   window.removeEventListener('resize-end', handleResizeEnd);
@@ -1654,8 +1640,6 @@ const unregisterEventListeners = () => {
 
 // 注册事件监听器
 const registerEventListeners = () => {
-  console.log('[FlowEditor] 注册事件监听器');
-  
   // 避免重复注册
   unregisterEventListeners();
   
@@ -1672,7 +1656,6 @@ const registerEventListeners = () => {
 
 // 在组件卸载时清理
 onUnmounted(() => {
-  console.log('[FlowEditor] 组件卸载');
   componentMountedRef.value = false;
   
   // 清除resize-end的timeout
@@ -1862,13 +1845,10 @@ const onPaneMouseDown = (event: MouseEvent) => {
   event.stopPropagation();
   
   // 获取画布元素的边界矩形
-  const canvasContainer = document.querySelector('.canvas-container');
   const vueFlowElement = document.querySelector('.vue-flow');
   
-  const canvas = canvasContainer || vueFlowElement;
-  
-  if (canvas) {
-    const rect = canvas.getBoundingClientRect();
+  if (vueFlowElement) {
+    const rect = vueFlowElement.getBoundingClientRect();
     
     // 计算相对于画布的点击位置
     const x = event.clientX - rect.left;
@@ -1961,19 +1941,14 @@ const onPaneMouseUp = (event: MouseEvent) => {
   event.preventDefault();
   event.stopPropagation();
   
-  // 计算选择框的位置和尺寸
+  // 计算选择框的位置和尺寸（相对于画布视口）
   const left = Math.min(startPoint.value.x, currentPoint.value.x);
   const top = Math.min(startPoint.value.y, currentPoint.value.y);
   const width = Math.abs(currentPoint.value.x - startPoint.value.x);
   const height = Math.abs(currentPoint.value.y - startPoint.value.y);
   
-  // 选择框的大小
-  const selectionRect = {
-    left,
-    top,
-    right: left + width,
-    bottom: top + height
-  };
+  // 获取画布变换信息
+  const { zoom, x: panX, y: panY } = getTransform();
   
   // 重置DOM选择框状态
   if (selectionBoxRef.value) {
@@ -1989,60 +1964,137 @@ const onPaneMouseUp = (event: MouseEvent) => {
     return;
   }
   
+  // 将视口坐标转换为流程图实际坐标
+  const flowSelectionRect = {
+    left: (left - panX) / zoom,
+    top: (top - panY) / zoom,
+    right: (left + width - panX) / zoom,
+    bottom: (top + height - panY) / zoom
+  };
+  
   // 获取在选择框内的节点
   const selectedNodeIds = getNodes.value
     .filter(node => {
-      // 获取节点的位置和尺寸
-      const nodeLeft = node.position.x;
-      const nodeTop = node.position.y;
+      // 获取节点的位置
+      const nodePos = node.position;
       
-      // 获取节点宽高
-      let nodeWidth = 100; // 默认宽度
-      let nodeHeight = 50; // 默认高度
+      // 获取节点尺寸
+      let nodeWidth = 0;
+      let nodeHeight = 0;
       
-      // 尝试获取节点的实际尺寸
-      if (node.dimensions) {
-        nodeWidth = node.dimensions.width;
-        nodeHeight = node.dimensions.height;
-      } else if (node.width && node.height) {
-        nodeWidth = node.width;
-        nodeHeight = node.height;
-      } else {
-        // 尝试从DOM获取节点尺寸
-        const nodeElement = document.querySelector(`[data-id="${node.id}"]`);
-        if (nodeElement) {
-          const rect = nodeElement.getBoundingClientRect();
-          nodeWidth = rect.width / getTransform().zoom;
-          nodeHeight = rect.height / getTransform().zoom;
+      // 从DOM获取真实节点尺寸
+      const nodeEl = document.querySelector(`[data-id="${node.id}"]`);
+      if (nodeEl) {
+        const innerNode = nodeEl.querySelector('.rounded-rect-node, .condition-node, .circle-node, .start-end-node, .text-label-node, .line-node, .svg-icon-node');
+        if (innerNode) {
+          const rect = innerNode.getBoundingClientRect();
+          nodeWidth = rect.width / zoom;
+          nodeHeight = rect.height / zoom;
+        } else {
+          const rect = nodeEl.getBoundingClientRect();
+          nodeWidth = rect.width / zoom;
+          nodeHeight = rect.height / zoom;
         }
       }
       
-      // 计算节点的右边和底部坐标
-      const nodeRight = nodeLeft + nodeWidth;
-      const nodeBottom = nodeTop + nodeHeight;
+      // 如果DOM方法失败，从节点数据获取尺寸
+      if (nodeWidth <= 0 || nodeHeight <= 0) {
+        // 从dimensions属性获取
+        if (node.dimensions) {
+          nodeWidth = node.dimensions.width;
+          nodeHeight = node.dimensions.height;
+        } 
+        // 从style属性获取
+        else if (node.data?.style) {
+          const style = node.data.style;
+          if (typeof style.width === 'string') {
+            const match = style.width.match(/(\d+)/);
+            if (match) nodeWidth = parseInt(match[1], 10);
+          } else if (typeof style.width === 'number') {
+            nodeWidth = style.width;
+          }
+          
+          if (typeof style.height === 'string') {
+            const match = style.height.match(/(\d+)/);
+            if (match) nodeHeight = parseInt(match[1], 10);
+          } else if (typeof style.height === 'number') {
+            nodeHeight = style.height;
+          }
+        }
+        
+        // 使用节点类型特定的默认尺寸
+        if (nodeWidth <= 0) {
+          nodeWidth = node.type === 'circle' ? 38 : 
+                     node.type === 'svgIcon' ? 24 : 
+                     node.type === 'line' ? 120 : 100;
+        }
+        if (nodeHeight <= 0) {
+          nodeHeight = node.type === 'circle' ? 38 : 
+                      node.type === 'condition' ? 60 : 
+                      node.type === 'svgIcon' ? 24 :
+                      node.type === 'line' ? 1 : 38;
+        }
+      }
       
-      // 检查节点是否在选择框内
-      // 我们认为节点的任意部分在选择框内则选中它
-      return (
-        // 检查是否有重叠
-        !(
-          nodeRight < selectionRect.left || // 节点在选择框左侧
-          nodeLeft > selectionRect.right || // 节点在选择框右侧
-          nodeBottom < selectionRect.top || // 节点在选择框上方
-          nodeTop > selectionRect.bottom    // 节点在选择框下方
-        )
+      // 计算节点边界框
+      const nodeRight = nodePos.x + nodeWidth;
+      const nodeBottom = nodePos.y + nodeHeight;
+      
+      // 使用相交逻辑，节点只要和选择框有交集就选中
+      const isIntersecting = !(
+        nodeRight < flowSelectionRect.left || 
+        nodePos.x > flowSelectionRect.right || 
+        nodeBottom < flowSelectionRect.top || 
+        nodePos.y > flowSelectionRect.bottom
       );
+      
+      return isIntersecting;
     })
     .map(node => node.id);
   
-  // 更新节点选择状态
-  const updatedNodes = getNodes.value.map(node => ({
+  // 保存选中节点的ID到selectedNodesViaAreaSelection
+  selectedNodesViaAreaSelection.value = selectedNodeIds;
+  
+  // 更新 selectedNodes 引用
+  selectedNodes.value = selectedNodeIds;
+  
+  // 将所有节点设置为非选中，再将框选中的节点设置为选中
+  const nodes = getNodes.value;
+  const updatedNodes = nodes.map(node => ({
     ...node,
     selected: selectedNodeIds.includes(node.id)
   }));
   
-  // 更新节点
+  // 使用setNodes更新节点状态
   setNodes(updatedNodes as any);
+  
+  // 手动触发一次onSelectionChange，确保它接收到正确的选中节点
+  const selectedNodesObjects = updatedNodes.filter(n => selectedNodeIds.includes(n.id));
+  onSelectionChange({ nodes: selectedNodesObjects });
+  
+  // 添加延迟检查最终选中状态
+  setTimeout(() => {
+    // 验证所有需要选中的节点是否确实被选中
+    const finalSelection = getNodes.value
+      .filter(node => node.selected)
+      .map(node => node.id);
+    
+    // 检查是否所有应选中的节点都被选中
+    const allSelected = selectedNodeIds.every(id => 
+      getNodes.value.find(n => n.id === id)?.selected
+    );
+    
+    // 如果仍有问题，尝试最后的解决方法
+    if (!allSelected) {
+      const finalNodes = getNodes.value.map(node => ({
+        ...node,
+        selected: selectedNodeIds.includes(node.id)
+      }));
+      
+      // 再次应用更新
+      setNodes(finalNodes as any);
+    }
+  }, 100);
   
   // 重置框选状态
   isSelecting.value = false;
@@ -2278,6 +2330,9 @@ const getDataUrl = async (format: 'jpg' | 'png' = 'jpg', download: boolean = fal
       return null
     }
 
+    // 添加一个类来防止UI抖动
+    document.body.classList.add('exporting-image')
+    
     // 保存原始状态
     const originalTransform = { ...getTransform() }
     const originalNodes = getNodes.value.map(node => ({ ...node }))
@@ -2346,17 +2401,7 @@ const getDataUrl = async (format: 'jpg' | 'png' = 'jpg', download: boolean = fal
     const currentPan = getTransform().x || 0
     const currentZoom = getTransform().zoom || 1
     
-    // 提前获取需要临时隐藏的控件元素
-    const controlsToHide = document.querySelectorAll('.vue-flow__controls, .vue-flow__minimap, .top-toolbar, .node-toolbar, .left-sidebar')
-    const originalVisibility: Array<[Element, string]> = []
-
-    // 临时隐藏控件
-    controlsToHide.forEach(el => {
-      // 保存所有相关的原始样式
-      originalVisibility.push([el, (el as HTMLElement).style.visibility])
-      // 使用visibility: hidden替代display: none，这样不会改变布局
-      ;(el as HTMLElement).style.visibility = 'hidden'
-    })
+    // 不再手动隐藏元素，而是依靠body.exporting-image类的CSS样式
 
     try {
       // 使用vueFlow提供的视图API来平移和缩放到内容区域
@@ -2481,6 +2526,29 @@ const getDataUrl = async (format: 'jpg' | 'png' = 'jpg', download: boolean = fal
           }
         })
         
+        // 处理边缘标签背景 - 修复黑色背景问题
+        const edgeTextBgs = svg.querySelectorAll('.vue-flow__edge-textbg, .vue-flow__edge-textwrapper rect')
+        edgeTextBgs.forEach(rect => {
+          if (rect instanceof SVGRectElement) {
+            // 设置边缘标签背景为白色并增加透明度
+            rect.style.fill = '#ffffff'
+            rect.style.fillOpacity = '0.8'
+            // 完全移除边框
+            rect.style.stroke = 'none'
+            rect.style.strokeWidth = '0'
+          }
+        })
+        
+        // 处理边缘标签文本
+        const edgeTexts = svg.querySelectorAll('.vue-flow__edge-text, .vue-flow__edge-textwrapper text')
+        edgeTexts.forEach(text => {
+          if (text instanceof SVGTextElement) {
+            // 设置边缘标签文本字体大小
+            text.style.fontSize = '12px'
+            text.style.fontFamily = 'Arial, sans-serif'
+          }
+        })
+        
         // 确保marker (箭头) 正确显示
         const markers = svg.querySelectorAll('marker')
         markers.forEach(marker => {
@@ -2523,7 +2591,7 @@ const getDataUrl = async (format: 'jpg' | 'png' = 'jpg', download: boolean = fal
       const exportImageOptions = {
         quality: 0.95,
         backgroundColor: 'white', 
-        pixelRatio: 1, // 设置为1确保1:1比例
+        pixelRatio: 1, // 设置为1确保1:1比例，防止文本被放大
         skipAutoScale: true,
         // 包含所有相关样式
         fontEmbedCSS: document.querySelector('link[rel="stylesheet"]')?.getAttribute('href') || undefined,
@@ -2532,15 +2600,19 @@ const getDataUrl = async (format: 'jpg' | 'png' = 'jpg', download: boolean = fal
           if (!node || !node.classList) return true;
           
           // 检查元素是否应该被过滤（基于类名）
-          const shouldBeFiltered = ['vue-flow__controls', 'vue-flow__minimap', 'top-toolbar', 'node-toolbar', 'left-sidebar'].some(
-            className => node.classList.contains(className)
+          const shouldBeFiltered = [
+            'vue-flow__controls', 
+            'vue-flow__minimap', 
+            'top-toolbar', 
+            'node-toolbar', 
+            'left-sidebar'
+          ].some(className => 
+            node.classList.contains(className) || 
+            node.closest(`.${className}`)
           );
           
-          // 检查元素是否被隐藏（通过visibility属性）
-          const isHidden = window.getComputedStyle(node).visibility === 'hidden';
-          
-          // 仅保留不应被过滤且未隐藏的元素
-          return !shouldBeFiltered && !isHidden;
+          // 仅保留不应被过滤的元素
+          return !shouldBeFiltered;
         }
       };
 
@@ -2578,15 +2650,12 @@ const getDataUrl = async (format: 'jpg' | 'png' = 'jpg', download: boolean = fal
       setNodes(originalNodes as any)
       setEdges(originalEdges)
       
-      // 恢复控件可见性
-      controlsToHide.forEach((el, index) => {
-        if (index < originalVisibility.length) {
-          // 恢复原始的visibility属性
-          ;(el as HTMLElement).style.visibility = originalVisibility[index][1] || 'visible'
-        }
-      })
+      // 移除防抖动类，不再手动恢复visibility
+      document.body.classList.remove('exporting-image')
     }
   } catch (error) {
+    // 确保无论如何都移除防抖动类
+    document.body.classList.remove('exporting-image')
     console.error('生成图片数据URL失败:', error)
     return null
   }
@@ -2751,16 +2820,25 @@ defineExpose(flowEditorMethods)
 
 .main-content {
   flex: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: 40px 1fr;
   position: relative;
   overflow: hidden;
 }
 
 .canvas-container {
-  flex: 1;
+  grid-column: 2;
   height: 100%;
   position: relative;
   overflow: hidden;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* 防止导出时的布局变化 */
+body.exporting-image .main-content {
+  grid-template-columns: 40px 1fr !important;
+  transition: none !important;
 }
 
 .vue-flow-wrapper {

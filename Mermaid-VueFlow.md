@@ -194,7 +194,7 @@ flowchart LR
     E -->F
 ```
 
-1. 使用更规范的方式定义WEBAPI接口，包括请求方法为POST、请求参数、请求体、响应格式、响应状态码、错误码等
+1. 使用规范的方式定义WEBAPI接口，包括请求方法为POST、请求参数、请求体、响应格式、响应状态码、错误码等
    
    在src\components\FlowEditor.vue组件和src\components\FlowViewer.vue上都增加相同的功能API，调用时传入一个txt文件格式字符串。
    
