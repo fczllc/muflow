@@ -17,6 +17,7 @@ interface CanvasToolsConfig {
   saveLocal?: boolean; // 本地保存按钮
   saveAPI?: boolean;  // API保存按钮
   help?: boolean;     // 帮助按钮
+  mermaid?: boolean;  // Mermaid导入按钮
 }
 
 // 默认值
@@ -26,7 +27,8 @@ interface CanvasToolsConfig {
   import: true,
   saveLocal: true,
   saveAPI: true,
-  help: true
+  help: true,
+  mermaid: true
 }
 ```
 
@@ -47,6 +49,8 @@ interface CanvasToolsConfig {
 | saveToAPI | apiEndpoint: string, options?: RequestInit | Promise<boolean> | 保存流程图数据到API |
 | loadFromAPI | apiEndpoint: string, options?: RequestInit | Promise<boolean> | 从API加载流程图数据 |
 | getDataUrl | format?: 'jpg'\|'png', download?: boolean | Promise<string\|null> | 获取流程图的数据URL，可选是否下载 |
+| importFlowDataFromJson | jsonData: string | Promise<boolean> | 从JSON字符串导入流程图数据 |
+| saveToJsonProperty | propertyName: string | void | 将流程图数据保存到指定的JSON属性中 |
 
 ```typescript
 // 可以在TypeScript中这样定义FlowEditor暴露的方法类型
@@ -58,6 +62,8 @@ interface FlowEditorMethods {
   saveToAPI: (apiEndpoint: string, options?: RequestInit) => Promise<boolean>;
   loadFromAPI: (apiEndpoint: string, options?: RequestInit) => Promise<boolean>;
   getDataUrl: (format?: 'jpg' | 'png', download?: boolean) => Promise<string | null>;
+  importFlowDataFromJson: (jsonData: string) => Promise<boolean>;
+  saveToJsonProperty: (propertyName: string) => void;
 }
 ```
 

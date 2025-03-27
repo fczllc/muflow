@@ -57,6 +57,8 @@ const handleError = (error) => {
 | fitView | (options?: FitViewOptions) | void | 自适应视图大小 |
 | zoomTo | (level: number) | void | 缩放到指定比例 |
 | getTransform | - | Transform | 获取当前视图变换信息 |
+| processFlowData | (data: object) | Promise<void> | 处理并显示流程图数据 |
+| loadFlowDataFromJson | (jsonData: string) | Promise<void> | 从JSON字符串加载流程图数据 |
 
 ### FitViewOptions 类型
 

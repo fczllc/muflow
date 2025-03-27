@@ -2393,15 +2393,9 @@ const getDataUrl = async (format: 'jpg' | 'png' = 'jpg', download: boolean = fal
     }
     
     // 创建临时的viewBox配置，用于捕获指定区域
-    const originalViewportTransform = vueFlowElement.style.transform
-    const originalViewportPosition = vueFlowElement.style.position
-    const originalViewportOverflow = vueFlowElement.style.overflow
+     const originalViewportOverflow = vueFlowElement.style.overflow
     const originalWidth = vueFlowElement.style.width
     const originalHeight = vueFlowElement.style.height
-    
-    // 缓存当前的视图参数
-    const currentPan = getTransform().x || 0
-    const currentZoom = getTransform().zoom || 1
     
     // 不再手动隐藏元素，而是依靠body.exporting-image类的CSS样式
 
@@ -2674,6 +2668,57 @@ const exportImage = async (format: 'jpg' | 'png' = 'jpg'): Promise<string | null
 }
 
 /**
+ * 从JSON对象导入流程图数据
+ * @param data 流程图JSON数据对象
+ * @returns Promise<boolean> 导入是否成功
+ */
+const importFlowDataFromJson = async (data: any): Promise<boolean> => {
+  try {
+    // 验证数据格式
+    if (!data || typeof data !== 'object' || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+      alert('无效的流程图数据格式');
+      return false;
+    }
+    
+    // 处理节点和边的数据
+    const nodes = data.nodes.map((node: any) => {
+      // 确保位置信息正确
+      const position = {
+        x: node.position?.x || 0,
+        y: node.position?.y || 0
+      };
+      
+      return {
+        ...node,
+        position,
+        selected: false
+      };
+    });
+    
+    const edges = data.edges.map((edge: any) => ({
+      ...edge,
+      selected: false
+    }));
+    
+    // 应用数据到画布
+    setNodes([]);
+    setEdges([]);
+    
+    // 使用setTimeout确保清空操作完成
+    await new Promise<void>(resolve => setTimeout(resolve, 50));
+    
+    setNodes(nodes);
+    setEdges(edges);
+    
+    return true;
+  } catch (error) {
+    console.error('导入数据失败:', error);
+    alert('导入数据失败：' + (error instanceof Error ? error.message : String(error)));
+    return false;
+  }
+}
+
+/**
  * 从JSON文件导入流程图数据
  * @param file JSON文件对象
  */
@@ -2725,6 +2770,45 @@ const importFlowData = async (file: File): Promise<boolean> => {
     return false;
   }
 };
+/**
+ * 保存流程图数据到JSON对象的指定属性
+ * @param targetObject 目标JSON对象
+ * @param propertyPath 属性路径,例如 'flow.data'
+ * @returns 是否保存成功
+ */
+const saveToJsonProperty = (targetObject: any, propertyPath: string): boolean => {
+  try {
+    if (!targetObject || typeof targetObject !== 'object') {
+      throw new Error('目标对象无效');
+    }
+
+    const flowData = getFlowData();
+    
+    // 解析属性路径
+    const pathParts = propertyPath.split('.');
+    let current = targetObject;
+    
+    // 遍历路径直到最后一个属性
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      const part = pathParts[i];
+      if (!(part in current)) {
+        current[part] = {};
+      }
+      current = current[part];
+    }
+    
+    // 设置最后一个属性的值
+    const lastPart = pathParts[pathParts.length - 1];
+    current[lastPart] = flowData;
+    
+    return true;
+  } catch (error) {
+    console.error('保存到JSON属性失败:', error);
+    alert('保存到JSON属性失败：' + (error instanceof Error ? error.message : String(error)));
+    return false;
+  }
+};
+
 
 /**
  * 保存流程图数据到API
@@ -2851,7 +2935,9 @@ const flowEditorMethods = {
   processNodeData,
   processEdgeData,
   getDataUrl,
-  importMermaidFlowchart  // 添加Mermaid导入API
+  importMermaidFlowchart,  // 添加Mermaid导入API
+  saveToJsonProperty,
+  importFlowDataFromJson,
 }
 
 // 提供FlowEditor的方法给子组件
@@ -3202,5 +3288,92 @@ body.exporting-image .main-content {
 .flow-canvas {
   width: 100%;
   height: 100%;
+}
+
+/* 防止导出图片时UI抖动 */
+body.exporting-image .left-sidebar {
+  pointer-events: none !important; /* 防止交互 */
+  will-change: transform !important; /* 优化性能 */
+  transition: none !important; /* 禁用所有过渡 */
+  /* 保持完全可见，不透明 */
+  opacity: 1 !important; 
+  visibility: visible !important;
+  position: relative !important;
+}
+
+body.exporting-image .vue-flow__controls, 
+body.exporting-image .vue-flow__minimap, 
+body.exporting-image .top-toolbar,
+body.exporting-image .node-toolbar {
+  pointer-events: none !important; /* 防止交互 */
+  will-change: transform !important; /* 优化性能 */
+  transition: none !important; /* 禁用所有过渡 */
+  visibility: visible !important; /* 确保元素保持可见 */
+  opacity: 0.3 !important; /* 使元素半透明而不是完全消失 */
+}
+
+/* 导出图片时确保画布位置固定 */
+body.exporting-image .vue-flow {
+  will-change: transform !important; 
+  transition: none !important;
+  /* 保持可见，但不要修改其位置 */
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* 确保变换面板也固定，防止画布抖动 */
+body.exporting-image .vue-flow__transformationpane {
+  will-change: transform !important; 
+  transition: none !important;
+  /* 重要：确保在动画过程中保持其位置 */
+  transform-origin: center center !important;
+}
+
+/* 确保左侧边栏不会抖动 */
+.left-sidebar {
+  position: relative !important;
+  z-index: 10 !important;
+  will-change: transform !important;
+  transform: translateZ(0) !important; /* 强制GPU加速 */
+  transition: none !important; /* 禁用所有过渡效果 */
+  box-shadow: none !important; /* 移除可能引起重绘的阴影 */
+}
+
+/* 稳定化Vue Flow容器 */
+.vue-flow {
+  will-change: transform !important;
+  transform: translateZ(0) !important; /* 强制GPU加速 */
+  position: relative !important; /* 确保容器位置稳定 */
+  overflow: visible !important; /* 防止因溢出处理引起的视觉变化 */
+}
+
+/* 稳定化变换面板 */
+.vue-flow__transformationpane {
+  will-change: transform !important;
+  backface-visibility: hidden !important; /* 减少3D变换时的视觉抖动 */
+  transform-style: preserve-3d !important; /* 优化3D变换 */
+}
+
+/* 优化导出过程: 
+   1. 创建一个覆盖层，遮挡可能的视觉变化
+   2. 使用CSS动画来平滑过渡 
+*/
+body.exporting-image::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.01); /* 几乎透明的遮罩 */
+  z-index: 9999; /* 置于最上层 */
+  pointer-events: none; /* 不阻止交互 */
+  animation: fade-in-out 1s ease-in-out; /* 平滑过渡 */
+}
+
+@keyframes fade-in-out {
+  0% { opacity: 0; }
+  50% { opacity: 0.05; } /* 轻微的闪烁效果分散注意力 */
+  100% { opacity: 0; }
 }
 </style>
