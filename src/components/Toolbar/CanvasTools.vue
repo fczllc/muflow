@@ -172,6 +172,7 @@ import ConfirmModal from '../Modal/ConfirmModal.vue'
 import MermaidImportModal from '../Modal/MermaidImportModal.vue'
 import { toJpeg, toPng } from 'html-to-image'
 import type { FlowNode, FlowEdge, FlowData, APIResponse } from '../../types/flow'
+import { parseMermaidFlowchart } from '../../utils/mermaid/mermaidParser'
 
 // 获取FlowEditor暴露的方法
 interface FlowEditorMethods {
@@ -184,6 +185,7 @@ interface FlowEditorMethods {
   processNodeData: (nodes: any[]) => any[];
   processEdgeData: (edges: any[]) => any[];
   getDataUrl: (format?: 'jpg' | 'png', download?: boolean) => Promise<string | null>;
+  importMermaidFlowchart: (script: string) => { success: boolean; message?: string };
 }
 
 const flowEditor = inject<FlowEditorMethods | null>('flowEditor', null)
@@ -868,14 +870,56 @@ const hideMermaid = () => {
 
 // 处理Mermaid脚本导入
 const handleMermaidImport = (script: string) => {
-  // 目前只记录日志，实际功能将在后续阶段实现
-  console.log('导入Mermaid脚本:', script)
-  
-  // 显示临时提示
-  alert('Mermaid导入功能正在开发中，敬请期待！')
-  
-  // 隐藏模态框
-  hideMermaid()
+  try {
+    // 如果有注入flowEditor，则使用其暴露的方法
+    if (flowEditor && typeof flowEditor.importMermaidFlowchart === 'function') {
+      const result = flowEditor.importMermaidFlowchart(script);
+      
+      if (!result.success) {
+        apiErrorMessage.value = result.message || '导入失败，请检查脚本格式';
+        showAPIError.value = true;
+      }
+    } else {
+      // 如果没有注入flowEditor或者没有importMermaidFlowchart方法，则使用本地解析
+      const parsedData = parseMermaidFlowchart(script);
+      
+      if (!parsedData.success) {
+        // 如果解析失败，显示错误消息
+        apiErrorMessage.value = parsedData.message || '解析失败，请检查脚本格式';
+        showAPIError.value = true;
+        return;
+      }
+      
+      if (parsedData.nodes.length === 0) {
+        // 如果没有解析出节点，显示错误消息
+        apiErrorMessage.value = '解析结果为空，请检查脚本内容';
+        showAPIError.value = true;
+        return;
+      }
+      
+      // 清空当前画布
+      setNodes([]);
+      setEdges([]);
+      
+      // 设置解析后的节点和边
+      setNodes(parsedData.nodes);
+      setEdges(parsedData.edges);
+      
+      // 不再自动调整视图，保持100%的缩放比例
+      // setTimeout(() => {
+      //  fitView({ padding: 0.2 });
+      // }, 100);
+      
+      console.log('成功导入Mermaid流程图');
+    }
+  } catch (error) {
+    console.error('导入Mermaid时出错:', error);
+    apiErrorMessage.value = '导入失败，发生未知错误';
+    showAPIError.value = true;
+  } finally {
+    // 隐藏模态框
+    hideMermaid();
+  }
 }
 
 // 定义按钮配置接口

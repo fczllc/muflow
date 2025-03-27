@@ -24,10 +24,12 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@types/uuid": "^10.0.0",
     "@vue-flow/core": "^1.42.1",
     "feather-icons": "^4.29.2",
     "html2canvas": "^1.4.1",
     "lodash-es": "^4.17.21",
+    "uuid": "^11.1.0",
     "vue": "^3.4.19"
   },
   "devDependencies": {

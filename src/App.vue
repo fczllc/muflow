@@ -36,6 +36,7 @@ import FlowEditor from './components/FlowEditor.vue'
 interface FlowEditorMethods {
   exportFlowData: () => void;
   getDataUrl: (format?: 'jpg' | 'png', download?: boolean) => Promise<string | null>;
+  importMermaidFlowchart: (script: string) => { success: boolean; message?: string };
   // 可以根据需要添加其他方法
 }
 

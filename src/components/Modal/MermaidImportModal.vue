@@ -4,35 +4,37 @@
  -->
 
 <template>
-  <div v-if="show" class="modal-overlay">
-    <div class="mermaid-import-modal">
-      <div class="modal-header">
-        <h3>导入Mermaid流程图</h3>
-        <button class="close-btn" @click="$emit('cancel')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="mermaid-script">请粘贴Mermaid流程图脚本（限制200行）</label>
-          <textarea 
-            id="mermaid-script" 
-            v-model="mermaidScript" 
-            class="mermaid-textarea"
-            placeholder="粘贴Mermaid flowchart脚本代码..."
-            @input="validateInput"
-          ></textarea>
-          <div v-if="error" class="error-message">{{ error }}</div>
+  <Teleport to="body">
+    <div v-if="show" class="modal-overlay">
+      <div class="mermaid-import-modal">
+        <div class="modal-header">
+          <h3>导入Mermaid流程图</h3>
+          <button class="close-btn" @click="$emit('cancel')">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="mermaid-script">请粘贴Mermaid流程图脚本（限制200行）</label>
+            <textarea 
+              id="mermaid-script" 
+              v-model="mermaidScript" 
+              class="mermaid-textarea"
+              placeholder="粘贴Mermaid flowchart脚本代码..."
+              @input="validateInput"
+            ></textarea>
+            <div v-if="error" class="error-message">{{ error }}</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" @click="$emit('cancel')">取消</button>
+          <button 
+            class="confirm-btn" 
+            @click="handleConfirm" 
+            :disabled="!!error || !mermaidScript.trim()"
+          >确认</button>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="cancel-btn" @click="$emit('cancel')">取消</button>
-        <button 
-          class="confirm-btn" 
-          @click="handleConfirm" 
-          :disabled="!!error || !mermaidScript.trim()"
-        >确认</button>
-      </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -65,6 +67,12 @@ watch(() => props.show, (newVal) => {
 const validateInput = () => {
   const script = mermaidScript.value
   
+  // 检查是否为空
+  if (!script.trim()) {
+    error.value = ''
+    return
+  }
+  
   // 检查长度限制
   const lineCount = script.split('\n').length
   if (lineCount > 200) {
@@ -72,9 +80,28 @@ const validateInput = () => {
     return
   }
   
-  // 检查是否包含flowchart关键字
-  if (script.trim() && !script.includes('flowchart')) {
+  // 检查是否包含flowchart或graph关键字
+  if (!script.includes('flowchart') && !script.includes('graph')) {
     error.value = '非flowchart类型'
+    return
+  }
+  
+  // 检查流程图方向
+  const dirMatch = script.match(/(?:flowchart|graph)\s+(TB|TD|LR|BT|RL)/i)
+  if (dirMatch) {
+    const direction = dirMatch[1].toUpperCase()
+    if (!['TB', 'TD', 'LR'].includes(direction)) {
+      error.value = `不支持的流程图方向: ${direction}，仅支持TB、TD和LR`
+      return
+    }
+  } else {
+    error.value = '未找到有效的流程图方向，请使用TB、TD或LR'
+    return
+  }
+  
+  // 检查子图（暂不支持）
+  if (script.includes('subgraph')) {
+    error.value = '暂不支持子图(subgraph)功能'
     return
   }
   

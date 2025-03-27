@@ -165,6 +165,8 @@ import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 // 导入html-to-image库
 import { toJpeg, toPng } from 'html-to-image'
+// 导入Mermaid解析器
+import { parseMermaidFlowchart } from '../utils/mermaid/mermaidParser'
 
 // 自定义NodeComponent类型以解决类型兼容性问题
 type NodeComponent = any
@@ -2785,6 +2787,59 @@ const loadFromAPI = async (apiEndpoint: string, options?: RequestInit): Promise<
   }
 };
 
+/**
+ * 从Mermaid脚本导入流程图
+ * @param script Mermaid脚本文本
+ * @returns 导入结果，包含成功状态和可能的错误消息
+ */
+const importMermaidFlowchart = (script: string): { success: boolean; message?: string } => {
+  try {
+    // 解析Mermaid脚本
+    const parsedData = parseMermaidFlowchart(script);
+    
+    if (!parsedData.success) {
+      return {
+        success: false,
+        message: parsedData.message || '解析失败，请检查脚本格式'
+      };
+    }
+    
+    if (parsedData.nodes.length === 0) {
+      return {
+        success: false,
+        message: '解析结果为空，请检查脚本内容'
+      };
+    }
+    
+    // 清空当前画布
+    setNodes([]);
+    setEdges([]);
+    
+    // 导入解析后的节点和边
+    const processedNodes = processNodeData(parsedData.nodes);
+    const processedEdges = processEdgeData(parsedData.edges);
+    
+    setNodes(processedNodes);
+    setEdges(processedEdges);
+    
+    // 不再自动调整视图，保持100%的缩放比例
+    // setTimeout(() => {
+    //  fitView({ padding: 0.2 });
+    // }, 100);
+    
+    console.log('成功导入Mermaid流程图');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('导入Mermaid时出错:', error);
+    
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : '导入失败，发生未知错误'
+    };
+  }
+};
+
 // 暴露方法给外部使用
 const flowEditorMethods = {
   getFlowData,
@@ -2795,7 +2850,8 @@ const flowEditorMethods = {
   loadFromAPI,
   processNodeData,
   processEdgeData,
-  getDataUrl
+  getDataUrl,
+  importMermaidFlowchart  // 添加Mermaid导入API
 }
 
 // 提供FlowEditor的方法给子组件

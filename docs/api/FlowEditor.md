@@ -388,3 +388,26 @@ const getImageData = async () => {
 };
 </script>
 ```
+
+## 方法列表
+
+### 基础方法
+
+| 方法名           | 描述                      | 参数                    | 返回值               |
+|-----------------|--------------------------|------------------------|---------------------|
+| getFlowData     | 获取当前流程图数据          | 无                     | FlowData 对象        |
+| clearFlowData   | 清空当前流程图数据         | 无                      | void                |
+| exportFlowData  | 将流程图导出为JSON文件     | 无                      | void                |
+| getDataUrl      | 获取流程图的图片数据URL    | format?: 'jpg'/'png', download?: boolean | Promise<string/null> |
+| fitView         | 自动调整视图以显示所有内容  | padding?: number       | void                |
+
+### 数据导入导出
+
+| 方法名           | 描述                      | 参数                    | 返回值               |
+|-----------------|--------------------------|------------------------|---------------------|
+| importFlowData  | 从文件导入流程图数据       | file: File             | Promise<boolean>    |
+| saveToAPI       | 将流程图数据保存至API端点  | apiEndpoint: string, options?: RequestInit | Promise<boolean> |
+| loadFromAPI     | 从API端点加载流程图数据    | apiEndpoint: string, options?: RequestInit | Promise<boolean> |
+| importMermaidFlowchart | 导入Mermaid流程图脚本 | script: string | { success: boolean; message?: string } |
+
+### 节点和边处理
