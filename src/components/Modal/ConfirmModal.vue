@@ -1,17 +1,17 @@
 <template>
   <Teleport to="body">
-    <div v-if="show" class="modal-overlay" @click="onCancel">
+    <div v-if="show" class="modal-overlay" @click="$emit('cancel')">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h3>{{ title }}</h3>
+          <button class="close-btn" @click="$emit('cancel')">&times;</button>
         </div>
         <div class="modal-body">
-          {{ message }}
-          <slot></slot>
+          <p>{{ message }}</p>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-cancel" @click="onCancel">取消</button>
-          <button class="btn btn-confirm" @click="onConfirm">确认</button>
+          <button class="cancel-btn" @click="$emit('cancel')">取消</button>
+          <button class="confirm-btn" @click="$emit('confirm')">确定</button>
         </div>
       </div>
     </div>
@@ -33,13 +33,10 @@ defineProps<{
   message: string
 }>()
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'confirm'): void
   (e: 'cancel'): void
 }>()
-
-const onConfirm = () => emit('confirm')
-const onCancel = () => emit('cancel')
 </script>
 
 <style scoped>
@@ -47,9 +44,9 @@ const onCancel = () => emit('cancel')
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,15 +55,20 @@ const onCancel = () => emit('cancel')
 
 .modal-content {
   background: white;
-  padding: 20px;
   border-radius: 8px;
-  min-width: 300px;
-  max-width: 90%;
+  padding: 20px;
+  width: 500px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 
 .modal-header {
-  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .modal-header h3 {
@@ -75,9 +77,30 @@ const onCancel = () => emit('cancel')
   color: #333;
 }
 
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
 .modal-body {
   margin-bottom: 20px;
+}
+
+.modal-body p {
+  margin: 0;
   color: #666;
+  line-height: 1.8;
+  white-space: pre-line;
+  font-size: 14px;
 }
 
 .modal-footer {
@@ -86,8 +109,9 @@ const onCancel = () => emit('cancel')
   gap: 12px;
 }
 
-.btn {
-  padding: 6px 16px;
+.cancel-btn,
+.confirm-btn {
+  padding: 8px 16px;
   border-radius: 4px;
   border: none;
   cursor: pointer;
@@ -95,21 +119,21 @@ const onCancel = () => emit('cancel')
   transition: all 0.2s;
 }
 
-.btn-cancel {
+.cancel-btn {
   background: #f5f5f5;
   color: #666;
 }
 
-.btn-cancel:hover {
+.cancel-btn:hover {
   background: #e8e8e8;
 }
 
-.btn-confirm {
-  background: #1a73e8;
+.confirm-btn {
+  background: #409eff;
   color: white;
 }
 
-.btn-confirm:hover {
-  background: #1557b0;
+.confirm-btn:hover {
+  background: #66b1ff;
 }
 </style> 

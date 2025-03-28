@@ -1,7 +1,13 @@
 <template>
   <div class="canvas-tools">
     <div v-if="buttons.clear" class="tool-btn-wrapper">
-      <button class="icon-btn" @click="clearCanvas" @mouseleave="hideTooltip" title="清除画布">
+      <button 
+        class="icon-btn" 
+        @click="clearCanvas" 
+        @mouseenter="activeTooltip = 'clear'"
+        @mouseleave="hideTooltip" 
+        title="清除画布"
+      >
         <ToolbarIcon type="clear" />
       </button>
       <div class="tooltip" v-show="activeTooltip === 'clear'">清除画布</div>
@@ -26,13 +32,6 @@
         style="display: none"
         @change="handleFileImport"
       >
-    </div>
-
-    <div v-if="buttons.mermaid" class="tool-btn-wrapper">
-      <button class="icon-btn" @click="importMermaid" @mouseleave="hideTooltip" title="导入Mermaid">
-        <ToolbarIcon type="mermaid" />
-      </button>
-      <div class="tooltip" v-show="activeTooltip === 'mermaid'">导入Mermaid流程图</div>
     </div>
 
     <div v-if="buttons.saveLocal" class="tool-btn-wrapper">
@@ -69,73 +68,20 @@
     <ConfirmModal
       :show="showClearConfirm"
       title="清除画布"
-      message="确认要清除画布吗？此操作不可恢复。"
+      message="确定要清除画布上的所有内容吗？此操作不可恢复。"
       @confirm="handleClearConfirm"
-      @cancel="handleClearCancel"
+      @cancel="showClearConfirm = false"
     />
 
     <!-- 帮助模态框 -->
-    <div v-if="showHelpModal" class="modal-overlay" @click="hideHelp">
-      <div class="help-modal" @click.stop>
-        <div class="help-modal-header">
-          <h3>快捷键说明</h3>
-          <button class="close-btn" @click="hideHelp">&times;</button>
-        </div>
-        <div class="help-modal-content">
-          <div class="shortcut-list">
-            <div class="shortcut-item">
-              <div class="shortcut-key">悬停</div>
-              <div class="shortcut-desc">显示节点连线锚点，从锚点连线</div>
-            </div>
-            <div class="shortcut-item">
-              <div class="shortcut-key">Click</div>
-              <div class="shortcut-desc">选中，显示缩放锚点，拖动改变大小</div>
-            </div>
-            <div class="shortcut-item">
-              <div class="shortcut-key">Ctrl + A</div>
-              <div class="shortcut-desc">全选所有对象</div>
-            </div>
-            <div class="shortcut-item">
-              <div class="shortcut-key">ESC</div>
-              <div class="shortcut-desc">取消选中/编辑状态</div>
-            </div>
-            <div class="shortcut-item">
-              <div class="shortcut-key">Ctrl + 点击</div>
-              <div class="shortcut-desc">多选对象</div>
-            </div>
-            <div class="shortcut-item">
-              <div class="shortcut-key">Del/Backspace</div>
-              <div class="shortcut-desc">删除选中的对象</div>
-            </div>
-                       <div class="shortcut-item">
-              <div class="shortcut-key">Ctrl+C/Ctrl+V</div>
-              <div class="shortcut-desc">复制/粘贴选中对象</div>
-            </div>
-            <div class="shortcut-item">
-              <div class="shortcut-key">Ctrl+Z</div>
-              <div class="shortcut-desc">撤销操作/最多10步</div>
-            </div> 
-            <div class="shortcut-item">
-              <div class="shortcut-key">鼠标框选</div>
-              <div class="shortcut-desc">在空白处拖动鼠标框选对象</div>
-            </div> 
-            <div class="shortcut-item">
-              <div class="shortcut-key">双击</div>
-              <div class="shortcut-desc">编辑节点文本</div>
-            </div>
-            <div class="shortcut-item">
-              <div class="shortcut-key">鼠标拖拽</div>
-              <div class="shortcut-desc">移动节点位置</div>
-            </div>
-            <div class="shortcut-item">
-              <div class="shortcut-key">直线操作</div>
-              <div class="shortcut-desc">shift+鼠标拖拽两端辅助角度调整</div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
+    <ConfirmModal
+      :show="showHelpModal"
+      title="快捷键说明"
+      :message="helpMessage"
+      @confirm="hideHelp"
+      @cancel="hideHelp"
+    >
+    </ConfirmModal>
 
     <!-- API错误提示模态框 -->
     <ConfirmModal
@@ -146,11 +92,6 @@
       @cancel="handleAPIError"
     />
 
-    <!-- Mermaid导入模态框 -->
-    <MermaidImportModal
-      :show="showMermaidModal"
-      @confirm="handleMermaidImport"
-      @cancel="hideMermaid"
     />
   </div>
 </template>
@@ -169,10 +110,9 @@ import { useVueFlow } from '@vue-flow/core'
 import type { Node as VueFlowNode, Edge as VueFlowEdge } from '@vue-flow/core'
 import ToolbarIcon from '../Icons/ToolbarIcon.vue'
 import ConfirmModal from '../Modal/ConfirmModal.vue'
-import MermaidImportModal from '../Modal/MermaidImportModal.vue'
 import { toJpeg, toPng } from 'html-to-image'
 import type { FlowNode, FlowEdge, FlowData, APIResponse } from '../../types/flow'
-import { parseMermaidFlowchart } from '../../utils/mermaid/mermaidParser'
+
 
 // 获取FlowEditor暴露的方法
 interface FlowEditorMethods {
@@ -185,7 +125,6 @@ interface FlowEditorMethods {
   processNodeData: (nodes: any[]) => any[];
   processEdgeData: (edges: any[]) => any[];
   getDataUrl: (format?: 'jpg' | 'png', download?: boolean) => Promise<string | null>;
-  importMermaidFlowchart: (script: string) => { success: boolean; message?: string };
 }
 
 const flowEditor = inject<FlowEditorMethods | null>('flowEditor', null)
@@ -205,10 +144,24 @@ const {
 const getScale = () => getTransform().zoom || 1
 
 // 提示框状态
-const activeTooltip = ref<'clear' | 'export' | 'save' | 'import' | 'help' | 'saveToAPI' | 'mermaid' | null>(null)
+const activeTooltip = ref<'clear' | 'export' | 'save' | 'import' | 'help' | 'saveToAPI' | null>(null)
 
 // 帮助模态框状态
 const showHelpModal = ref(false)
+const helpMessage = `
+悬停: 显示节点连线锚点，从锚点连线
+Click: 选中，显示缩放锚点，拖动改变大小
+Ctrl + A: 全选所有对象
+ESC: 取消选中/编辑状态
+Ctrl + 点击: 多选对象
+Del/Backspace: 删除选中的对象
+Ctrl+C/Ctrl+V: 复制/粘贴选中对象
+Ctrl+Z: 撤销操作/最多10步
+鼠标框选: 在空白处拖动鼠标框选对象
+双击: 编辑节点文本
+鼠标拖拽: 移动节点位置
+直线操作: shift+鼠标拖拽两端辅助角度调整
+`
 
 // 隐藏提示框
 const hideTooltip = () => {
@@ -228,10 +181,6 @@ const clearCanvas = () => {
 const handleClearConfirm = () => {
   setNodes([])
   setEdges([])
-  showClearConfirm.value = false
-}
-
-const handleClearCancel = () => {
   showClearConfirm.value = false
 }
 
@@ -854,74 +803,6 @@ const handleAPIError = () => {
   apiErrorMessage.value = ''
 }
 
-// Mermaid导入状态
-const showMermaidModal = ref(false)
-
-// 导入Mermaid流程图
-const importMermaid = () => {
-  showMermaidModal.value = true
-  // 实际功能在后续阶段实现
-}
-
-// 隐藏Mermaid导入模态框
-const hideMermaid = () => {
-  showMermaidModal.value = false
-}
-
-// 处理Mermaid脚本导入
-const handleMermaidImport = (script: string) => {
-  try {
-    // 如果有注入flowEditor，则使用其暴露的方法
-    if (flowEditor && typeof flowEditor.importMermaidFlowchart === 'function') {
-      const result = flowEditor.importMermaidFlowchart(script);
-      
-      if (!result.success) {
-        apiErrorMessage.value = result.message || '导入失败，请检查脚本格式';
-        showAPIError.value = true;
-      }
-    } else {
-      // 如果没有注入flowEditor或者没有importMermaidFlowchart方法，则使用本地解析
-      const parsedData = parseMermaidFlowchart(script);
-      
-      if (!parsedData.success) {
-        // 如果解析失败，显示错误消息
-        apiErrorMessage.value = parsedData.message || '解析失败，请检查脚本格式';
-        showAPIError.value = true;
-        return;
-      }
-      
-      if (parsedData.nodes.length === 0) {
-        // 如果没有解析出节点，显示错误消息
-        apiErrorMessage.value = '解析结果为空，请检查脚本内容';
-        showAPIError.value = true;
-        return;
-      }
-      
-      // 清空当前画布
-      setNodes([]);
-      setEdges([]);
-      
-      // 设置解析后的节点和边
-      setNodes(parsedData.nodes);
-      setEdges(parsedData.edges);
-      
-      // 不再自动调整视图，保持100%的缩放比例
-      // setTimeout(() => {
-      //  fitView({ padding: 0.2 });
-      // }, 100);
-      
-      console.log('成功导入Mermaid流程图');
-    }
-  } catch (error) {
-    console.error('导入Mermaid时出错:', error);
-    apiErrorMessage.value = '导入失败，发生未知错误';
-    showAPIError.value = true;
-  } finally {
-    // 隐藏模态框
-    hideMermaid();
-  }
-}
-
 // 定义按钮配置接口
 interface ButtonsConfig {
   clear?: boolean
@@ -930,7 +811,6 @@ interface ButtonsConfig {
   saveLocal?: boolean
   saveAPI?: boolean
   help?: boolean
-  mermaid?: boolean
 }
 
 // 定义组件属性
@@ -947,7 +827,6 @@ const props = withDefaults(defineProps<Props>(), {
     saveLocal: true,
     saveAPI: true,
     help: true,
-    mermaid: true
   })
 })
 </script>
@@ -988,77 +867,27 @@ const props = withDefaults(defineProps<Props>(), {
 
 .tooltip {
   position: absolute;
-  right: 100%;
+  left: 100%;
   top: 50%;
   transform: translateY(-50%);
-  margin-right: 8px;
+  margin-left: 8px;
   padding: 4px 8px;
-  background: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.75);
   color: white;
-  font-size: 12px;
   border-radius: 4px;
+  font-size: 12px;
   white-space: nowrap;
-  pointer-events: none;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 1000;
 }
 
+/* 帮助模态框特定样式 */
 .help-modal {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
   width: 400px;
   max-width: 90vw;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.help-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.help-modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #999;
-  cursor: pointer;
-  padding-bottom: 6px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 3px;
-  transition: all 0.2s;
-}
-
-.close-btn:hover {
-  background: #f5f5f5;
-  color: #666;
 }
 
 .help-modal-content {
-  max-height: 70vh;
+  max-height: calc(80vh - 100px);
   overflow-y: auto;
 }
 
@@ -1092,10 +921,9 @@ const props = withDefaults(defineProps<Props>(), {
   font-size: 14px;
 }
 
-/* 添加新的样式 */
+/* API按钮样式 */
 .icon-btn[title="从API导入"],
 .icon-btn[title="保存到API"] {
-  /* 可以添加特殊的样式来区分API相关的按钮 */
   background-color: #f0f8ff;
 }
 

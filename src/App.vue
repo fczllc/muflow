@@ -18,8 +18,7 @@
         import: true,
         saveLocal: true,
         saveAPI: true,
-        help: true,
-        mermaid: true
+        help: true
       }" 
     />
   </div>
