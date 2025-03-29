@@ -91,8 +91,6 @@
       @confirm="handleAPIError"
       @cancel="handleAPIError"
     />
-
-    />
   </div>
 </template>
 
@@ -531,28 +529,28 @@ const saveJSON = () => {
             if (!isNaN(parsedHeight)) {
               height = parsedHeight;
             }
+          }
         }
-      }
 
-      return {
-        ...node,
-        position,
+        return {
+          ...node,
+          position,
           // 保存节点尺寸信息
           width,
           height,
-        data: {
-          ...node.data,
-          label: node.data?.label || '',
-          fontSize: node.data?.fontSize || 14,
-          color: node.data?.color || '#000000',
+          data: {
+            ...node.data,
+            label: node.data?.label || '',
+            fontSize: node.data?.fontSize || 12,
+            color: node.data?.color || '#000000',
             style: {
               ...(node.data?.style || {}),
               width: `${width}px`,
               height: `${height}px`
             }
-        },
-        selected: false // 重置选中状态
-      }
+          },
+          selected: false // 重置选中状态
+        }
     })
 
       // 完整保存边的所有属性，特别是锚点信息

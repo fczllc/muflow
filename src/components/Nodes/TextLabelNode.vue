@@ -63,6 +63,40 @@ const editInputRef = ref<HTMLTextAreaElement | null>(null)
 // 计算当前文本对齐方式
 const textAlign = computed(() => props.data?.style?.textAlign || 'center')
 
+// 自动调整textarea高度的函数
+const autoResizeTextarea = () => {
+  if (editInputRef.value) {
+    // 重置高度以获取正确的scrollHeight
+    editInputRef.value.style.height = '16px'
+    const scrollHeight = editInputRef.value.scrollHeight
+    editInputRef.value.style.height = `${scrollHeight}px`
+    
+    // 更新节点高度
+    if (nodeRef.value) {
+      const newHeight = Math.max(scrollHeight + 8, 28) // 添加padding并保持最小高度
+      nodeRef.value.style.height = `${newHeight}px`
+      
+      // 更新节点数据
+      updateNode(props.id, {
+        data: {
+          ...props.data,
+          style: {
+            ...props.data.style,
+            height: `${newHeight}px`
+          }
+        }
+      })
+    }
+  }
+}
+
+// 监听文本变化
+watch(editLabel, () => {
+  nextTick(() => {
+    autoResizeTextarea()
+  })
+})
+
 // 在组件挂载时确保样式对象存在
 onMounted(() => {
   // 确保节点数据中有样式对象
@@ -116,8 +150,14 @@ onMounted(() => {
 
 // 监听节点编辑状态变化
 watch(() => props.data.isEditing, (newIsEditing) => {
+  console.log('[TextLabelNode] 外部编辑状态变化', {
+    newIsEditing,
+    currentIsEditing: isEditing.value
+  })
   // 如果外部将编辑状态设为false，同步更新本地状态
   if (newIsEditing === false && isEditing.value === true) {
+    // 确保在更新状态之前保存内容
+    finishEditing()
     isEditing.value = false
   }
 })
@@ -270,8 +310,80 @@ const startResize = (event: MouseEvent, type: string) => {
   document.addEventListener('mouseup', handleMouseUp)
 }
 
+// 完成编辑
+const finishEditing = (event?: FocusEvent) => {
+  console.log('[TextLabelNode] finishEditing 触发', {
+    event: event?.type,
+    isEditing: isEditing.value,
+    currentLabel: editLabel.value,
+    eventTarget: event?.target,
+    editInputRef: editInputRef.value
+  })
+
+  // 如果有事件，且不是由textarea触发的，直接返回
+  if (event && (!editInputRef.value || event.target !== editInputRef.value)) {
+    console.log('[TextLabelNode] 目标元素不是textarea，不执行保存', {
+      eventTarget: event.target,
+      editInputRef: editInputRef.value
+    })
+    return
+  }
+  
+  console.log('[TextLabelNode] 开始保存文本内容', {
+    newLabel: editLabel.value,
+    nodeId: props.id
+  })
+  
+  // 保存当前编辑的文本内容
+  const newLabel = editLabel.value
+  
+  // 清除所有文本选择
+  window.getSelection()?.removeAllRanges()
+  
+  // 获取当前节点尺寸
+  const currentWidth = nodeRef.value?.offsetWidth || 100
+  const currentHeight = nodeRef.value?.offsetHeight || 30
+  
+  // 获取当前节点的样式，确保样式对象存在
+  const currentStyle = props.data?.style || {}
+  
+  console.log('[TextLabelNode] 更新节点数据', {
+    width: currentWidth,
+    height: currentHeight,
+    style: currentStyle
+  })
+  
+  // 先更新节点数据
+  updateNode(props.id, {
+    data: {
+      ...props.data,
+      label: newLabel,
+      isEditing: false,
+      style: {
+        ...currentStyle,
+        width: `${currentWidth}px`,
+        height: `${currentHeight}px`,
+        fontWeight: currentStyle.fontWeight,
+        fontStyle: currentStyle.fontStyle,
+        textDecoration: currentStyle.textDecoration,
+        textAlign: currentStyle.textAlign || 'center'
+      }
+    } 
+  })
+  
+  console.log('[TextLabelNode] 节点数据更新完成，设置编辑状态为false')
+  
+  // 最后再设置编辑状态为false
+  isEditing.value = false
+}
+
 // 处理双击事件，进入编辑模式
 const handleDoubleClick = () => {
+  console.log('[TextLabelNode] 双击事件触发', {
+    isEditing: isEditing.value,
+    currentLabel: props.data.label
+  })
+
   if (isEditing.value) return
   
   isEditing.value = true
@@ -285,63 +397,45 @@ const handleDoubleClick = () => {
     } 
   })
   
+  console.log('[TextLabelNode] 进入编辑模式，等待DOM更新')
+  
   // 等待DOM更新后设置输入框焦点
   nextTick(() => {
     if (editInputRef.value) {
+      console.log('[TextLabelNode] DOM更新完成，设置输入框焦点')
       // 设置输入框尺寸与节点一致
       editInputRef.value.style.width = '100%'
-      editInputRef.value.style.height = '100%'
+      editInputRef.value.style.minHeight = '16px'
       editInputRef.value.style.boxSizing = 'border-box'
       
       // 聚焦并选择文本
       editInputRef.value.focus()
       editInputRef.value.select()
+      
+      // 初始调整高度
+      autoResizeTextarea()
     }
   })
-}
-
-// 完成编辑
-const finishEditing = () => {
-  if (!isEditing.value) return
-  
-  // 清除所有文本选择
-  window.getSelection()?.removeAllRanges()
-  
-  // 获取当前节点尺寸
-  const currentWidth = nodeRef.value?.offsetWidth || 100
-  const currentHeight = nodeRef.value?.offsetHeight || 30
-  
-  // 获取当前节点的样式，确保样式对象存在
-  const currentStyle = props.data?.style || {}
-  
-  // 更新节点数据
-  updateNode(props.id, {
-    data: {
-      ...props.data,
-      label: editLabel.value,
-      isEditing: false,
-      style: {
-        ...currentStyle,
-        width: `${currentWidth}px`,
-        height: `${currentHeight}px`,
-        // 确保保留字体样式属性
-        fontWeight: currentStyle.fontWeight,
-        fontStyle: currentStyle.fontStyle,
-        textDecoration: currentStyle.textDecoration,
-        textAlign: currentStyle.textAlign || 'center'
-      }
-    } 
-  })
-  
-  isEditing.value = false
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
   // 阻止事件冒泡，防止触发节点删除
   e.stopPropagation()
   
-  if (e.key === 'Enter' && !e.shiftKey) {
-    finishEditing()
+  if (e.key === 'Enter') {
+    // Enter 插入换行
+    const start = editInputRef.value?.selectionStart || 0
+    const end = editInputRef.value?.selectionEnd || 0
+    editLabel.value = editLabel.value.substring(0, start) + '\n' + editLabel.value.substring(end)
+    
+    nextTick(() => {
+      if (editInputRef.value) {
+        editInputRef.value.selectionStart = start + 1
+        editInputRef.value.selectionEnd = start + 1
+      }
+    })
+    
+    e.preventDefault()
   } else if (e.key === 'Escape') {
     isEditing.value = false
     // 清除所有文本选择
@@ -354,7 +448,6 @@ const handleKeydown = (e: KeyboardEvent) => {
       } 
     })
   }
-  // 不处理Delete键，让浏览器默认行为删除选中文本
 }
 
 // 处理节点点击事件
@@ -436,7 +529,8 @@ const handleNodeClick = (event: MouseEvent) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
 }
 
 /* 根据对齐方式设置内容对齐 */
@@ -460,12 +554,13 @@ const handleNodeClick = (event: MouseEvent) => {
   white-space: pre-wrap;
   word-break: break-word;
   max-width: 100%;
-  display: inline-block;
   width: 100%;
-  /* 使用继承样式以确保正确显示下划线等文本装饰 */
+  padding: 5px;
+  box-sizing: border-box;
   text-decoration: inherit;
   font-weight: inherit;
   font-style: inherit;
+  line-height: 1.2;
 }
 
 /* 选中状态样式 - 只显示虚线轮廓 */
@@ -499,14 +594,14 @@ const handleNodeClick = (event: MouseEvent) => {
 /* 编辑输入框样式 */
 .edit-input {
   width: 100% !important;
-  height: 100% !important;
+  min-height: 16px !important;
   border: none !important;
   background: transparent !important;
   outline: none !important;
   font-size: inherit !important;
   color: inherit !important;
   resize: none !important;
-  padding: 5px !important;
+  padding: 4px !important;
   margin: 0 !important;
   font-family: inherit !important;
   white-space: pre-wrap !important;
@@ -515,6 +610,7 @@ const handleNodeClick = (event: MouseEvent) => {
   overflow-wrap: break-word !important;
   box-sizing: border-box !important;
   overflow: hidden !important; /* 隐藏滚动条 */
+  line-height: 1.2 !important;
 }
 
 .text-label-node.align-left .edit-input {

@@ -69,6 +69,7 @@
         :stroke-width="props.selected ? 1 : (props.data.style?.borderWidth ? parseFloat(props.data.style.borderWidth) : 1)"
         :stroke-dasharray="!props.selected && props.data.style?.borderStyle === 'dashed' ? '5,5' : 
                           !props.selected && props.data.style?.borderStyle === 'dotted' ? '2,2' : 'none'"
+        vector-effect="non-scaling-stroke"
       />
     </svg>
     
@@ -397,14 +398,14 @@ const startResize = (event: MouseEvent, type: string) => {
     
     switch (type) {
       case 'top':
-        newHeight = Math.max(80, startHeight - deltaY)
+        newHeight = Math.max(60, startHeight - deltaY)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'right':
         newWidth = Math.max(100, startWidth + deltaX)
         break
       case 'bottom':
-        newHeight = Math.max(80, startHeight + deltaY)
+        newHeight = Math.max(60, startHeight + deltaY)
         break
       case 'left':
         newWidth = Math.max(100, startWidth - deltaX)
@@ -412,23 +413,23 @@ const startResize = (event: MouseEvent, type: string) => {
         break
       case 'topLeft':
         newWidth = Math.max(100, startWidth - deltaX)
-        newHeight = Math.max(80, startHeight - deltaY)
+        newHeight = Math.max(60, startHeight - deltaY)
         newPosition.x = startPosition.x + (startWidth - newWidth)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'topRight':
         newWidth = Math.max(100, startWidth + deltaX)
-        newHeight = Math.max(80, startHeight - deltaY)
+        newHeight = Math.max(60, startHeight - deltaY)
         newPosition.y = startPosition.y + (startHeight - newHeight)
         break
       case 'bottomLeft':
         newWidth = Math.max(100, startWidth - deltaX)
-        newHeight = Math.max(80, startHeight + deltaY)
+        newHeight = Math.max(60, startHeight + deltaY)
         newPosition.x = startPosition.x + (startWidth - newWidth)
         break
       case 'bottomRight':
         newWidth = Math.max(100, startWidth + deltaX)
-        newHeight = Math.max(80, startHeight + deltaY)
+        newHeight = Math.max(60, startHeight + deltaY)
         break
     }
     

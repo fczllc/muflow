@@ -2247,7 +2247,7 @@ const getFlowData = () => {
       data: {
         ...node.data,
         label: node.data?.label || '',
-        fontSize: node.data?.fontSize || 14,
+        fontSize: node.data?.fontSize || 12,
         color: node.data?.color || '#000000',
         style: {
           ...(node.data?.style || {}),
