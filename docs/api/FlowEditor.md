@@ -51,6 +51,8 @@ interface CanvasToolsConfig {
 | getDataUrl | format?: 'jpg'\|'png', download?: boolean | Promise<string\|null> | 获取流程图的数据URL，可选是否下载 |
 | importFlowDataFromJson | jsonData: string | Promise<boolean> | 从JSON字符串导入流程图数据 |
 | saveToJsonProperty | propertyName: string | void | 将流程图数据保存到指定的JSON属性中 |
+| exportFlowAsBlobAndHeight | 导出流程图为Blob对象并返回高度 | 无 | Promise<{ blob: Blob; height: number } \| null> |
+| fitView | 自动调整视图以显示所有内容 | padding?: number | void |
 
 ```typescript
 // 可以在TypeScript中这样定义FlowEditor暴露的方法类型
@@ -62,8 +64,10 @@ interface FlowEditorMethods {
   saveToAPI: (apiEndpoint: string, options?: RequestInit) => Promise<boolean>;
   loadFromAPI: (apiEndpoint: string, options?: RequestInit) => Promise<boolean>;
   getDataUrl: (format?: 'jpg' | 'png', download?: boolean) => Promise<string | null>;
+  exportFlowAsBlobAndHeight: () => Promise<{ blob: Blob; height: number } | null>;
   importFlowDataFromJson: (jsonData: string) => Promise<boolean>;
   saveToJsonProperty: (propertyName: string) => void;
+  fitView: (padding?: number) => void;
 }
 ```
 
@@ -394,6 +398,68 @@ const getImageData = async () => {
 };
 </script>
 ```
+
+### 导出流程图为Blob并获取高度
+
+```vue
+<template>
+  <div class="app">
+    <FlowEditor ref="flowEditorRef" />
+    <button @click="exportFlowWithHeight">导出流程图</button>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import FlowEditor from './components/FlowEditor.vue';
+
+interface FlowEditorMethods {
+  exportFlowAsBlobAndHeight: () => Promise<{ blob: Blob; height: number } | null>;
+}
+
+const flowEditorRef = ref<InstanceType<typeof FlowEditor> | null>(null);
+
+const exportFlowWithHeight = async () => {
+  if (flowEditorRef.value) {
+    const flowEditor = flowEditorRef.value as unknown as FlowEditorMethods;
+    const result = await flowEditor.exportFlowAsBlobAndHeight();
+    
+    if (result) {
+      const { blob, height } = result;
+      
+      // 使用Blob创建一个临时URL
+      const url = URL.createObjectURL(blob);
+      
+      // 创建一个下载链接
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `flow-${height}px.png`;
+      link.click();
+      
+      // 清理临时URL
+      URL.revokeObjectURL(url);
+      
+      console.log('流程图高度:', height);
+    } else {
+      console.log('流程图为空或导出失败');
+    }
+  }
+};
+</script>
+
+<style>
+.app {
+  width: 100vw;
+  height: 100vh;
+}
+</style>
+```
+
+这个示例展示了如何：
+1. 获取流程图的Blob数据和高度
+2. 将Blob数据转换为可下载的文件
+3. 在文件名中包含流程图的高度信息
+4. 处理空画布的情况
 
 ## 方法列表
 
