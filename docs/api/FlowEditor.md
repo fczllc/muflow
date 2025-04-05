@@ -399,13 +399,15 @@ const getImageData = async () => {
 </script>
 ```
 
-### 导出流程图为Blob并获取高度
+### 导出流程图并上传到服务器
 
 ```vue
 <template>
   <div class="app">
     <FlowEditor ref="flowEditorRef" />
-    <button @click="exportFlowWithHeight">导出流程图</button>
+    <button @click="uploadFlow" :disabled="isUploading">
+      {{ isUploading ? '正在上传...' : '上传流程图' }}
+    </button>
   </div>
 </template>
 
@@ -418,31 +420,43 @@ interface FlowEditorMethods {
 }
 
 const flowEditorRef = ref<InstanceType<typeof FlowEditor> | null>(null);
+const isUploading = ref(false);
 
-const exportFlowWithHeight = async () => {
-  if (flowEditorRef.value) {
+const uploadFlow = async () => {
+  if (!flowEditorRef.value) return;
+  
+  try {
+    isUploading.value = true;
     const flowEditor = flowEditorRef.value as unknown as FlowEditorMethods;
     const result = await flowEditor.exportFlowAsBlobAndHeight();
     
     if (result) {
       const { blob, height } = result;
       
-      // 使用Blob创建一个临时URL
-      const url = URL.createObjectURL(blob);
+      // 创建 FormData 对象用于上传
+      const formData = new FormData();
+      formData.append('file', blob, 'flowchart.png');
+      formData.append('height', height.toString());
       
-      // 创建一个下载链接
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `flow-${height}px.png`;
-      link.click();
+      // 发送到服务器
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
       
-      // 清理临时URL
-      URL.revokeObjectURL(url);
-      
-      console.log('流程图高度:', height);
+      if (response.ok) {
+        console.log('上传成功');
+        console.log('流程图高度:', height);
+      } else {
+        throw new Error('上传失败');
+      }
     } else {
       console.log('流程图为空或导出失败');
     }
+  } catch (error) {
+    console.error('上传出错:', error);
+  } finally {
+    isUploading.value = false;
   }
 };
 </script>
@@ -457,9 +471,10 @@ const exportFlowWithHeight = async () => {
 
 这个示例展示了如何：
 1. 获取流程图的Blob数据和高度
-2. 将Blob数据转换为可下载的文件
-3. 在文件名中包含流程图的高度信息
-4. 处理空画布的情况
+2. 使用FormData封装数据
+3. 将流程图上传到服务器
+4. 处理上传状态和错误情况
+5. 在请求中包含流程图的高度信息
 
 ## 方法列表
 
