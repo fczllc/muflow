@@ -1835,7 +1835,7 @@ const arrangeLayers = (action: 'top' | 'bottom' | 'up' | 'down') => {
   }
   
   // 更新节点
-  setNodes(updatedNodes)
+  setNodes(updatedNodes) // 直接传递 updatedNodes
   
   // 保存历史记录
   saveToHistory()
@@ -3074,106 +3074,37 @@ const exportFlowAsBlobAndHeight = async (): Promise<{ blob: Blob | null; height:
       return null
     }
 
-    if (!vueFlowInstance.value) {
-      console.error('Flow 实例未初始化')
-      throw new Error('Flow 实例未初始化')
+    // 使用 exportImage 的核心逻辑生成图片
+    const dataUrl = await getDataUrl('jpg', false)
+    if (!dataUrl) {
+      console.error('获取图片数据失败')
+      return null
     }
 
-    // 获取 Vue Flow 容器元素
-    const vueFlowEl = vueFlowInstance.value.$el as HTMLElement
-    if (!vueFlowEl) {
-      console.error('无法获取 Flow 容器元素')
-      throw new Error('无法获取 Flow 容器元素')
-    }
+    console.log('JPEG 导出成功:', dataUrl.substring(0, 50) + '...')
 
-    // 克隆 Vue Flow 元素
-    const clonedVueFlow = vueFlowEl.cloneNode(true) as HTMLElement
-
-    // 计算内容边界
-    let minX = Number.POSITIVE_INFINITY
-    let maxX = Number.NEGATIVE_INFINITY
-    let minY = Number.POSITIVE_INFINITY
-    let maxY = Number.NEGATIVE_INFINITY
-
-    // 遍历所有节点计算边界
-    getNodes.value.forEach((node) => {
-      const nodeWidth = parseInt(node.data?.style?.width || '100')
-      const nodeHeight = parseInt(node.data?.style?.height || '38')
-
-      minX = Math.min(minX, node.position.x)
-      maxX = Math.max(maxX, node.position.x + nodeWidth)
-      minY = Math.min(minY, node.position.y)
-      maxY = Math.max(maxY, node.position.y + nodeHeight)
+    // 获取图片高度
+    const img = new Image()
+    const imageHeight = await new Promise<number>((resolve) => {
+      img.onload = () => {
+        resolve(img.height)
+      }
+      img.src = dataUrl
     })
 
-    // 添加边距
-    const padding = 20
-    minX -= padding
-    minY -= padding
-    maxX += padding
-    maxY += padding
+    // 转换为 Blob
+    console.log('开始转换为 Blob')
+    const blob = dataURLtoBlob(dataUrl)
+    console.log('Blob 转换成功:', blob)
 
-    // 计算内容尺寸
-    const contentWidth = maxX - minX
-    const contentHeight = maxY - minY
-
-    // 准备导出选项
-    const exportImageOptions = {
-      quality: 0.95,
-      backgroundColor: '#ffffff',
-      pixelRatio: 1, // 确保 1:1 导出
-      width: contentWidth,
-      height: contentHeight,
-      style: {
-        width: `${contentWidth}px`,
-        height: `${contentHeight}px`
-      },
-      canvasWidth: contentWidth,
-      canvasHeight: contentHeight,
-      skipAutoScale: true,
-      filter: (node: HTMLElement) => {
-        if (!node || !node.classList) return true
-        
-        // 过滤掉不需要的元素
-        const excludeClasses = [
-          'vue-flow__handle',
-          'vue-flow__edge-interaction',
-          'resize-handle'
-        ]
-        
-        return !excludeClasses.some(className => 
-          node.classList.contains(className) || 
-          node.closest(`.${className}`)
-        )
-      }
+    if (!blob) {
+      console.error('Blob 转换失败')
+      return null
     }
 
-    // 将克隆的元素添加到临时容器
-    const tempContainer = document.createElement('div')
-    tempContainer.style.position = 'absolute'
-    tempContainer.style.left = '-9999px'
-    tempContainer.style.top = '-9999px'
-    document.body.appendChild(tempContainer)
-    tempContainer.appendChild(clonedVueFlow)
-
-    try {
-      // 导出为 JPEG
-      console.log('开始导出为 JPEG')
-      const dataUrl = await toJpeg(clonedVueFlow, exportImageOptions)
-      console.log('JPEG 导出成功:', dataUrl.substring(0, 50) + '...')
-      
-      // 转换为 Blob
-      console.log('开始转换为 Blob')
-      const blob = dataURLtoBlob(dataUrl)
-      console.log('Blob 转换成功:', blob)
-      
-      return {
-        blob,
-        height: contentHeight
-      }
-    } finally {
-      // 清理临时元素
-      document.body.removeChild(tempContainer)
+    return {
+      blob,
+      height: imageHeight
     }
   } catch (error) {
     console.error('导出流程图失败:', error)

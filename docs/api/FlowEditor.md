@@ -408,19 +408,25 @@ const getImageData = async () => {
     <button @click="uploadFlow" :disabled="isUploading">
       {{ isUploading ? '正在上传...' : '上传流程图' }}
     </button>
+    <div v-if="previewUrl" class="preview">
+      <img :src="previewUrl" alt="预览图" />
+      <p>图片高度: {{ imageHeight }}px</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import FlowEditor from './components/FlowEditor.vue';
 
 interface FlowEditorMethods {
-  exportFlowAsBlobAndHeight: () => Promise<{ blob: Blob; height: number } | null>;
+  exportFlowAsBlobAndHeight: () => Promise<{ blob: Blob | null; height: number } | null>;
 }
 
 const flowEditorRef = ref<InstanceType<typeof FlowEditor> | null>(null);
 const isUploading = ref(false);
+const previewUrl = ref<string | null>(null);
+const imageHeight = ref<number>(0);
 
 const uploadFlow = async () => {
   if (!flowEditorRef.value) return;
@@ -430,12 +436,16 @@ const uploadFlow = async () => {
     const flowEditor = flowEditorRef.value as unknown as FlowEditorMethods;
     const result = await flowEditor.exportFlowAsBlobAndHeight();
     
-    if (result) {
+    if (result && result.blob) {
       const { blob, height } = result;
+      imageHeight.value = height;
+      
+      // 创建预览URL
+      previewUrl.value = URL.createObjectURL(blob);
       
       // 创建 FormData 对象用于上传
       const formData = new FormData();
-      formData.append('file', blob, 'flowchart.png');
+      formData.append('file', blob, 'flowchart.jpg'); // 注意这里使用.jpg扩展名
       formData.append('height', height.toString());
       
       // 发送到服务器
@@ -445,10 +455,10 @@ const uploadFlow = async () => {
       });
       
       if (response.ok) {
-        console.log('上传成功');
-        console.log('流程图高度:', height);
+        const data = await response.json();
+        console.log('上传成功:', data);
       } else {
-        throw new Error('上传失败');
+        throw new Error('上传失败: ' + response.statusText);
       }
     } else {
       console.log('流程图为空或导出失败');
@@ -459,22 +469,49 @@ const uploadFlow = async () => {
     isUploading.value = false;
   }
 };
+
+// 组件卸载时清理预览URL
+onUnmounted(() => {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value);
+  }
+});
 </script>
 
-<style>
+<style scoped>
 .app {
   width: 100vw;
   height: 100vh;
+}
+
+.preview {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.preview img {
+  max-width: 100%;
+  height: auto;
 }
 </style>
 ```
 
 这个示例展示了如何：
-1. 获取流程图的Blob数据和高度
-2. 使用FormData封装数据
-3. 将流程图上传到服务器
-4. 处理上传状态和错误情况
-5. 在请求中包含流程图的高度信息
+1. 获取流程图的JPG格式的Blob数据和高度
+2. 创建预览图片显示给用户
+3. 使用FormData封装数据
+4. 将流程图上传到服务器
+5. 处理上传状态和错误情况
+6. 在请求中包含流程图的高度信息
+7. 正确清理预览URL资源
+
+注意事项：
+- 导出的图片格式为JPG
+- 返回的Blob可能为null，需要进行检查
+- 建议在上传前显示预览图，让用户确认导出效果
+- 记得在组件卸载时清理预览URL资源
 
 ## 方法列表
 
