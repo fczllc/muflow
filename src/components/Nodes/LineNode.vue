@@ -34,25 +34,52 @@
         transformOrigin: '0 center'
       }"
     >
-      <!-- 左箭头 -->
-      <div 
-        v-if="showLeftArrow" 
-        class="arrow left-arrow"
-        :style="arrowStyle"
-      ></div>
-
-      <!-- 线条 -->
-      <div 
-        class="line"
-        :style="lineStyle"
-      ></div>
-
-      <!-- 右箭头 -->
-      <div 
-        v-if="showRightArrow" 
-        class="arrow right-arrow"
-        :style="arrowStyle"
-      ></div>
+      <!-- 使用单个SVG绘制线条和箭头 -->
+      <svg
+        class="line-svg"
+        :width="width"
+        height="20"
+        viewBox="0 0 100 20"
+        preserveAspectRatio="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <!-- 定义阴影滤镜 -->
+        <defs>
+          <filter id="arrow-shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="0" stdDeviation="0.5" flood-opacity="0.3" />
+          </filter>
+        </defs>
+      
+        <!-- 先绘制线条 -->
+        <line
+          :x1="lineEndpoints.x1"
+          :y1="lineEndpoints.y"
+          :x2="lineEndpoints.x2"
+          :y2="lineEndpoints.y"
+          :stroke="lineColor"
+          :stroke-width="strokeWidth"
+          :stroke-dasharray="strokeDasharray"
+        />
+        
+        <!-- 再绘制箭头，确保箭头在线条上方 -->
+        <polygon
+          v-if="showLeftArrow"
+          :points="leftArrowPoints"
+          :fill="lineColor"
+          stroke="white"
+          :stroke-width="0.5"
+          filter="url(#arrow-shadow)"
+        />
+        
+        <polygon
+          v-if="showRightArrow"
+          :points="rightArrowPoints"
+          :fill="lineColor"
+          stroke="white"
+          :stroke-width="0.5"
+          filter="url(#arrow-shadow)"
+        />
+      </svg>
     </div>
 
     <!-- 右侧调整点 -->
@@ -124,49 +151,64 @@ const showRightArrow = computed(() => {
   return props.data?.arrowStyle === 'target' || props.data?.arrowStyle === 'both'
 })
 
-// 计算线条样式
-const lineStyle = computed<CSSProperties>(() => {
+// 计算线条颜色
+const lineColor = computed(() => {
   const style = props.data?.style || {}
-  const strokeWidth = style.strokeWidth || 1
-  const color = selected.value ? '#409eff' : (style.stroke || '#000')
-  
-  const baseStyle: CSSProperties = {
-    width: '100%',
-    height: '1px',
-    backgroundColor: color,
-    position: 'absolute',
-    top: '50%',
-    left: '0',
-    transform: `translateY(-50%) scaleY(${strokeWidth})`,
-    transformOrigin: 'center'
-  }
-
-  // 如果是虚线或点线，使用特殊处理
-  if (style.strokeDasharray) {
-    return {
-      ...baseStyle,
-      backgroundColor: 'transparent',
-      height: `${strokeWidth}px`,
-      transform: 'translateY(-50%)',
-      borderStyle: style.strokeDasharray === '5 5' ? 'dashed' : 'dotted',
-      borderWidth: `${strokeWidth}px`,
-      borderColor: color
-    }
-  }
-
-  return baseStyle
+  return selected.value ? '#409eff' : (style.stroke || '#000')
 })
 
-// 计算箭头样式
-const arrowStyle = computed<CSSProperties>(() => {
+// 计算线条宽度
+const strokeWidth = computed(() => {
   const style = props.data?.style || {}
-  const color = selected.value ? '#409eff' : (style.stroke || '#000')
-  const size = Math.max(6, Math.min(10, (style.strokeWidth || 1) * 2))
+  return style.strokeWidth || 1
+})
 
-  return {
-    borderWidth: `${size}px`,
-    borderColor: `transparent transparent transparent ${color}`
+// 计算线条端点位置
+const lineEndpoints = computed(() => {
+  // 根据是否显示箭头来调整线条端点，向内缩进以避免与箭头重叠
+  const size = Math.max(5, Math.min(8, (strokeWidth.value * 2)));
+  const leftX = showLeftArrow.value ? size : 0;
+  const rightX = showRightArrow.value ? (100 - size) : 100;
+  return { x1: leftX, x2: rightX, y: 10 };
+})
+
+// 计算虚线模式
+const strokeDasharray = computed(() => {
+  const style = props.data?.style || {}
+  
+  // 判断是否是虚线或点线
+  if (style.strokeDasharray) {
+    // 将虚线模式转换为SVG兼容的格式
+    if (style.strokeDasharray === '5 5') {
+      return '5 5' // 虚线
+    } else {
+      return '2 2' // 点线
+    }
   }
+  
+  return '' // 实线
+})
+
+// 计算左箭头点位置
+const leftArrowPoints = computed(() => {
+  const style = props.data?.style || {}
+  // 确保箭头大小与线条粗细成比例但不会过大或过小
+  const size = Math.max(5, Math.min(8, (strokeWidth.value * 2)))
+  const halfHeight = Math.max(2.5, Math.min(5, size/1.5))
+  
+  // 左侧箭头计算
+  return `0,10 ${size},${10-halfHeight} ${size},${10+halfHeight}`
+})
+
+// 计算右箭头点位置
+const rightArrowPoints = computed(() => {
+  const style = props.data?.style || {}
+  // 确保箭头大小与线条粗细成比例但不会过大或过小
+  const size = Math.max(5, Math.min(8, (strokeWidth.value * 2)))
+  const halfHeight = Math.max(2.5, Math.min(5, size/1.5))
+  
+  // 右侧箭头计算
+  return `100,10 ${100-size},${10-halfHeight} ${100-size},${10+halfHeight}`
 })
 
 // 角度对齐计算函数
@@ -428,39 +470,16 @@ const handleNodeClick = (event: MouseEvent) => {
 
 .line-container {
   position: absolute !important;
-  height: 1px !important;
-  top: 0 !important;
+  height: 20px !important; /* 调整高度适应SVG */
+  top: -9.5px !important; /* 微调位置使线居中 */
   left: 0 !important;
   transform-origin: 0 center;
+  overflow: visible !important;
 }
 
-.line {
-  position: absolute !important;
-  width: 100% !important;
-  height: 100% !important;
-  pointer-events: all !important;
-  z-index: 1 !important;
-}
-
-/* 箭头样式 */
-.arrow {
-  position: absolute;
-  top: 50%;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  transform: translateY(-50%);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.left-arrow {
-  left: -10px;
-  transform: translateY(-50%) rotate(180deg);
-}
-
-.right-arrow {
-  right: -10px;
+.line-svg {
+  display: block;
+  overflow: visible;
 }
 
 /* 调整点样式 */

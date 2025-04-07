@@ -470,6 +470,31 @@ const handleError = (error: any) => {
   error.value = '流程图加载出错，请刷新页面重试'
 }
 
+/**
+ * 从JSON对象加载流程图数据
+ * @param flowData 流程图数据对象
+ */
+const loadFlowDataFromJson = async (flowData: any) => {
+  try {
+    error.value = null
+    
+    if (!flowData || !flowData.nodes || !flowData.edges) {
+      throw new Error('传入的数据格式不正确')
+    }
+    
+    await processFlowData(flowData)
+    emit('load-success', flowData)
+  } catch (err: any) {
+    const errorMessage = err.message || '加载流程图数据失败'
+    error.value = errorMessage
+    emit('load-error', errorMessage)
+    nodes.value = []
+    edges.value = []
+    handleError(err)
+  }
+}
+
+
 // 修改数据加载方法
 const loadFlowDataFromApi = async (flowId: string) => {
   try {
@@ -529,7 +554,9 @@ watch([() => props.flowId, () => props.flowData], ([newFlowId, newFlowData]) => 
 
 // 暴露 processFlowData 方法供外部调用
 defineExpose({
-  processFlowData
+  processFlowData,
+  loadFlowDataFromJson
+
 })
 </script>
 

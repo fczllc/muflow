@@ -50,25 +50,25 @@
         fontWeight: props.data.style?.fontWeight || 'normal',
         fontStyle: props.data.style?.fontStyle || 'normal'
       }">{{ data.label }}</span>
-      <input 
-        v-else
-        ref="editInputRef"
-        v-model="editLabel" 
-        @blur="finishEditing"
-        @keydown="handleKeydown"
-        class="edit-input nodrag nowheel"
-        type="text"
-      />
+      <div v-else class="edit-container">
+        <textarea 
+          ref="editInputRef"
+          v-model="editLabel" 
+          @blur="finishEditing"
+          @keydown="handleKeydown"
+          class="edit-input nodrag nowheel"
+        ></textarea>
+      </div>
     </div>
     
     <!-- 修改后 -->
     <template v-if="selected && !isEditing">
       <div 
-        v-for="position in resizeHandlePositions" 
-        :key="position.type"
-        :class="['resize-handle', position.class]"
-        @mousedown="(event) => startResize(event, position.type)"
-        class="nodrag"
+        v-for="(pos, index) in resizeHandlePositions" 
+        :key="index"
+        class="resize-handle"
+        :class="pos.class"
+        @mousedown="startResize($event, pos.type)"
       ></div>
     </template>
   </div>
@@ -212,11 +212,47 @@ watch(() => props.data.isEditing, (newIsEditing) => {
 
 const isEditing = ref(false)
 const editLabel = ref('')
-const editInputRef = ref<HTMLInputElement | null>(null)
+const editInputRef = ref<HTMLTextAreaElement | null>(null)
+
+// 添加自动调整高度的函数
+const autoResizeTextarea = () => {
+  if (editInputRef.value) {
+    // 重置高度以获取正确的scrollHeight
+    editInputRef.value.style.height = '16px'
+    const scrollHeight = editInputRef.value.scrollHeight
+    editInputRef.value.style.height = `${scrollHeight}px`
+    
+    // 更新节点高度
+    if (nodeRef.value) {
+      const newHeight = Math.max(scrollHeight + 10, 30) // 添加padding并保持最小高度
+      nodeRef.value.style.height = `${newHeight}px`
+      
+      // 更新节点数据
+      updateNode(props.id, {
+        data: {
+          ...props.data,
+          style: {
+            ...props.data.style,
+            height: `${newHeight}px`
+          }
+        }
+      })
+    }
+  }
+}
+
+// 监听文本变化
+watch(editLabel, () => {
+  nextTick(() => {
+    autoResizeTextarea()
+  })
+})
 
 const handleDoubleClick = (event: MouseEvent) => {
   // 阻止事件冒泡，防止触发画布缩放
   event.stopPropagation()
+  
+  if (isEditing.value) return
   
   // 保存当前节点尺寸
   const currentWidth = nodeRef.value?.offsetWidth || 0
@@ -243,46 +279,48 @@ const handleDoubleClick = (event: MouseEvent) => {
     if (editInputRef.value) {
       // 设置输入框尺寸与节点一致
       editInputRef.value.style.width = '100%'
-      editInputRef.value.style.height = '100%'
+      editInputRef.value.style.minHeight = '16px'
       editInputRef.value.style.boxSizing = 'border-box'
       
       // 聚焦并选择文本
       editInputRef.value.focus()
       editInputRef.value.select()
-    }
-    
-    // 确保节点尺寸不变
-    if (nodeRef.value) {
-      nodeRef.value.style.width = `${currentWidth}px`
-      nodeRef.value.style.height = `${currentHeight}px`
+      
+      // 初始调整高度
+      autoResizeTextarea()
     }
   })
 }
 
-const finishEditing = () => {
-  isEditing.value = false
+const finishEditing = (event?: FocusEvent) => {
+  // 如果有事件，且不是由textarea触发的，直接返回
+  if (event && (!event.target || !(event.target as HTMLElement).classList.contains('edit-input'))) {
+    return
+  }
+  
+  // 保存当前编辑的文本内容
+  const newLabel = editLabel.value
   
   // 清除所有文本选择
   window.getSelection()?.removeAllRanges()
   
   // 获取当前节点尺寸
-  const currentWidth = nodeRef.value?.offsetWidth || 0
-  const currentHeight = nodeRef.value?.offsetHeight || 0
+  const currentWidth = nodeRef.value?.offsetWidth || 120
+  const currentHeight = nodeRef.value?.offsetHeight || 42
   
-  // 确保样式对象存在
+  // 获取当前节点的样式，确保样式对象存在
   const currentStyle = props.data?.style || {}
-  
-  // 更新节点标签并标记为非编辑状态，同时保持尺寸
-  updateNode(props.id, { 
-    data: { 
-      ...props.data, 
-      label: editLabel.value,
+ 
+  // 更新节点数据
+  updateNode(props.id, {
+    data: {
+      ...props.data,
+      label: newLabel,
       isEditing: false,
       style: {
         ...currentStyle,
         width: `${currentWidth}px`,
         height: `${currentHeight}px`,
-        // 确保保留字体样式属性
         fontWeight: currentStyle.fontWeight,
         fontStyle: currentStyle.fontStyle,
         textDecoration: currentStyle.textDecoration,
@@ -290,20 +328,31 @@ const finishEditing = () => {
       }
     } 
   })
-  
-  // 确保节点尺寸不变
-  if (nodeRef.value) {
-    nodeRef.value.style.width = `${currentWidth}px`
-    nodeRef.value.style.height = `${currentHeight}px`
-  }
+   
+  // 最后再设置编辑状态为false
+  isEditing.value = false
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
   // 阻止事件冒泡，防止触发节点删除
   e.stopPropagation()
-  
-  if (e.key === 'Enter' && !e.shiftKey) {
-    finishEditing()
+ 
+  if (e.key === 'Enter') {
+    // Enter 插入换行
+    const start = editInputRef.value?.selectionStart || 0
+    const end = editInputRef.value?.selectionEnd || 0
+    editLabel.value = editLabel.value.substring(0, start) + '\n' + editLabel.value.substring(end)
+    
+    nextTick(() => {
+      if (editInputRef.value) {
+        editInputRef.value.selectionStart = start + 1
+        editInputRef.value.selectionEnd = start + 1
+        // 调整高度
+        autoResizeTextarea()
+      }
+    })
+    
+    e.preventDefault()
   } else if (e.key === 'Escape') {
     isEditing.value = false
     // 清除所有文本选择
@@ -316,7 +365,6 @@ const handleKeydown = (e: KeyboardEvent) => {
       } 
     })
   }
-  // 不处理Delete键，让浏览器默认行为删除选中文本
 }
 
 // 确保调整大小功能正常工作
@@ -737,12 +785,13 @@ export default {
   white-space: pre-wrap;
   word-break: break-word;
   max-width: 100%;
-  display: inline-block;
   width: 100%;
-  /* 使用继承样式以确保正确显示下划线等文本装饰 */
+  padding: 5px;
+  box-sizing: border-box;
   text-decoration: inherit;
   font-weight: inherit;
   font-style: inherit;
+  line-height: 1.2;
 }
 
 /* 调整大小的控制点样式 */
@@ -789,20 +838,57 @@ export default {
   box-sizing: border-box;
 }
 
-/* 编辑输入框样式优化 */
-.edit-input {
+/* 编辑容器样式 */
+.edit-container {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  min-height: 20px;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: inherit;
-  color: inherit;
+  display: flex;
+  align-items: center;
   padding: 0;
   margin: 0;
-  font-family: inherit;
-  box-sizing: border-box; /* 确保padding和border不会增加元素总宽高 */
+  box-sizing: border-box;
+}
+
+.rounded-rect-node.align-left .edit-container {
+  justify-content: flex-start;
+}
+
+.rounded-rect-node.align-center .edit-container {
+  justify-content: center;
+}
+
+.rounded-rect-node.align-right .edit-container {
+  justify-content: flex-end;
+}
+
+/* 编辑输入框样式 */
+.edit-input {
+  width: 100% !important;
+  min-height: 16px !important;
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  resize: none !important;
+  padding: 4px !important;
+  margin: 0 !important;
+  font-family: inherit !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  line-height: 1.2 !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 100% !important;
+    display: block !important;
 }
 
 .rounded-rect-node.align-left .edit-input {
@@ -817,56 +903,21 @@ export default {
   text-align: right !important;
 }
 
-/* 调整大小锚点的位置和光标样式 */
-.resize-handle.top {
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  cursor: n-resize;
+/* 修复文本区域的垂直对齐问题 */
+textarea.edit-input {
+  display: block !important;
+  line-height: 1.2 !important;
+  overflow: hidden !important;
 }
 
-.resize-handle.right {
-  right: -5px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: e-resize;
+/* 编辑状态下的节点样式 */
+.rounded-rect-node.editing {
+  user-select: text;
 }
 
-.resize-handle.bottom {
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  cursor: s-resize;
-}
-
-.resize-handle.left {
-  left: -5px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: w-resize;
-}
-
-.resize-handle.topLeft {
-  top: -5px;
-  left: -5px;
-  cursor: nw-resize;
-}
-
-.resize-handle.topRight {
-  top: -5px;
-  right: -5px;
-  cursor: ne-resize;
-}
-
-.resize-handle.bottomLeft {
-  bottom: -5px;
-  left: -5px;
-  cursor: sw-resize;
-}
-
-.resize-handle.bottomRight {
-  bottom: -5px;
-  right: -5px;
-  cursor: se-resize;
+/* 确保编辑状态下内容不会溢出 */
+.rounded-rect-node.editing .node-content {
+  position: relative;
+  overflow: visible;
 }
 </style> 

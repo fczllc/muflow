@@ -69,6 +69,7 @@
         :stroke-width="props.selected ? 1 : (props.data.style?.borderWidth ? parseFloat(props.data.style.borderWidth) : 1)"
         :stroke-dasharray="!props.selected && props.data.style?.borderStyle === 'dashed' ? '5,5' : 
                           !props.selected && props.data.style?.borderStyle === 'dotted' ? '2,2' : 'none'"
+        vector-effect="non-scaling-stroke"
       />
     </svg>
     

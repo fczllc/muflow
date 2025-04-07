@@ -21,11 +21,13 @@
       </button>
     </div>
     
-    <IconSelector 
-      :isOpen="showIconSelector" 
-      @close="showIconSelector = false" 
-      @select="onIconSelect"
-    />
+    <div class="icons-container" :class="{ 'active': showIconSelector }">
+      <IconSelector 
+        :isOpen="showIconSelector" 
+        @close="showIconSelector = false" 
+        @select="onIconSelect"
+      />
+    </div>
    
     <!-- 鱼骨图确认对话框 -->
     <ConfirmModal 
@@ -392,8 +394,11 @@ const hideTooltip = () => {
 
 // 切换图标选择器显示状态
 const toggleIconSelector = () => {
-  showIconSelector.value = !showIconSelector.value
-  hideTooltip()
+  // 使用requestAnimationFrame确保DOM更新前完成状态切换
+  requestAnimationFrame(() => {
+    showIconSelector.value = !showIconSelector.value
+    hideTooltip()
+  })
 }
 
 // 显示鱼骨图确认对话框
@@ -470,12 +475,17 @@ export default defineComponent({
 <style scoped>
 .resource-tool {
   padding: 10px;
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .tool-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  width: 100%;
 }
 
 .tool-btn {
@@ -500,4 +510,14 @@ export default defineComponent({
 
 }
 
+.icons-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  pointer-events: none;
+}
+.icons-container.active {
+  pointer-events: auto;
+}
 </style> 

@@ -135,8 +135,8 @@ const icons: IconData[] = [
 
 <style scoped>
 .icon-selector {
-  position: fixed;
-  top: 50%; /* 垂直居中 */
+  position: absolute; /* 改用绝对定位 */
+  top: 50%;
   transform: translateY(-50%) translateX(-100%); /* 垂直居中并初始隐藏 */
   left: 40px; /* 紧靠左侧工具栏 */
   width: 220px; /* 调整宽度更接近图片 */
@@ -150,18 +150,16 @@ const icons: IconData[] = [
   flex-direction: column;
   z-index: 100;
   overflow: hidden;
-  visibility: hidden; /* 初始状态下完全隐藏 */
   opacity: 0; /* 初始状态下透明 */
   pointer-events: none; /* 初始状态下不接收鼠标事件 */
-  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.2s ease, visibility 0s 0.2s; /* 添加过渡动画 */
+  transition: transform 0.2s ease, opacity 0.2s ease; /* 缩短过渡时间 */
+  will-change: transform, opacity; /* 优化性能 */
 }
 
 .icon-selector.open {
   transform: translateY(-50%) translateX(0); /* 垂直居中并显示 */
-  visibility: visible; /* 打开状态下可见 */
   opacity: 1; /* 打开状态下完全不透明 */
   pointer-events: all; /* 打开状态下接收鼠标事件 */
-  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.2s ease, visibility 0s; /* 添加过渡动画 */
 }
 
 .icon-selector-header {

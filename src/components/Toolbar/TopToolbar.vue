@@ -1657,8 +1657,6 @@ onMounted(() => {
   
   // 监听背景色的变化，确保颜色指示器同步更新
   watch(() => bgColor.value, (newColor) => {
-    // 无需额外操作，v-model 已经会更新 DOM
-    console.log('背景色已更新:', newColor)
   })
 
   // 添加点击事件监听器

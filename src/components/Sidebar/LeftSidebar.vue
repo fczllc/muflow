@@ -14,17 +14,26 @@
     
     <!-- 底部画布工具 -->
     <div class="bottom-tools">
-      <CanvasTools />
+      <CanvasTools :buttons="canvasToolsConfig" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { inject } from 'vue'
 import WidgetTool from './WidgetTool.vue'
 import ResourceTool from './ResourceTool.vue'
 import CanvasTools from '../Toolbar/CanvasTools.vue'
 
-// 移除props定义，ResourceTool现在直接通过inject获取函数
+// 从父组件注入画布工具配置
+const canvasToolsConfig = inject('canvasTools', {
+  clear: true,
+  export: true,
+  import: true,
+  saveLocal: true,
+  saveAPI: true,
+  help: true
+})
 </script>
 
 <style scoped>
@@ -37,7 +46,11 @@ import CanvasTools from '../Toolbar/CanvasTools.vue'
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 40px;
+  grid-column: 1;
+  position: relative;
+  will-change: transform;
+  transform: translateZ(0); /* 启用GPU加速 */
+  z-index: 10;
 }
 
 .top-tools {
